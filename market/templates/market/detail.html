@@ -82,7 +82,7 @@
 			+ '/'
 				);
 		$(function(){
-                       listingSocket.onopen = function(e){
+                       listingSocket.onopen = function(e){				
                 $.ajax({
                         type:"GET",
 			url:"/market/api/"+listing_id+"/last_bid",
@@ -95,7 +95,10 @@
 
 		listingSocket.onmessage = function(e) {
                         const data = JSON.parse(e.data);
-                        document.querySelector('#last-bid').value = data.new_bid_set;
+			if (data.new_bid_set){
+                        	document.querySelector('#last-bid').value = data.new_bid_set;
+					}
+			if (data.comment){
                         document.querySelector('#all-comments').innerHTML += '<div class = "card comment">'
                         +'<div class = "card-body">'
                         +'<div class = "card-title">'
@@ -114,6 +117,7 @@
 			+'</div>'
 			+'</div>';
 			document.querySelector('#comment-input').value = "";
+							}
                                 };
 
 		listingSocket.onclose = function(e) {
@@ -141,6 +145,15 @@
 
                         });
                 });
+
+		$(function(){
+                        $('#comment-input').keyup(function(e){
+                                if (e.keyCode === 13){
+                                $('#comment-submit').click()
+                                                }
+                        });
+                });
+
 
 		$(function(){
                         $('#comment-submit').click(function(e){
