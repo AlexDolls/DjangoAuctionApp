@@ -1,0 +1,39 @@
+{% extends "market/layout.html" %}
+
+{% block body %}
+<div class="container p-4 text-center" style="max-width: 600px;">
+
+    {% if message %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endif %}
+
+    <div class="card inout">
+        <div class="card-body m-4">
+            <h2 class="card-title">LOGIN</h2><hr>
+	    {% if messages %}
+	    	<ul>
+	    	{% for message in messages %}
+		<li {% if message.tag %}class="{{ message.tag }}"{% endif %}>{{ message }}</li>
+		{% endfor %}
+		</ul>
+	    {% endif %}
+            <form action="{% url 'market:login' %}" method="post" class="card-text mb-3">
+                {% csrf_token %}
+                <div class="form-floating mb-3">
+                    <input class="form-control" autofocus type="text" name="username" placeholder="Username">
+		    <label for = "username">Username</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input class="form-control" type="password" name="password" placeholder="Password">
+		    <label for = "floatingInput">Password</label>
+                </div>
+		<div class = "d-grid gap-2 col-6 mx-auto">
+                <input class="btn btn-primary" type="submit" value="LOGIN">
+		</div>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

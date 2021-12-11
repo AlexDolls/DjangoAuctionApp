@@ -1,0 +1,15 @@
+{% extends "market/layout.html" %}
+
+{% block body %}
+<h2 class="py-3 m-3"><strong><font color = "white">Categories</h2>
+<div class = "container">
+	<div class = "list-group">
+	{% for category in categories %}
+	<a href="{% url "market:category_listings" category.id %}" class="list-group-item list-group-item-action">{{category.name}}</a>
+	{% empty %}
+	<div class="alert alert-info text-center p-4 my-4 mx-2">No items Available</div>
+	{% endfor %}
+	</div>
+
+</div>
+{% endblock %}

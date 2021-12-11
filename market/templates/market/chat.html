@@ -1,0 +1,21 @@
+{% extends "market/layout.html" %}
+
+{% block body %}
+	<div class = "chat-body">
+		<h3 class = "p-3" style = "color:white;"><strong>{% if user.username == chat.members.all.0.username %}{{ chat.members.all.1.username }}{% else %}{{ chat.members.all.0.username }}{% endif %}</strong></h3>
+	<div class = "container chat-window">
+	{% for message in messages %}
+	{% if user.id == message.sender_id %}
+	<div class="chat-message" style = "text-align:right; background-color:rgba(0, 64, 255, 0.8);">{{ message.text }}</div>
+	{% else %}
+	 <div class="chat-message" style = "text-align:left; background-color:rgba(255, 255, 255, 0.8);">{{ message.text }}</div>
+	{% endif %}
+	{% endfor %}
+	<form action = "{% url 'market:chat' chat.id %}" method = "post" class = "p-3" style = "text-align:right;">
+	{% csrf_token %}
+	<input type = "text" name = "text" id = "text" placeholder = "Message text"><br><br>
+	<input type = "submit" value = "Send message" class = "btn-primary btn-lg">
+	</form>
+	</div>
+	</div>
+{% endblock %}

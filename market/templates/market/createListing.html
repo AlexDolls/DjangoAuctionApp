@@ -1,0 +1,43 @@
+{% extends 'market/layout.html' %}
+{% block body %}
+	<form action = "{% url 'market:createListing' %}" method = 'post'>
+	{% csrf_token %}
+	<fieldset class = "detail-parasha">
+		{% if messages %}
+		<ul class = "messages">
+			{% for message in messages %}
+			<li style = "color:red;"{% if message.tags %} class = "{{ message.tags }}"{% endif %}>{{ message }}</li>
+			{% endfor %}
+		</ul>
+		{% endif %}
+		<legend><h1>Listing Creation</h1></legend>
+		<div class = "form-floating mb-3 col-6" style = "width:100%;">
+			<input class = "form-control" type = "text" id = "listingname" name = "listingname" maxlength = "32" placeholder = "listingname">
+			<label for = "listingname">Name for listing</label>
+		</div>
+		<small>Select Category</small>
+		<select class="form-control mb-3" name="category" style = "width:50%;">
+                	{% for category in categories %}
+                    		<option value={{ category }}>
+                        	{{ category.name }}
+                    		</option>
+                	{% endfor %}
+                </select>
+		<div class="form-floating mb-3 col-6" style = "width:100%;">
+			<input type="number" class="form-control" name = "startBid" id="floatingInput" placeholder="name@example.com">
+			<label for="floatingInput">Listing's start Price</label>
+		</div>
+		<div class = "form-floating mb-3 col-6" style = "width:100%;">
+			<input class = "form-control" type = "text" name = "imageurl" id = "imageurl" placeholder = "Image URL">
+			<label for = "imageurl">Image URL</label>
+		</div>
+		<div class="form-floating mb-3" style = "width:100%;">
+  			<textarea class="form-control" name = "listingdesc" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 100px"></textarea>
+  			<label for="floatingTextarea2">Listing Description</label>
+		</div>
+		<div class = "d-grid gap-2 col-6 mx-auto">
+		<input class = "btn-primary btn-lg" type = "submit" value = "Create">
+		</div>
+	</fieldset>
+	</form>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "market/layout.html" %}
+
+{% block body %}
+<div class = "container p-4 text-center" style"max-width: 600px;">
+<div class = "card inout">
+	<div class = "card-body m-4">
+	<fieldset>
+		<br>
+		<legend>SIGN UP</legend><hr>
+		{% if messages %}
+		<ul class = "messages">
+			{% for message in messages%}
+			<li {% if message.tag %} class = "{{ message.tag }}" {% endif %}>{{ message }}</li>
+			{% endfor %}
+		</ul>
+		{% endif %}
+	<form action = "{% url 'market:signup' %}" method="post" class = "card-text mb-3">
+	{% csrf_token %}
+		<div class="form-group p-2">
+                    <input class="form-control" autofocus type="text" name="username" placeholder="Username">
+                </div>
+                <div class="form-group p-2">
+                    <input class="form-control" type="email" name="email" placeholder="Email Address">
+                </div>
+                <div class="form-group p-2">
+                    <input class="form-control" type="password" name="password" placeholder="Password">
+                </div>
+                <div class="form-group p-2">
+                    <input class="form-control" type="password" name="confirm_password" placeholder="Confirm Password">
+                </div>
+                <input class="btn btn-success" type="submit" value="SIGN UP">
+	</form>
+	Already have an account? <a href="{% url 'market:login' %}" style = "color:blue;">Log In here.</a>
+	</fieldset>
+</div>
+</div>
+</div>
+{% endblock %}

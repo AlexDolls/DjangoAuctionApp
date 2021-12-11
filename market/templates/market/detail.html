@@ -1,0 +1,215 @@
+{% extends "market/layout.html" %}
+{% block body %}
+
+<script type = "text/javascript">
+	function bidhistory()
+	{	
+		var historyList = ""
+		{% for bid in auctionlisting.bid_set.all %}
+			var username = "{{ bid.user.username }}"
+			var bid_date = "{{ bid.date }}"
+			var value = "{{ bid.value }}"
+			historyList += "<li class = 'p-1' style='margin: 0.5rem 0;'>" +"<strong> "+ username +" </strong> :"+ value +"$ — "+ bid_date + "</li>";
+		{% endfor %}
+			document.getElementById("history").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Hide history' OnClick = 'clearhistory();'>";
+			document.getElementById("history").innerHTML += "<div id = 'history_list' style = 'padding:10px; background-color:rgba(255,255,255,0.4); margin: 1rem 0; border-radius:1rem; height: auto; width: auto;'></div>";
+			document.getElementById("history_list").innerHTML = historyList
+	}
+
+	function clearhistory()
+	{
+		document.getElementById("history").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Show history' OnClick = 'bidhistory();'>";
+	}
+</script>
+
+<div class = "detail-page">
+	{% if messages %}
+		<ul class = "messages">
+			{% for message in messages%}
+			<li {% if message.tags %} class = "{{message.tags}}" {% endif %}> {{ message }}</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+	<h1 style = "text-align:center;"><strong>{{ auctionlisting.name }}</strong>{% if true_user %} <a class = "btn btn-primary" href={% url "market:editListing" auctionlisting.id %}>Edit</a>{% endif %}</h1>
+	<hr>
+	<div class="image">
+        	<img class="big" src="{{ auctionlisting.image }}" alt="{{ auctionlisting.id }}">
+    	</div>	
+	<hr>
+	<h4 style = "text-align:left;">Description:</h4>
+	<div class = "item-description">{% if auctionlisting.description %} {{ auctionlisting.description }} {% else %} No description {% endif %}</div>
+	<hr>
+	<h4>Listing details</h4>
+	<hr style = "width:10rem;">
+	<ul style = "font-size:20px;">
+		<li>User : {{ auctionlisting.user }}</li>
+		<li>Start price: {{ auctionlisting.startBid }} $</li>
+		<li>Creation date: {{ auctionlisting.creationDate }}</li>
+	</ul>
+	
+	{% if user.is_authenticated %}
+	<form action = "{% url "market:watchlist" %}" method = "post" class = "add-category" style = "z-index:1;">
+		{% csrf_token %}
+			<input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
+			<input type = "submit" class = "btn-primary btn-lg" value = {% if auctionlisting in user.watchlist.all %}"Remove from watchlist"{% else %}"Add to Watchlist"{% endif %}>
+	</form>
+	{% endif %}
+	<h3 style = "font-size:30px;">Last Bid:<input type = 'text' id = 'last-bid'{% if bid is None%} value = "No bids yet :)"{% else %} value = "{{bid.value}}"${% endif %} readonly = "True" style = "width:auto;"></h3>
+        <div id="history">
+	<input type = "button" class = "btn-primary btn-lg" value = "Show history" OnClick = "bidhistory();">
+	</div>
+	{% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
+		<center>
+		<input type = "number" id = "newbid" name = "newbid" style = "height:2.4rem; width:9rem; font-size:30px;"
+		{% if bid is None %} min = {{auctionlisting.startBid}} max = 99999 value = {{auctionlisting.startBid}}
+                {% else %} min ={{bid.value}} max = 99999 value = {{bid.value}}
+		       {% endif %}><br><br>
+
+		<input class="btn btn-primary mb-3" id = "new-bid-submit" type = "button" value = "Make Bid!" style = "width:10rem; height:4rem; font-size:30px;">
+	{% elif not auctionlisting.active %}
+	<center><h3><strong>Last Price:</strong> {% if bid is None %} {{auctionlisting.startBid}}
+                {% else %} {{bid.value}} {% endif %} $</h3></center>
+	<center><h2><span class="badge bg-warning">Listing is Ended</span></h2></center>
+	{% endif %}
+	<div id = 'result'></div>
+	<script type = 'text/javascript'>
+		const listing_id = "{{auctionlisting.id}}"	
+		listingSocket = new WebSocket(
+			'ws://'
+			+ window.location.host
+			+ '/ws/market/'
+			+ listing_id
+			+ '/'
+				);
+		$(function(){
+                       listingSocket.onopen = function(e){
+                $.ajax({
+                        type:"GET",
+			url:"/market/api/"+listing_id+"/last_bid",
+                        success:function(result){
+				document.querySelector('#last-bid').value = result.value
+                                        }
+                                });
+                         };
+		});
+
+		listingSocket.onmessage = function(e) {
+                        const data = JSON.parse(e.data);
+                        document.querySelector('#last-bid').value = data.new_bid_set;
+                        document.querySelector('#all-comments').innerHTML += '<div class = "card comment">'
+                        +'<div class = "card-body">'
+                        +'<div class = "card-title">'
+                        +'<span class="badge bg-dark mb-2" style = "font-size:13px;">'
+                        + data.username
+                        +'</span>'
+                        +'<h5>'
+                        + data.comment
+                        +'</h5>'
+                        +'</div>'
+                        +'<div class = "card-text">'
+                        +'<small>Commented on: <strong>'
+                        + data.comment_date
+                        +'</strong></small>'
+                        +'</div>'
+			+'</div>'
+			+'</div>';
+			document.querySelector('#comment-input').value = "";
+                                };
+
+		listingSocket.onclose = function(e) {
+			console.error('Listing details page connection was interrupted');
+				};
+
+
+		
+		$(function(){
+                        $('#newbid').keyup(function(e){
+                                if (e.keyCode === 13){
+                                $('#new-bid-submit').click()
+                                                }
+                        });
+                });
+
+                $(function(){
+                        $('#new-bid-submit').click(function(e){
+				const newbidInputDom = document.querySelector('#newbid');
+                        	const newbid = newbidInputDom.value;
+                        	listingSocket.send(JSON.stringify({
+                                'newbid': newbid,
+                                'listing_id':listing_id
+                                        }));
+
+                        });
+                });
+
+		$(function(){
+                        $('#comment-submit').click(function(e){
+                        const newCommentDom = document.querySelector('#comment-input');
+                        const newComment = newCommentDom.value;
+                        listingSocket.send(JSON.stringify({
+                                'post_comment': newComment,
+                                'listing_id':listing_id
+                                        }));
+
+                        });
+                });
+
+
+	</script>
+		<div id = "all-comments" style = "text-align:left;">
+		{% for comment in comments %}
+		<div class = "card comment">
+			<div class = "card-body">
+			<div class = "card-title">
+				<span class="badge bg-dark mb-2" style = "font-size:13px;">{{ comment.user.username }}</span>
+				<h5>{{ comment.text }}</h5>
+			</div>
+			<div class = "card-text">
+				<small>Commented on: <strong>{{ comment.date|date:"M d, h:i a" }}</strong></small>
+			</div>
+			</div>
+
+		</div>
+		{% endfor %}
+		</div>
+	</fieldset>
+	{% if user == auctionlisting.user and auctionlisting.active == True %}
+        <center>
+        <form action = {% url "market:endlisting" %} method = "post" class = "p-3">
+        {% csrf_token %}
+                <input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
+                <input type = "submit" class = "btn-dark btn-lg" value = "End Listing">
+        </form>
+        </center>
+        {% endif %}
+        {% if user == auctionlisting.user %}
+        <form action = "{% url "market:removeListing" %}" method = "post" class = "add-category-left" style="z-index:1;">
+        {% csrf_token %}
+                <input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
+                <input type = "submit" class = "btn-danger btn-lg" value = "Delete Listing">
+        </form>
+        {% endif %}
+        </center>
+        <fieldset>
+                {% if auctionlisting.active and user.is_authenticated %}
+                                <div class = "form-floating mb-3">
+                                <textarea class = "form-control mb-3" name = "comment" id = "comment-input" style = "height:100px;" placeholder = "comment_text"></textarea>
+                                <label for = "comment">Comment</label>
+                                <center><input type = "button" id = "comment-submit" class = "btn-info btn-lg" value = "Post comment"></center>
+                                </div>
+                {% endif %}
+                {% if auctionlisting in user.winlist.all %}
+                        <form action = "{% url "market:sendcontact" %}" method = "post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                                <h3>You winned that listing, write your e-mail below to contact with listing owner</h3>
+                                <input type = "hidden" value = {{auctionlisting.id}} name = "listing_id">
+                                <label for="exampleInputEmail1" class="form-label">Email address</label>
+                                <input type="email" class="form-control" name = "email" id="exampleInputEmail1" aria-describedby="emailHelp">
+                                <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                                <input type = "submit" class = "btn-access btn-lg" value = "Send">
+                        </div>
+                        </form>
+                        {% endif %}
+</div>
+{% endblock %}
