@@ -1,10 +1,12 @@
 import json
+import datetime
 from django.db.models import Max
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from django.utils import timezone
+from django.utils import timezone, dateformat
 
 from .models import AuctionListing, Comment, User, Bid, Category, Chat, Message
+
 
 class ListingConsumer(WebsocketConsumer):
     def connect(self):
@@ -28,7 +30,7 @@ class ListingConsumer(WebsocketConsumer):
     def new_comment(self, comment_text, listing):
         comment_text = comment_text.strip()
         if comment_text:
-            date = timezone.now()
+            date = timezone.localtime()
             comment = Comment.objects.create(listing = listing, user = self.user, date = date, text = comment_text)
             comment.save()
             async_to_sync(self.channel_layer.group_send)(
@@ -37,7 +39,7 @@ class ListingConsumer(WebsocketConsumer):
                     'type': 'post_new_comment',
                     'comment': f"{comment.text}",
                     'username': f"{comment.user.username}",
-                    'comment_date':f'{comment.date}'
+                    'comment_date':f'{dateformat.format(comment.date, "M d, h:i a")}'
                 }
             )       
 
