@@ -59,18 +59,24 @@
 	<input type = "button" class = "btn-primary btn-lg" value = "Show history" OnClick = "bidhistory();">
 	</div>
 	{% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
+		<div id = "new-bid-block">
 		<center>
 		<input type = "number" id = "newbid" name = "newbid" style = "height:2.4rem; width:9rem; font-size:30px;"
 		{% if bid is None %} min = {{auctionlisting.startBid}} max = 99999 value = {{auctionlisting.startBid}}
                 {% else %} min ={{bid.value}} max = 99999 value = {{bid.value}}
 		       {% endif %}><br><br>
-
 		<input class="btn btn-primary mb-3" id = "new-bid-submit" type = "button" value = "Make Bid!" style = "width:10rem; height:4rem; font-size:30px;">
+		</div>
+
 	{% elif not auctionlisting.active %}
-	<center><h3><strong>Last Price:</strong> {% if bid is None %} {{auctionlisting.startBid}}
+        <center><h3><strong>Last Price:</strong> {% if bid is None %} {{auctionlisting.startBid}}
                 {% else %} {{bid.value}} {% endif %} $</h3></center>
-	<center><h2><span class="badge bg-warning">Listing is Ended</span></h2></center>
-	{% endif %}
+        <center><h2><span class="badge bg-warning">Listing is Ended</span></h2></center>
+        {% endif %}
+	{% if auctionlisting in user.winlist.all %}
+	<center><h2><strong>You're the winner of that listing!</strong></h2></center>
+        {% endif %}
+
 	<div id = 'result'></div>
 	<script type = 'text/javascript'>
 		const listing_id = "{{auctionlisting.id}}"	
@@ -81,13 +87,21 @@
 			+ listing_id
 			+ '/'
 				);
+
+
 		$(function(){
                        listingSocket.onopen = function(e){				
                 $.ajax({
                         type:"GET",
 			url:"/market/api/"+listing_id+"/last_bid",
                         success:function(result){
+			if (result.value){
 				document.querySelector('#last-bid').value = result.value
+			}
+			else{
+				const lastBidInfo = JSON.parse(result.data)
+                                document.querySelector('#last-bid').value = lastBidInfo.value
+			}
                                         }
                                 });
                          };
@@ -117,7 +131,50 @@
 			+'</div>'
 			+'</div>';
 			document.querySelector('#comment-input').value = "";
-							}
+                                                        }
+			if (data.win_user_id){
+			document.querySelector('#new-bid-block').innerHTML = "";
+			document.querySelector('#end-listing-block').innerHTML = "<center><h1>ENDED</h1></center>"; 
+		 	const current_user_id = {{ user.id }}
+
+			if (current_user_id == data.win_user_id){
+			var winner_text = "<center><h2><strong>You're the winner of that listing!</strong></h2></center>";}
+			else{winner_text ="";}
+			$.ajax({
+				type:"GET",
+				url:"/market/api/"+listing_id+"/last_bid",
+				success:function(result){
+				if (result.value){
+					document.querySelector('#result').innerHTML = 
+					winner_text
+					+"<center><h3><strong>"
+					+ "Last Price: "
+					+ "</strong>"
+					+ result.value
+					+ "</h3></center>"
+					+ "<center><h2><span class = 'badge bg-warning'>"
+					+ "Listing is Ended"
+					+ "</span></h2></center>";
+					document.querySelector('#end-listing-block').innerHTML = "";	
+						}
+				else	{	
+					var last_bid_startbid = {{ auctionlisting.startBid }}
+					document.querySelector('#result').innerHTML = 
+                                        "<center><h3><strong>"
+                                        + "Last Price: "
+                                        + "</strong>"
+                                        + last_bid_startbid
+                                        + " $</h3></center>"
+                                        + "<center><h2><span class = 'badge bg-warning'>"
+                                        + "Listing is Ended"
+                                        + "</span></h2></center>";
+					document.querySelector('#end-listing-block').innerHTML = "";
+					
+						}
+					}
+				});
+			}
+
                                 };
 
 		listingSocket.onclose = function(e) {
@@ -167,8 +224,25 @@
                         });
                 });
 
+		$(function(){
+			$('#end-listing-submit').click(function(e){
+			const endlisting = 'end';
+			listingSocket.send(JSON.stringify({
+				'endlisting':endlisting,
+				'listing_id':listing_id,
+					}));
+			});
+		});
+
 
 	</script>
+
+	{% if user == auctionlisting.user and auctionlisting.active == True %}
+        <center id = "end-listing-block">
+                <input type = "button" id = "end-listing-submit" class = "btn-dark btn-lg" value = "End Listing">
+        </center>
+        {% endif %}
+
 		<div id = "all-comments" style = "text-align:left;">
 		{% for comment in comments %}
 		<div class = "card comment">
@@ -186,15 +260,6 @@
 		{% endfor %}
 		</div>
 	</fieldset>
-	{% if user == auctionlisting.user and auctionlisting.active == True %}
-        <center>
-        <form action = {% url "market:endlisting" %} method = "post" class = "p-3">
-        {% csrf_token %}
-                <input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
-                <input type = "submit" class = "btn-dark btn-lg" value = "End Listing">
-        </form>
-        </center>
-        {% endif %}
         {% if user == auctionlisting.user %}
         <form action = "{% url "market:removeListing" %}" method = "post" class = "add-category-left" style="z-index:1;">
         {% csrf_token %}
@@ -211,18 +276,6 @@
                                 <center><input type = "button" id = "comment-submit" class = "btn-info btn-lg" value = "Post comment"></center>
                                 </div>
                 {% endif %}
-                {% if auctionlisting in user.winlist.all %}
-                        <form action = "{% url "market:sendcontact" %}" method = "post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                                <h3>You winned that listing, write your e-mail below to contact with listing owner</h3>
-                                <input type = "hidden" value = {{auctionlisting.id}} name = "listing_id">
-                                <label for="exampleInputEmail1" class="form-label">Email address</label>
-                                <input type="email" class="form-control" name = "email" id="exampleInputEmail1" aria-describedby="emailHelp">
-                                <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
-                                <input type = "submit" class = "btn-access btn-lg" value = "Send">
-                        </div>
-                        </form>
-                        {% endif %}
+
 </div>
 {% endblock %}
