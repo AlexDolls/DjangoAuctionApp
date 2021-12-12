@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.http import HttpResponseRedirect, HttpResponse
@@ -23,13 +24,18 @@ from .serializers import BidSerializer
 class GetListingBidInfoView(APIView):
     def get(self, request, listing_id):
         listing = get_object_or_404(AuctionListing, pk=listing_id)
-        last_bid = Bid.objects.filter(listing=listing).order_by('-value')[0]
-        queryset = last_bid
-        serializer_for_queryset = BidSerializer(
-        instance = queryset,
-        many = False
-                )
-        return Response(serializer_for_queryset.data)
+        bids = Bid.objects.filter(listing=listing)
+        if not bids:
+            pass
+        else:
+            last_bid = Bid.objects.filter(listing=listing).order_by('-value')[0]
+            queryset = last_bid
+            serializer_for_queryset = BidSerializer(
+            instance = queryset,
+            many = False
+                    )
+            return Response(serializer_for_queryset.data)
+        return Response(json.dumps({'value':'No bids yet :)'}))
 
 class IndexView(generic.ListView):
     template_name = 'market/index.html'
@@ -264,7 +270,7 @@ def endlisting(request):
                 win_user.winlist.add(listing)
                 new_chat = Chat.objects.create()
                 new_chat.members.add(win_user, listing.user)
-                new_message_text = f"Hi, you won my listing at link {reverse('market:details', kwargs = {'listing_id':listing.id})}"
+                new_message_text = f"Hi, you won my listing at link http://127.0.0.1:8000{reverse('market:details', kwargs = {'listing_id':listing.id})}"
                 new_message = Message.objects.create(chat = new_chat, sender_id = listing.user.id, text = new_message_text)
                 messages.warning(request, f"{last_bid.user.username}")
                 return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":listing.id}))
