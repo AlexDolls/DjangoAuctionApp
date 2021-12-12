@@ -1,4 +1,5 @@
 import json
+from django.urls import reverse
 import datetime
 from django.db.models import Max
 from asgiref.sync import async_to_sync
@@ -19,7 +20,6 @@ class ListingConsumer(WebsocketConsumer):
             self.channel_name
             )
         self.accept()
-
 
     def disconnect(self, close_code):
         #Leave room group
@@ -43,9 +43,38 @@ class ListingConsumer(WebsocketConsumer):
                 }
             )       
 
+    def end_listing(self, listing):
+        if self.user == listing.user:
+            listing.active = False
+            listing.save()
+            """Define winner"""
+            bids = Bid.objects.filter(listing=listing)
+            if not bids:
+                redirect('market:details', listing_id = listing.id)
+            else:
+                last_bid = bids.order_by('-value')[0]
+                win_user = last_bid.user
+                win_user.winlist.add(listing)
+                new_message_text = f"Hi, you won my listing at link http://127.0.0.1:8000{reverse('market:details', kwargs = {'listing_id':listing.id})}"
+                try:
+                    chat = Chat.objects.filter(members = win_user).get(members = listing.user)
+                except Chat.DoesNotExist:
+                    chat = Chat.objects.create()
+                    chat.members.add(win_user, listing.user)
+
+                new_message = Message.objects.create(chat=chat, sender_id = listing.user.id, text = new_message_text)
+            
+                async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,
+                {
+                'type': 'listing_winner',
+                'win_user_id': f"{win_user.id}"
+                }
+            )
+
+
     #Receive message from WebSocket
     def receive(self, text_data):
-
         text_data_json = json.loads(text_data)
         try:
             listing = AuctionListing.objects.get(pk = int(text_data_json['listing_id']))
@@ -61,6 +90,13 @@ class ListingConsumer(WebsocketConsumer):
         else:
             print("letsgo")
             self.new_comment(comment_text, listing)
+
+        try:
+            endlisting  = text_data_json['endlisting']
+        except KeyError:
+            pass
+        else:
+            self.end_listing(listing)
 
         try:
             new_bid = float(text_data_json['newbid'])
@@ -83,17 +119,18 @@ class ListingConsumer(WebsocketConsumer):
                     async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
             {
-                'type': 'chat_message',
+                'type': 'new_bid_listing',
                 'new_bid_set': f"{new_bid_object.value}"
             }
         )
                 else:
                     pass
     
-    def chat_message(self, event):
+    def new_bid_listing(self, event):
         new_bid_set = event['new_bid_set']
 
         # Send message to WebSocket
+
         self.send(text_data=json.dumps({
             'new_bid_set': new_bid_set,
         }))
@@ -109,3 +146,11 @@ class ListingConsumer(WebsocketConsumer):
             'username':username,
             'comment_date':comment_date,
                 }))
+
+    def listing_winner(self,event):
+        win_user_id = event['win_user_id']
+
+        #Send message to WebSocket
+        self.send(text_data = json.dumps({
+            'win_user_id':win_user_id,
+            }))
