@@ -1,9 +1,11 @@
 {% extends "market/layout.html" %}
 
 {% block body %}
+
 	<div class = "chat-body">
 		<h3 class = "p-3" style = "color:white;"><strong>{% if user.username == chat.members.all.0.username %}{{ chat.members.all.1.username }}{% else %}{{ chat.members.all.0.username }}{% endif %}</strong></h3>
 	<div class = "container chat-window">
+	<div id = 'messages-field'>
 	{% for message in messages %}
 	{% if user.id == message.sender_id %}
 	<div class="chat-message" style = "text-align:right; background-color:rgba(0, 64, 255, 0.8);">{{ message.text }}</div>
@@ -11,11 +13,70 @@
 	 <div class="chat-message" style = "text-align:left; background-color:rgba(255, 255, 255, 0.8);">{{ message.text }}</div>
 	{% endif %}
 	{% endfor %}
-	<form action = "{% url 'market:chat' chat.id %}" method = "post" class = "p-3" style = "text-align:right;">
-	{% csrf_token %}
-	<input type = "text" name = "text" id = "text" placeholder = "Message text"><br><br>
-	<input type = "submit" value = "Send message" class = "btn-primary btn-lg">
-	</form>
+	</div>
+
+	<input type = "text" id = "message-input" placeholder = "Message text"><br><br>
+	<input type = "button" id = "message-submit" value = "Send message" class = "btn-primary btn-lg">
+	<div id = "messageresult"></div>
 	</div>
 	</div>
+{% endblock %}
+{% block chat_script %}
+<script type = 'text/javascript'>      
+                chatSocket = new WebSocket(
+                        'ws://'
+                        + window.location.host
+                        + '/ws/market/'
+                        +'inbox'
+                        +'/'
+                                );
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+	    if (data.message){
+		if (data.send_self){
+		document.querySelector('#messages-field').innerHTML += 
+					'<div class="chat-message"'
+					+'style = "text-align:right;'
+					+'background-color:rgba(0, 64, 255, 0.8);">'
+					+data.message
+					+'</div>';
+			}
+		else{
+            	document.querySelector('#messages-field').innerHTML += 
+                                        '<div class="chat-message"'
+                                        +'style = "text-align:left;'
+                                        +'background-color:rgba(255, 255, 255, 0.8);">'
+                                        +data.message
+                                        +'</div>';
+
+		}
+
+		}
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        document.querySelector('#message-input').focus();
+        document.querySelector('#message-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#message-submit').click();
+            }   
+        };
+
+        document.querySelector('#message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#message-input');
+            const message = messageInputDom.value;
+            const sender_id = '{{ user.id }}';
+            const chat_id = '{{ chat.id }}';
+            chatSocket.send(JSON.stringify({
+                'new_message_text': message,
+                'sender_id':sender_id,
+                'chat_id':chat_id,
+                'new_chat':'',
+            }));
+            messageInputDom.value = '';
+        };
+        </script>
 {% endblock %}
