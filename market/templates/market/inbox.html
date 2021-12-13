@@ -1,20 +1,65 @@
 {% extends "market/layout.html" %}
 
 {% block body%}
-
 <div class = "detail-parasha">
-{% for chat in chats %}
-	<h3>
-	<span class = "badge rounded-pill bg-light text-dark mb-2" style = "color:white;">
-	<a href = "{% url "market:chat" chat.id %}">
-		{% if user.username in chat.members.all.0.username %}
-		{{ chat.members.all.1.username }}
-		{% else %}
-		{{ chat.members.all.0.username }}
-		{% endif %}
-	</a>
-	</span>
-	</h3>
-{% endfor %}
+<div class="container">
+  <div class = "row">
+	  <h1><strong> Chats </strong></h1>
+	  <hr>
+  </div>
+  <div class="row">
+    <div class="col">
+	{% for chat in chats %}
+        <h3>
+        <span class = "badge rounded-pill bg-light text-dark mb-2" style = "color:white;">
+        <a href = "{% url "market:chat" chat.id %}">
+                {% if user.id == chat.members.all.0.id %}
+                {{ chat.members.all.1.username }}
+                {% else %}
+                {{ chat.members.all.0.username }}
+                {% endif %}
+        </a>
+        </span>
+        </h3>
+	{% endfor %}
+    </div>
+    <div class="col">
+	    <h2>Start Chat with:</h2>
+	    <form action = "{% url 'market:inbox' %}" method = "post">
+	    {% csrf_token %}
+	    <div id = "user-list">
+		{% for item in site_users %}
+		<div class="form-check">
+			<input class="form-check-input" type="radio" name="user_id" id="flexRadioDefault{{item.id}}" value = '{{item.id}}'>
+		<label class="form-check-label" for="flexRadioDefault{{item.id}}">
+			{{ item.username }}
+                </label>
+		</div>
+		{% endfor %}
+		<input type = 'submit' class = "btn-primary btn-lg" value = "Start!">
+	    </div>
+	    </form>
+    </div>
+  </div>
 </div>
+</div>
+{% endblock %}
+
+{% block chat_script %}
+     	<script type = 'text/javascript'>      
+                chatSocket = new WebSocket(
+                        'ws://'
+                        + window.location.host
+                        + '/ws/market/'
+                        +'inbox'
+                        +'/'
+                                );
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+                if (data.message){
+                document.querySelector('#inbox-message').innerHTML = data.user_inbox;
+                }
+        };
+        </script>
+
 {% endblock %}
