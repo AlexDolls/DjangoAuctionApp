@@ -7,6 +7,7 @@ class User(AbstractUser):
     watchlist = models.ManyToManyField('AuctionListing', blank = True, related_name = 'userWatchList')
     category = models.ManyToManyField('Category', blank = True, related_name = "userCategories")
     winlist = models.ManyToManyField('AuctionListing', blank = True, related_name = "userWinListings")
+    inbox = models.IntegerField(default = 0)
 
 class Chat(models.Model):
     members = models.ManyToManyField("User", blank=True, related_name = "userChat")
