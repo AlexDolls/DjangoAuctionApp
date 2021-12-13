@@ -333,9 +333,37 @@ def winlistings(request):
 @login_required
 def inbox(request):
     user = request.user
+    if request.method == "POST":
+        try:
+            choosen_user = User.objects.get(pk = int(request.POST['user_id']))
+        except (KeyError, User.DoesNotExist, ValueError):
+            messages.warning(request, "User not found :(")
+            return HttpResponseRedirect(reverse("market:inbox"))
+        else:
+            check_chat = Chat.objects.filter(members = user.id).filter(members=choosen_user.id)
+            if not check_chat:
+                new_chat = Chat.objects.create()
+                new_chat.members.add(user, choosen_user)
+                new_chat.save()
+                return HttpResponseRedirect(reverse("market:chat", kwargs = {'chat_id':new_chat.id}))
+            messages.warning(request, "Chat exist :(")
+            return HttpResponseRedirect(reverse("market:inbox"))
+        
     chats = Chat.objects.filter(members=user)
+    user.inbox = 0
+    user.save()
+    all_users = User.objects.all().exclude(pk = user.id)
+    current_user_chats = Chat.objects.filter(members = user.id)
+
+    for chat in current_user_chats:
+        if chat.members.all()[0].id == user.id:
+            all_users = all_users.exclude(pk = chat.members.all()[1].id)
+        else:
+            all_users = all_users.exclude(pk = chat.members.all()[0].id)
+     
     return render(request, "market/inbox.html", {
     "chats":chats,
+    "site_users":all_users,
         })
 
 @login_required
@@ -357,6 +385,8 @@ def chat(request, chat_id):
                     return HttpResponseRedirect(reverse("market:chat", kwargs = {"chat_id" : chat.id}))
             else:
                 messages = Message.objects.filter(chat = chat)
+                user.inbox = 0
+                user.save()
                 return render(request, "market/chat.html", {
                 "messages":messages,
                 "chat":chat,
