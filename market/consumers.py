@@ -154,3 +154,74 @@ class ListingConsumer(WebsocketConsumer):
         self.send(text_data = json.dumps({
             'win_user_id':win_user_id,
             }))
+
+class ChatConsumer(WebsocketConsumer):
+    def connect(self):
+        print("HELLO")
+        self.user = self.scope['user']
+        self.room_group_name = f'chat_{self.user.id}'
+        print(f"{self.room_group_name} --- {self.user.username} --- {self.user.id}")
+
+        # Join room group
+        async_to_sync(self.channel_layer.group_add)(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        self.accept()
+
+    def disconnect(self, close_code):
+        # Leave room group
+        async_to_sync(self.channel_layer.group_discard)(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    # Receive message from WebSocket
+    def new_message_chat_exist(self, chat, sender, message_text):
+        message = Message.objects.create(text = message_text, sender_id = sender.id, chat = chat)
+        message.save()
+        chat_members = chat.members.all()
+        receiver = chat.members.exclude(username=f'{sender.username}').first()
+        receiver.inbox += 1
+        receiver.save()
+        async_to_sync(self.channel_layer.group_send)(
+            f'chat_{receiver.id}',
+            {
+                'type': 'chat_message',
+                'message': message.text,
+                'user_inbox': receiver.inbox,
+            }
+        )
+        print("GOOOOOOOOOOOOOOOOOOOOOOO")
+        self.send(text_data = json.dumps(
+                {
+                    'message':message.text,
+                    'send_self':'yes',
+                    }))
+
+    def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        if text_data_json['new_chat']:
+            pass
+        else:
+            try:
+                chat = Chat.objects.get(pk = int(text_data_json['chat_id']))
+                message_text = text_data_json['new_message_text']
+                sender = User.objects.get(pk = int(text_data_json['sender_id']))
+            except (KeyError, Chat.DoesNotExist, User.DoesNotExist):
+                pass
+            else:
+                self.new_message_chat_exist(chat, sender, message_text)
+
+
+    # Receive message from room group
+    def chat_message(self, event):
+        message = event['message']
+        user_inbox = event['user_inbox']
+
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'message': message,
+            'user_inbox': user_inbox,
+        }))
