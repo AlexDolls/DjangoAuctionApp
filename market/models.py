@@ -16,6 +16,7 @@ class Message(models.Model):
     text = models.CharField(max_length = 100)
     sender_id = models.IntegerField()
     chat = models.ForeignKey("Chat", on_delete=models.CASCADE)
+    unread = models.BooleanField(default = True)
 
 class Category(models.Model):
     name = models.CharField(max_length = 32)
