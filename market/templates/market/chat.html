@@ -1,25 +1,30 @@
 {% extends "market/layout.html" %}
 
 {% block body %}
+<h3 class = "p-3" style = "color:white;"><strong>{% if user.username == chat.members.all.0.username %}{{ chat.members.all.1.username }}{% else %}{{ chat.members.all.0.username }}{% endif %}</strong></h3>	
 
-	<div class = "chat-body">
-		<h3 class = "p-3" style = "color:white;"><strong>{% if user.username == chat.members.all.0.username %}{{ chat.members.all.1.username }}{% else %}{{ chat.members.all.0.username }}{% endif %}</strong></h3>
-	<div class = "container chat-window">
 	<div id = 'messages-field'>
 	{% for message in messages %}
 	{% if user.id == message.sender_id %}
-	<div class="chat-message" style = "text-align:right; background-color:rgba(0, 64, 255, 0.8);">{{ message.text }}</div>
+	<div class="container-for-chat darker">
+        <img src="https://i.pinimg.com/originals/e2/42/9a/e2429ab30c83e3935da91d0be1e42282.png" alt="Avatar" class="right">
+	<p>{{message.text}}</p>
+        </div>
+
 	{% else %}
-	 <div class="chat-message" style = "text-align:left; background-color:rgba(255, 255, 255, 0.8);">{{ message.text }}</div>
+	 <div class="container-for-chat">
+        <img src="https://cdnb.artstation.com/p/users/avatars/001/826/401/large/b6ed840673e6785a694e47f83aacc589.jpg?1584628467" alt="Avatar">
+	<p>{{message.text}}</p>
+        </div>
 	{% endif %}
 	{% endfor %}
 	</div>
-
-	<input type = "text" id = "message-input" placeholder = "Message text"><br><br>
+	<div class="form-floating" style:'text-aling:right;'>
+	<textarea class = "form-control" id = "message-input" placeholder = "Message text" style = "height: 100px; width:50%;"></textarea><br><br>
+	<label for="floatingTextarea2">Message Text</label>
+	</div>
 	<input type = "button" id = "message-submit" value = "Send message" class = "btn-primary btn-lg">
-	<div id = "messageresult"></div>
-	</div>
-	</div>
+
 {% endblock %}
 {% block chat_script %}
 <script type = 'text/javascript'>      
@@ -34,20 +39,22 @@
             const data = JSON.parse(e.data);
 	    if (data.message){
 		if (data.send_self){
-		document.querySelector('#messages-field').innerHTML += 
-					'<div class="chat-message"'
-					+'style = "text-align:right;'
-					+'background-color:rgba(0, 64, 255, 0.8);">'
-					+data.message
-					+'</div>';
+		document.querySelector('#messages-field').innerHTML +='<div class="container-for-chat darker">'
+        							+'<img src="https://i.pinimg.com/originals/e2/42/9a/e2429ab30c83e3935da91d0be1e42282.png" alt="Avatar" class="right">'
+        							+'<p>'
+								+data.message
+								+'</p>'
+								+'</div>';
 			}
 		else{
-            	document.querySelector('#messages-field').innerHTML += 
-                                        '<div class="chat-message"'
-                                        +'style = "text-align:left;'
-                                        +'background-color:rgba(255, 255, 255, 0.8);">'
-                                        +data.message
-                                        +'</div>';
+            	document.querySelector('#messages-field').innerHTML += '<div class="container-for-chat">'
+                                                                +'<img src="https://cdnb.artstation.com/p/users/avatars/001/826/401/large/b6ed840673e6785a694e47f83aacc589.jpg?1584628467" alt="Avatar">'
+                                                                +'<p>'
+                                                                +data.message
+                                                                +'</p>'
+                                                                +'</div>';
+ 
+
 
 		}
 
