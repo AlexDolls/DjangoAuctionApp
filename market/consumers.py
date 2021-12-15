@@ -1,7 +1,7 @@
 import json
 from django.urls import reverse
 import datetime
-from django.db.models import Max
+from django.db.models import Max, Sum
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.utils import timezone, dateformat
@@ -182,9 +182,17 @@ class ChatConsumer(WebsocketConsumer):
         message = Message.objects.create(text = message_text, sender_id = sender.id, chat = chat)
         message.save()
         chat_members = chat.members.all()
-        receiver = chat.members.exclude(username=f'{sender.username}').first()
-        receiver.inbox += 1
+        receiver = chat.members.exclude(id=sender.id).first()
+        unread_messages_all = 0
+        
+        for chat_item in Chat.objects.filter(members=receiver):
+            for message_item in chat_item.message_set.filter(sender_id = sender.id):
+                if message_item.unread: #BooleanField 'unread' in Message
+                    unread_messages_all += 1
+
+        receiver.inbox = unread_messages_all
         receiver.save()
+
         async_to_sync(self.channel_layer.group_send)(
             f'chat_{receiver.id}',
             {
@@ -193,7 +201,6 @@ class ChatConsumer(WebsocketConsumer):
                 'user_inbox': receiver.inbox,
             }
         )
-        print("GOOOOOOOOOOOOOOOOOOOOOOO")
         self.send(text_data = json.dumps(
                 {
                     'message':message.text,
