@@ -5,7 +5,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.views import generic
 from django.db import IntegrityError
-from django.db.models import Max
+from django.db.models import Max, Sum
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -346,12 +346,11 @@ def inbox(request):
                 new_chat.members.add(user, choosen_user)
                 new_chat.save()
                 return HttpResponseRedirect(reverse("market:chat", kwargs = {'chat_id':new_chat.id}))
-            messages.warning(request, "Chat exist :(")
-            return HttpResponseRedirect(reverse("market:inbox"))
+            else:
+                messages.warning(request, "Chat exist :(")
+                return HttpResponseRedirect(reverse("market:inbox"))
         
     chats = Chat.objects.filter(members=user)
-    user.inbox = 0
-    user.save()
     all_users = User.objects.all().exclude(pk = user.id)
     current_user_chats = Chat.objects.filter(members = user.id)
 
@@ -385,7 +384,16 @@ def chat(request, chat_id):
                     return HttpResponseRedirect(reverse("market:chat", kwargs = {"chat_id" : chat.id}))
             else:
                 messages = Message.objects.filter(chat = chat)
-                user.inbox = 0
+                unread_messages_all = 0
+                for chat_item in Chat.objects.filter(members=user):
+                    for message_item in chat_item.message_set.exclude(sender_id = user.id):
+                        if chat_item == chat:
+                            message_item.unread = False
+                            message_item.save()
+                        if message_item.unread: #BooleanField 'unread' in Message
+                            unread_messages_all += 1
+
+                user.inbox = unread_messages_all
                 user.save()
                 return render(request, "market/chat.html", {
                 "messages":messages,
