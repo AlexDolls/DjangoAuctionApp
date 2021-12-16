@@ -77,6 +77,16 @@ WSGI_APPLICATION = 'auctsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+"""USE IT ONLY FOR TEST. NOT IN PRODCTION"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -87,6 +97,7 @@ DATABASES = {
         'PORT':'5432',
     }
 }
+"""
 
 AUTH_USER_MODEL = 'market.User'
 
@@ -135,6 +146,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ASGI_APPLICATION = 'auctsite.asgi.application'
 
+
+"""USE IT JUST FOR TEST. NOT IN PRODUCTION"""
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
+"""
 CHANNEL_LAYERS = {
     'default':{
         'BACKEND':'channels_redis.core.RedisChannelLayer',
@@ -143,3 +163,4 @@ CHANNEL_LAYERS = {
         },
     },
 }
+"""
