@@ -1,0 +1,18 @@
+{% extends 'market/layout.html' %}
+{% block body %}
+<div class = "detail-page">
+<form class = "form-avatar-upload" method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+   {{ form.as_p }}
+  <button type="submit">Upload</button>
+</form>
+
+{% if user_obj.avatar %}
+<h3>Succesfully uploaded avatar for {{ user_obj.username }}</h3>
+<div class = "user-avatar" style="background-image: url({{ user_obj.avatar.url}});" alt="connect">
+{% else %}
+<h3>Avatar wasn't set for {{ user_obj.username }}</h3>
+<div class = "user-avatar" style="background-image: url(https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg);" alt="connect">
+{% endif %}
+</div>
+{% endblock %}
