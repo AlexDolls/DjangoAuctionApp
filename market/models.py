@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 # Create your models here.
 
@@ -8,6 +9,7 @@ class User(AbstractUser):
     category = models.ManyToManyField('Category', blank = True, related_name = "userCategories")
     winlist = models.ManyToManyField('AuctionListing', blank = True, related_name = "userWinListings")
     inbox = models.IntegerField(default = 0)
+    avatar = models.ImageField(upload_to="images", blank=True)
 
 class Chat(models.Model):
     members = models.ManyToManyField("User", blank=True, related_name = "userChat")
@@ -17,6 +19,7 @@ class Message(models.Model):
     sender_id = models.IntegerField()
     chat = models.ForeignKey("Chat", on_delete=models.CASCADE)
     unread = models.BooleanField(default = True)
+    date = models.DateTimeField(default = timezone.now())
 
 class Category(models.Model):
     name = models.CharField(max_length = 32)
