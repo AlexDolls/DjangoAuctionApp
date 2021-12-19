@@ -18,6 +18,7 @@ import datetime
 
 from .models import AuctionListing, Comment, User, Bid, Category, Chat, Message
 from .serializers import BidSerializer
+from .forms import UserAvatarForm
 
 # Create your views here.
 
@@ -251,7 +252,7 @@ def mylistings(request):
     return render(request, "market/index.html", {
         "active_listing_list":AuctionListing.objects.filter(user = user),
         "mylistings":"My Listings",})
-
+"""
 @login_required
 def endlisting(request):
     user = request.user
@@ -260,7 +261,7 @@ def endlisting(request):
         if user == listing.user:
             listing.active = False
             listing.save()
-            """Define Winner"""
+            #Define winner
             bids = Bid.objects.filter(listing=listing)
             if bids is None:
                 return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":listing.id}))
@@ -274,7 +275,7 @@ def endlisting(request):
                 new_message = Message.objects.create(chat = new_chat, sender_id = listing.user.id, text = new_message_text)
                 messages.warning(request, f"{last_bid.user.username}")
                 return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":listing.id}))
-
+"""
 def active_listing(request):
     return render(request, "market/index.html", {
         "active_listing_list":AuctionListing.objects.filter(active=True)})
@@ -374,31 +375,22 @@ def chat(request, chat_id):
         return HttpResponseRedirect(reverse("market:inbox"))
     else:
         if user in chat.members.all():
-            if request.method == "POST":
-                try:
-                    message_text = request.POST["text"]
-                except KeyError:
-                    return HttpResponseRedirect(reverse("market:chat", kwargs = {"chat_id":chat.id}))
-                else:
-                    send_message = Message.objects.create(chat = chat, sender_id = user.id, text = message_text)
-                    return HttpResponseRedirect(reverse("market:chat", kwargs = {"chat_id" : chat.id}))
-            else:
-                messages = Message.objects.filter(chat = chat)
-                unread_messages_all = 0
-                for chat_item in Chat.objects.filter(members=user):
-                    for message_item in chat_item.message_set.exclude(sender_id = user.id):
-                        if chat_item == chat:
-                            message_item.unread = False
-                            message_item.save()
-                        if message_item.unread: #BooleanField 'unread' in Message
-                            unread_messages_all += 1
+            messages = Message.objects.filter(chat = chat).order_by('date')
+            unread_messages_all = 0
+            for chat_item in Chat.objects.filter(members=user):
+                for message_item in chat_item.message_set.exclude(sender_id = user.id):
+                    if chat_item == chat:
+                        message_item.unread = False
+                        message_item.save()
+                    if message_item.unread: #BooleanField 'unread' in Message
+                        unread_messages_all += 1
 
-                user.inbox = unread_messages_all
-                user.save()
-                return render(request, "market/chat.html", {
-                "messages":messages,
-                "chat":chat,
-                    })
+            user.inbox = unread_messages_all
+            user.save()
+            return render(request, "market/chat.html", {
+            "messages":messages,
+            "chat":chat,
+                })
         else:
             return HttpResponseRedirect(reverse("market:inbox"))
 
@@ -415,3 +407,21 @@ def mybids(request):
         "active_listing_list":listings,
             })
     return HttpResponseRedirect(reverse("market:index"))
+
+@login_required
+def add_user_avatar(request, user_id):
+    user_instance = get_object_or_404(User, id=user_id)
+    if request.user == user_instance:
+        if request.method == "POST":
+            form = UserAvatarForm(request.POST ,request.FILES, instance = user_instance)
+            if form.is_valid():
+                form.save()
+                user_obj = form.instance
+                return render(request, 'market/usercabinet.html', {"form":form, "user_obj":user_obj})
+
+        else:
+            form = UserAvatarForm(instance=user_instance)    
+        return render(request, 'market/usercabinet.html', {'form':form, "user_obj":user_instance})
+    else:
+        return render(request, "market/index.html")
+
