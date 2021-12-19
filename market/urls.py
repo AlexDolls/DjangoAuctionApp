@@ -15,7 +15,6 @@ urlpatterns = [
             path('create/', views.createListing, name = 'createListing'),
             path('<int:listing_id>/edit/',views.editListing, name = 'editListing'),
             path('remove/',views.removeListing, name = 'removeListing'),
-            path('endlisting/',views.endlisting, name = 'endlisting'),
             path('watchlist/',views.watchlist, name = 'watchlist'),
             path('mylistings/',views.mylistings, name = 'mylistings'),
             path('sendcontact/',views.sendcontact, name = 'sendcontact'),
@@ -25,6 +24,7 @@ urlpatterns = [
             path('chat/<int:chat_id>',views.chat, name = 'chat'),
             path('logout/', views.logout_view, name = 'logout'),
             path('login/', views.login_view, name = 'login'),
+            path('user/<int:user_id>', views.add_user_avatar, name = "add_user_avatar"),
             path('signup/', views.signup, name = 'signup'),
             path('api/<int:listing_id>/last_bid', views.GetListingBidInfoView.as_view()),
         ]
