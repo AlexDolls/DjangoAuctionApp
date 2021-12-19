@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import os
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -92,7 +94,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME':'django_db',
         'USER':'alexdolls',
-        'PASSWORD':'12sanek12',
+        'PASSWORD':'strongpassword',
         'HOST': '127.0.0.1',
         'PORT':'5432',
     }
@@ -164,3 +166,9 @@ CHANNEL_LAYERS = {
     },
 }
 """
+
+#Main url for manage media
+MEDIA_URL = '/media/'
+
+#Path to store media files
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
