@@ -28,59 +28,48 @@ body {
 		</button>
 		<div class = "collapse navbar-collapse" id = "navbarSupportedContent">
 			<ul class = "navbar-nav me-auto mb-2 mb-lg-0">
-				<li class = "nav-item">
-                                        <a class = "nav-link" href = "{% url 'market:index' %}">
-                                                All
-                                        </a>
-                                </li>
 
-				<li class = "nav-item">
-					<a class = "nav-link" href = "{% url 'market:active' %}">
-						Active Listings
-					</a>
-				</li>
-				<li class = "nav-item">
-					<a class = "nav-link" href = "{% url 'market:categories' %}">
-						Categories
-					</a>
-				</li>
-				{% if user.bid_set.all %}
-				<li class = "nav-item">
-                                        <a class = "nav-link" href = "{% url 'market:mybids' %}">
-                                                My Bids
-                                        </a>
-                                </li>
-				{% endif %}
-				{% if user.is_authenticated and user.winlist.all %}
-				<li class = "nav-item">
-                                        <a class = "nav-link" href = "{% url 'market:winlist' %}">
-                                                Won<span class="badge rounded-pill bg-danger">{{ user.winlist.all.count }}</span>
-                                        </a>
-                                </li>
-				{% endif %}
+				<div class="dropdown" style = "margin-top:15px;">
+
+				<a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Listings
+          </a>
+
+  <ul class="dropdown-menu p-3" aria-labelledby="dropdownMenuButton1" style = "margin-top:-5px;">
+	<a class="dropdown-item" href="{% url 'market:index' %}">All</a>
+                                          <a class="dropdown-item" href="{% url 'market:active' %}">Active Listings</a>
+                                          <a class="dropdown-item" href="{% url 'market:categories' %}">By Categories</a>
+                                          <div class="dropdown-divider"></div>
+                                          {% if user.bid_set.all %}
+                                          <a class="dropdown-item" href="{% url 'market:mybids' %}">My Bids</a>
+                                          {% endif %}
+                                          {% if user.is_authenticated and user.winlist.all %}
+                                          <a class="dropdown-item" href="{% url 'market:winlist' %}">Won<span class="badge rounded-pill bg-danger">{{ user.winlist.all.count }}</span></a>
+                                          {% endif %}
+					  {% if user.auctionlisting_set.all %}
+					  <a class = "nav-link" href = "{% url 'market:mylistings' %}">My Listings</a>
+					  {% endif %}
+  </ul>
+</div>
+
 				{% if user.is_authenticated %}
-				<li class = "nav-item">
+				<li class = "nav-item" style = "margin-top:15px;">
                                         <a class = "nav-link" href = "{% url 'market:inbox' %}">
 						<strong>Inbox</strong>
 						<span id = "inbox-message" class="badge rounded-pill bg-danger">{{user.inbox}}</span>
                                         </a>
                                 </li>
 
-				<li class = "nav-item">
+				<li class = "nav-item" style = "margin-top:15px;">
 					<a class = "nav-link" href = "{% url 'market:watchlist' %}">
 						Watchlist <span class="badge rounded-pill bg-danger">{{ user.watchlist.all.count }}</span>
 					</a>
                                 </li>
-				<li class = "nav-item">
+				<li class = "nav-item" style = "margin-top:15px;">
 					<a class = "nav-link" href = "{% url 'market:createListing' %}">Create Listing</a>
                                 </li>
-				{% if user.auctionlisting_set.all %}	
-				<li class = "nav-item">
-                                        <a class = "nav-link" href = "{% url 'market:mylistings' %}">My Listings</a>
-                                </li>
-				{% endif %}
 
-				<li class = "nav-item">
+				<li class = "nav-item" style = "margin-top:15px;">
                                         <a class = "nav-link" href = "#">
 						{% if user.is_authenticated %}
 						Signed in as <strong>{{ user.username }}</strong>
@@ -99,16 +88,16 @@ body {
 
                                 </li>
 				{% endif %}
-				<li class = "nav-item">
+				<li class = "nav-item" style = "margin-top:15px;">
 					<a class = "nav-link" href = "{% url 'market:logout' %}">
 						Log out
 					</a>
                                 </li>
 				{% else %}
-				<li class = "nav-item">
+				<li class = "nav-item" style = "margin-top:5px;">
 					<a class = "nav-link" href = "{% url 'market:login' %}">Log in</a>
                                 </li>
-				<li class = "nav-item">
+				<li class = "nav-item" style = "margin-top:5px;">		
 					<a class = "nav-link" href = "{% url 'market:signup' %}">Sign Up</a>
                                 </li>
 				{% endif %}
