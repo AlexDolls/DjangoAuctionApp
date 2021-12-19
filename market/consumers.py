@@ -179,7 +179,8 @@ class ChatConsumer(WebsocketConsumer):
 
     # Receive message from WebSocket
     def new_message_chat_exist(self, chat, sender, message_text):
-        message = Message.objects.create(text = message_text, sender_id = sender.id, chat = chat)
+        date = timezone.localtime()
+        message = Message.objects.create(text = message_text, sender_id = sender.id, chat = chat, date = date)
         message.save()
         chat_members = chat.members.all()
         receiver = chat.members.exclude(id=sender.id).first()
@@ -199,11 +200,13 @@ class ChatConsumer(WebsocketConsumer):
                 'type': 'chat_message',
                 'message': message.text,
                 'user_inbox': receiver.inbox,
+                'message_date':f'{dateformat.format(message.date, "M d, h:i a")}'
             }
         )
         self.send(text_data = json.dumps(
                 {
                     'message':message.text,
+                    'message_date':f'{dateformat.format(message.date, "M d, h:i a")}',
                     'send_self':'yes',
                     }))
 
@@ -226,9 +229,11 @@ class ChatConsumer(WebsocketConsumer):
     def chat_message(self, event):
         message = event['message']
         user_inbox = event['user_inbox']
+        message_date = event['message_date']
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({
             'message': message,
             'user_inbox': user_inbox,
+            'message_date':message_date,
         }))

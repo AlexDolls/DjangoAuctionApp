@@ -51,7 +51,7 @@ body {
                                         </a>
                                 </li>
 				{% endif %}
-				{% if user.is_authenticated and auctionlisting in user.winlist.all %}
+				{% if user.is_authenticated and user.winlist.all %}
 				<li class = "nav-item">
                                         <a class = "nav-link" href = "{% url 'market:winlist' %}">
                                                 Won<span class="badge rounded-pill bg-danger">{{ user.winlist.all.count }}</span>
@@ -89,6 +89,16 @@ body {
 						{% endif %}
 					</a>
                                 </li>
+				{% if user.is_authenticated %}
+				<li class = "nav-item">
+						{% if user.avatar %}
+						<a class = "nav-link" href = "{% url 'market:add_user_avatar' user.id %}"><div class = "user-avatar" style = "background-image: url({{ user.avatar.url }});"></div></a>
+						{% else %}
+						<a class = "nav-link" href = "{% url 'market:add_user_avatar' user.id %}"><div class = "user-avatar" style = "background-image: url(https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg);"></div></a>
+						{% endif %}
+
+                                </li>
+				{% endif %}
 				<li class = "nav-item">
 					<a class = "nav-link" href = "{% url 'market:logout' %}">
 						Log out
