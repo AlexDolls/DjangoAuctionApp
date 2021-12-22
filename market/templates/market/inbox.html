@@ -67,7 +67,6 @@
 	
 	var sum_chat_unread = 0;
         {% for chat_item in chats %}
-                console.error('Listing');
                 {% for message_item in chat_item.message_set.all %}
                         {% if message_item.sender_id != user.id and message_item.unread%}
                                 sum_chat_unread += 1;
