@@ -78,6 +78,16 @@
         {% endif %}
 
 	<div id = 'result'></div>
+
+{% if user == auctionlisting.user and auctionlisting.active == True %}
+		<div id = "end-listing-block">
+		<center>
+                <input type = "button" id = "end-listing-submit" class = "btn-dark btn-lg" value = "End Listing">
+		</center>
+		</div>
+{% endif %}
+	
+
 	<script type = 'text/javascript'>
 		const listing_id = "{{auctionlisting.id}}"	
 		listingSocket = new WebSocket(
@@ -133,9 +143,18 @@
 			document.querySelector('#comment-input').value = "";
                                                         }
 			if (data.win_user_id){
-			document.querySelector('#new-bid-block').innerHTML = "";
-			document.querySelector('#end-listing-block').innerHTML = "<center><h1>ENDED</h1></center>"; 
-		 	const current_user_id = {{ user.id }}
+			
+			document.querySelector('#comment-input-form').innerHTML = "";
+
+                        if ("{{user.id}}" != "{{auctionlisting.user.id}}"){
+                                document.querySelector('#new-bid-block').innerHTML = "";
+                  }
+
+                        if ("{{user.id}}" === "{{auctionlisting.user.id}}"){
+                                document.querySelector('#end-listing-block').innerHTML = "<center><h1>ENDED</h1></center>";
+                        }
+                        const current_user_id = {{ user.id }}
+
 
 			if (current_user_id == data.win_user_id){
 			var winner_text = "<center><h2><strong>You're the winner of that listing!</strong></h2></center>";}
@@ -237,12 +256,6 @@
 
 	</script>
 
-	{% if user == auctionlisting.user and auctionlisting.active == True %}
-        <center id = "end-listing-block">
-                <input type = "button" id = "end-listing-submit" class = "btn-dark btn-lg" value = "End Listing">
-        </center>
-        {% endif %}
-
 		<div id = "all-comments" style = "text-align:left;">
 		{% for comment in comments %}
 		<div class = "card comment">
@@ -270,7 +283,7 @@
         </center>
         <fieldset>
                 {% if auctionlisting.active and user.is_authenticated %}
-                                <div class = "form-floating mb-3">
+                                <div class = "form-floating mb-3" id = "comment-input-form">
                                 <textarea class = "form-control mb-3" name = "comment" id = "comment-input" style = "height:100px;" placeholder = "comment_text"></textarea>
                                 <label for = "comment">Comment</label>
                                 <center><input type = "button" id = "comment-submit" class = "btn-info btn-lg" value = "Post comment"></center>
