@@ -112,11 +112,11 @@ def createListing(request):
         end_date = current_date + datetime.timedelta(days=30)
         active = True
         try: 
-            name = request.POST['listingname']
+            name = f"{request.POST['listingname']}"
             category = request.POST['category']
             startBid = float(request.POST['startBid'])
-            description = request.POST['listingdesc']
-            image = request.POST['imageurl']
+            description = f"{request.POST['listingdesc']}"
+            image = f"{request.POST['imageurl']}"
         except (KeyError, ValueError):
             messages.warning(request, "Some of fields is empty, check this out and try again")
             return HttpResponseRedirect(reverse("market:createListing"))
@@ -124,7 +124,7 @@ def createListing(request):
         else:
             try:
                 category = Category.objects.get(pk=category)
-            except(KeyError, Category.DoesNotExist):
+            except(ValueError, KeyError, Category.DoesNotExist):
                 messages.warning(request, "You didn't select a category")
                 return HttpResponseRedirect(reverse("market:createListing"))
             else:
