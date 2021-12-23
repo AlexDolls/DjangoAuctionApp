@@ -59,6 +59,7 @@ class ListingCreationViewTests(TestCase):
         """
         If POST data full and correct - Redirect to created listing page
         """
+        category_1_name = "category_1"
         user_password = "password"
         user_name = "test_user"
         category_1_name = "category_1"
@@ -72,7 +73,41 @@ class ListingCreationViewTests(TestCase):
                 "listingdesc":"Test_Description",}
         self.client.login(username = user_name, password = user_password)
         response = self.client.post(reverse("market:createListing"), post_data)
-        self.assertEqual(response.url, reverse("market:details", kwargs = {"listing_id":AuctionListing.objects.get(name = "Test_Listing").id,}))
+        self.assertURLEqual(response.url, reverse("market:details", kwargs = {"listing_id":AuctionListing.objects.get(name = "Test_Listing").id,}))
+
+    def test_get_request_for_not_logged_in_user(self):
+        """
+        If not logged in user try to request the creation page - return login request.
+        """
+        response = self.client.get(reverse("market:createListing"))
+        self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:createListing')}")
+
+    def test_get_request_for_logged_in_user(self):
+        """
+        If logged in user try to request the creation page - return 200 status code.
+        """
+        user_password = "password"
+        user_name = "test_user"
+
+        user = create_user(username = user_name, password = user_password)
+        self.client.login(username = user_name, password = user_password)
+        response = self.client.get(reverse("market:createListing"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_request_for_not_logged_in_user(self):
+        """
+        If not logged in user try to send post request - return login request
+        """
+        category_1_name = "category_1"
+
+        category = create_category(name = category_1_name)
+        post_data = {"listingname":"Test_Listing",
+                "category":category.id,
+                "startBid":100,
+                "imageurl":"None",
+                "listingdesc":"Test_Description",}
+        response = self.client.post(reverse("market:createListing"), post_data)
+        self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:createListing')}")
 
     def test_empty_listingname_post_data(self):
         """
@@ -259,7 +294,7 @@ class ListingCreationViewTests(TestCase):
         response = self.client.post(reverse("market:createListing"), post_data)
         self.assertEqual(response.url, reverse("market:details", kwargs = {"listing_id":AuctionListing.objects.get(name = "Test_Listing").id,}))
     
-class ListingIndexView(TestCase):
+class ListingIndexViewTests(TestCase):
     def test_all_listings_are_displayed_on_page(self):
         """
         Authorized user.
@@ -290,7 +325,29 @@ class ListingIndexView(TestCase):
         self.assertContains(response, "listing_4")
         self.assertContains(response, "Auction Listings")
 
-class ListingActiveView(TestCase):
+    def test_all_listings_are_displayed_on_page_not_logged_in(self):
+        """
+        Not Authorized user.
+        Checking that listings with a full set of combinations (Not active, Active) are displayed by IndexView
+        """
+        user_password = "password"
+        user_name = "test_user"
+        category_1_name = "category_1"
+
+        user = create_user(username = user_name, password = user_password)
+        category = create_category(name = category_1_name)
+
+        listing_not_active = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+        listing_active = create_listing(name = "listing_2", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+
+        response = self.client.get(reverse("market:index"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active, listing_active])
+        self.assertContains(response, "listing_1")
+        self.assertContains(response, "listing_2")
+        self.assertContains(response, "Auction Listings")
+
+
+class ListingActiveViewTests(TestCase):
     def test_only_active_listings_on_page(self):
         """
         Authorized user
@@ -317,3 +374,422 @@ class ListingActiveView(TestCase):
         self.client.login(username = user_name, password = user_password)
         self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_active_watchlist, listing_active_not_watchlist])
 
+    def test_only_active_listings_displayed_not_logged_in(self):
+        """
+        Not Authorized user.
+        Checking that only active listings are displayed on Active page.
+        """
+        user_password = "password"
+        user_name = "test_user"
+        category_1_name = "category_1"
+
+        user = create_user(username = user_name, password = user_password)
+        category = create_category(name = category_1_name)
+
+        listing_not_active = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+        listing_active = create_listing(name = "listing_2", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+
+        response = self.client.get(reverse("market:active"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_active])
+
+
+class CategoryViewTests(TestCase):
+    def test_2_categories_displayed_logged_in_user(self):
+        """
+        Authorized user
+        Created both categories are displayed on By Categories page
+        """
+        user_password = "password"
+        user_name = "test_user"
+        category_1_name = "category_1"
+        category_2_name = "category_2"
+
+        user = create_user(username = user_name, password = user_password)
+        category_1 = create_category(name = category_1_name)
+        category_2 = create_category(name = category_2_name)
+        
+        self.client.login(username=user_name, password = user_password)
+        response = self.client.get(reverse("market:categories"))
+        self.assertQuerysetEqual(list(response.context['categories']), [category_1, category_2])
+
+    def test_2_categories_displayed_not_logged_in_user(self):
+        """
+        Not Authorized user
+        Created both categories are displayed on By Categories page
+        """
+        category_1_name = "category_1"
+        category_2_name = "category_2"
+
+        category_1 = create_category(name = category_1_name)
+        category_2 = create_category(name = category_2_name)
+        response = self.client.get(reverse("market:categories"))
+        self.assertQuerysetEqual(list(response.context['categories']), [category_1, category_2])
+
+class CategoryListingsViewTests(TestCase):
+    def test_category_not_exist_logged_in_user(self):
+        """
+        Authorized User
+        If category not exist - return status code 404
+        """
+        user_password = "password"
+        user_name = "test_user"
+
+        user = create_user(username = user_name, password = user_password)
+
+        self.client.login(username=user_name, password = user_password)
+        response = self.client.get(reverse("market:category_listings", kwargs = {"category_id":1}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_category_not_exist_not_logged_in_user(self):
+        """
+        Not Authorized User
+        If category not exist - return status code 404
+        """
+        response = self.client.get(reverse("market:category_listings", kwargs = {"category_id":1}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_two_listings_different_categories_logged_in_user(self):
+        """
+        Authorized user
+        From all listings combinations with two different categories will be shown only those with choseen category (category_1)
+        """
+        user_password = "password"
+        user_name = "test_user"
+        category_1_name = "category_1"
+        category_2_name = "category_2"
+
+        user = create_user(username = user_name, password = user_password)
+        category_1 = create_category(name = category_1_name)
+        category_2 = create_category(name = category_2_name)
+        
+        #this listing will be added in user's watchlist and Not active - category_1
+        listing_not_active_watchlist_category_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user, startBid=100, days=30, active = False)
+        #this listing won't be added in user's watchlist and  Not active - category_1
+        listing_not_active_not_watchlist_category_1 = create_listing(name = "listing_2", image = "None", description = "test_desc", category = category_1, user=user, startBid=100, days=30, active = False)
+        #this listing will be added in user's watchlist and Active - category_1
+        listing_active_watchlist_category_1 = create_listing(name = "listing_3", image = "None", description = "test_desc", category = category_1, user=user, startBid=100, days=30, active = True)
+        #this listing won't be added in user's watchlist and Active - category_1
+        listing_active_not_watchlist_category_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user, startBid=100, days=30, active = True)
+
+        #this listing will be added in user's watchlist and Not active - category_2
+        listing_not_active_watchlist_category_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_2, user=user, startBid=100, days=30, active = False)
+        #this listing won't be added in user's watchlist and  Not active - category_2
+        listing_not_active_not_watchlist_category_2 = create_listing(name = "listing_2", image = "None", description = "test_desc", category = category_2, user=user, startBid=100, days=30, active = False)
+        #this listing will be added in user's watchlist and Active - category_2
+        listing_active_watchlist_category_2 = create_listing(name = "listing_3", image = "None", description = "test_desc", category = category_2, user=user, startBid=100, days=30, active = True)
+        #this listing won't be added in user's watchlist and Active - category_2
+        listing_active_not_watchlist_category_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_2, user=user, startBid=100, days=30, active = True)
+
+        user.watchlist.add(listing_active_watchlist_category_1, listing_not_active_watchlist_category_1, listing_active_watchlist_category_2, listing_not_active_watchlist_category_2)
+
+        self.client.login(username=user_name, password = user_password)
+        response = self.client.get(reverse("market:category_listings", kwargs = {"category_id":category_1.id}))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_watchlist_category_1, listing_not_active_not_watchlist_category_1, listing_active_watchlist_category_1, listing_active_not_watchlist_category_1])
+
+    def test_two_listings_different_categories_not_logged_in_user(self):
+        """
+        Not Authorized user
+        From all listings combinations with two different categories will be shown only those with choseen category (category_1)
+        """
+        user_password = "password"
+        user_name = "test_user"
+        category_1_name = "category_1"
+        category_2_name = "category_2"
+
+        user = create_user(username = user_name, password = user_password)
+        category_1 = create_category(name = category_1_name)
+        category_2 = create_category(name = category_2_name)
+
+        #this listing will be added in user's watchlist and Not active - category_1
+        listing_not_active_watchlist_category_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user, startBid=100, days=30, active = False)
+        #this listing won't be added in user's watchlist and  Not active - category_1
+        listing_not_active_not_watchlist_category_1 = create_listing(name = "listing_2", image = "None", description = "test_desc", category = category_1, user=user, startBid=100, days=30, active = False)
+        #this listing will be added in user's watchlist and Active - category_1
+        listing_active_watchlist_category_1 = create_listing(name = "listing_3", image = "None", description = "test_desc", category = category_1, user=user, startBid=100, days=30, active = True)
+        #this listing won't be added in user's watchlist and Active - category_1
+        listing_active_not_watchlist_category_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user, startBid=100, days=30, active = True)
+
+        #this listing will be added in user's watchlist and Not active - category_2
+        listing_not_active_watchlist_category_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_2, user=user, startBid=100, days=30, active = False)
+        #this listing won't be added in user's watchlist and  Not active - category_2
+        listing_not_active_not_watchlist_category_2 = create_listing(name = "listing_2", image = "None", description = "test_desc", category = category_2, user=user, startBid=100, days=30, active = False)
+        #this listing will be added in user's watchlist and Active - category_2
+        listing_active_watchlist_category_2 = create_listing(name = "listing_3", image = "None", description = "test_desc", category = category_2, user=user, startBid=100, days=30, active = True)
+        #this listing won't be added in user's watchlist and Active - category_2
+        listing_active_not_watchlist_category_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_2, user=user, startBid=100, days=30, active = True)
+
+        response = self.client.get(reverse("market:category_listings", kwargs = {"category_id":category_1.id}))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_watchlist_category_1, listing_not_active_not_watchlist_category_1, listing_active_watchlist_category_1, listing_active_not_watchlist_category_1])
+ 
+class MyListingsViewTests(TestCase):
+    def test_no_my_listings(self):
+        """
+        If user(user_1) created no listings and have empty watchlist - show appropriate message on page My Listings
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:mylistings"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [])
+        self.assertContains(response, "No items Available")
+
+    def test_no_my_listings_watchlist(self):
+        """
+        If user(user_1) created no listings and have listings of other user in his watchlist - No listings displayed on My Listings page.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+        
+        user_1.watchlist.add(listing_not_active_user_2, listing_active_user_2)
+
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:mylistings"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [])
+        self.assertContains(response, "No items Available")
+
+    def test_exist_only_my_listings(self):
+        """
+        If user(user_1) created listings - Only his listings displayed on My Listings page. No listings created by other users
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:mylistings"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_1, listing_active_user_1])
+
+    def test_exist_only_my_listings_watchlist(self):
+        """
+        If user(user_1) created listings and added it to watchlist - Only all of his listings displayed on My Listings page. No listings created by other users
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        
+        user_1.watchlist.add(listing_not_active_user_1, listing_active_user_1)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:mylistings"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_1, listing_active_user_1])
+
+    def test_exist_not_only_my_listings(self):
+        """
+        If user(user_1) created listings - Only his listings displayed on My Listings page. Two listings created by other user
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:mylistings"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_1, listing_active_user_1])
+
+    def test_exist_not_only_my_listings_watchlist(self):
+        """
+        If user(user_1) created listings - Only his listings displayed on My Listings page. Two listings created by other user. All listings was added to user_1 watchlist
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        
+        user_1.watchlist.add(listing_not_active_user_2, listing_active_user_2, listing_not_active_user_1, listing_active_user_1)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:mylistings"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_1, listing_active_user_1])
+
+class WatchlistViewTests(TestCase):
+    def test_404_page_if_unathorized_user(self):
+        """
+        If user is not Authorized - return 404 page
+        """
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:watchlist')}")
+        
+    def test_own_and_other_owner_listings_in_watchlist(self):
+        """
+        If user(user_1) will add his own listings and listings of other user in watchlist - all added listings will displayed
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        user_1.watchlist.add(listing_not_active_user_2, listing_active_user_2, listing_not_active_user_1, listing_active_user_1)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_2, listing_active_user_2, listing_not_active_user_1, listing_active_user_1])
+
+    def test_no_listings_in_watchlist(self):
+        """
+        If user(user_1) will not add any of his own listings and listings of other user in watchlist - nothing will displayed on Watchlist page - appropriate message will displayed.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [])
+        self.assertContains(response, "No items Available")
+
+    def test_only_other_user_listings_in_watchlist(self):
+        """
+        if user(user_1) added only listings of other user to watchlist - only added listings will displayed
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        user_1.watchlist.add(listing_not_active_user_2, listing_active_user_2)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_2, listing_active_user_2])
+
+    def test_only_own_listings_in_watchlist(self):
+        """
+        if user(user_1) added only own listings to watchlist - only added listings will displayed
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        user_1.watchlist.add(listing_not_active_user_1, listing_active_user_1)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_1, listing_active_user_1])
