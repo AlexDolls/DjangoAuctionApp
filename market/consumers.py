@@ -180,35 +180,37 @@ class ChatConsumer(WebsocketConsumer):
     # Receive message from WebSocket
     def new_message_chat_exist(self, chat, sender, message_text):
         date = timezone.localtime()
-        message = Message.objects.create(text = message_text, sender_id = sender.id, chat = chat, date = date)
-        message.save()
-        chat_members = chat.members.all()
-        receiver = chat.members.exclude(id=sender.id).first()
-        unread_messages_all = 0
-        
-        for chat_item in Chat.objects.filter(members=receiver):
-            for message_item in chat_item.message_set.filter(sender_id = sender.id):
-                if message_item.unread: #BooleanField 'unread' in Message
-                    unread_messages_all += 1
+        message_text = message_text.strip()
+        if message_text and len(message_text)<=300:
+            message = Message.objects.create(text = message_text, sender_id = sender.id, chat = chat, date = date)
+            message.save()
+            chat_members = chat.members.all()
+            receiver = chat.members.exclude(id=sender.id).first()
+            unread_messages_all = 0
+            
+            for chat_item in Chat.objects.filter(members=receiver):
+                for message_item in chat_item.message_set.filter(sender_id = sender.id):
+                    if message_item.unread: #BooleanField 'unread' in Message
+                        unread_messages_all += 1
 
-        receiver.inbox = unread_messages_all
-        receiver.save()
+            receiver.inbox = unread_messages_all
+            receiver.save()
 
-        async_to_sync(self.channel_layer.group_send)(
-            f'chat_{receiver.id}',
-            {
-                'type': 'chat_message',
-                'message': message.text,
-                'user_inbox': receiver.inbox,
-                'message_date':f'{dateformat.format(message.date, "M d, h:i a")}'
-            }
-        )
-        self.send(text_data = json.dumps(
+            async_to_sync(self.channel_layer.group_send)(
+                f'chat_{receiver.id}',
                 {
-                    'message':message.text,
-                    'message_date':f'{dateformat.format(message.date, "M d, h:i a")}',
-                    'send_self':'yes',
-                    }))
+                    'type': 'chat_message',
+                    'message': message.text,
+                    'user_inbox': receiver.inbox,
+                    'message_date':f'{dateformat.format(message.date, "M d, h:i a")}'
+                }
+            )
+            self.send(text_data = json.dumps(
+                    {
+                        'message':message.text,
+                        'message_date':f'{dateformat.format(message.date, "M d, h:i a")}',
+                        'send_self':'yes',
+                        }))
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
