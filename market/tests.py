@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 
-from .models import User, Category, AuctionListing, Bid, Comment
+from .models import User, Category, AuctionListing, Bid, Comment, Chat, Message
 
 def create_user(username, password):
     """
@@ -671,13 +671,158 @@ class MyListingsViewTests(TestCase):
         self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_1, listing_active_user_1])
 
 class WatchlistViewTests(TestCase):
-    def test_404_page_if_unathorized_user(self):
+    def test_unauthorized_user_GET_request(self):
         """
-        If user is not Authorized - return 404 page
+        If user is not Authorized - return login required page on GET request
         """
         response = self.client.get(reverse("market:watchlist"))
         self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:watchlist')}")
+
+    def test_unauthorized_user_empty_query_POST_request_add_to_watchlist(self):
+        """
+        If user is not Authorized and trying to send request Add to Watchlist - return login required page on POST request with empty query
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+        listing = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        response = self.client.post(reverse("market:watchlist"))
+        self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:watchlist')}")
+
+    def test_unauthorized_user_right_query_data_POST_request_add_to_watchlist(self):
+        """
+        If user is not Authorized and trying to send request Add to Watchlist - return login required page on POST request with right data in query
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+        listing = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        response = self.client.post(reverse("market:watchlist"), {"listing_id":listing.id})
+        self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:watchlist')}")
         
+    def test_unauthorized_user_wrong_query_data_POST_request_add_to_watchlist(self):
+        """
+        If user is not Authorized and trying to send request Add to Watchlist - return login required page on POST request with wrong data in query
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+        listing = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        response = self.client.post(reverse("market:watchlist"), {"listing_id":2})
+        self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:watchlist')}")
+
+    def test_authorized_user_empty_query_POST_request_add_to_watchlist(self):
+        """
+        If user is Authorized and trying to send request Add to Watchlist - redirect to index page and add nothing to user's watchlist by POST request with empty query
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+        listing = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:watchlist"))
+        self.assertURLEqual(response.url, reverse("market:index"))
+        self.assertQuerysetEqual(user_1.watchlist.all(),[])
+
+    def test_authorized_user_right_query_data_POST_request_add_to_watchlist(self):
+        """
+        If user is Authorized and trying to send request Add to Watchlist - add choosen listing to user's watchlist by POST request with right data in query
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+        listing = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:watchlist"), {"listing_id":listing.id})
+        self.assertQuerysetEqual(user_1.watchlist.all(), [listing])
+        
+    def test_authorized_user_wrong_query_data_POST_request_add_to_watchlist(self):
+        """
+        If user is Authorized and trying to send request Add to Watchlist- return 404 page and add nothing to user's watchlist by POST request with wrong data in query
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:watchlist"), {"listing_id":2})
+        self.assertEqual(response.status_code, 404)
+        self.assertQuerysetEqual(user_1.watchlist.all(),[])
+
+    def test_two_users_one_listing_watchlist_add(self):
+        """
+        if exist two users and one listing, when first user adding listings to his watchlist, second user's wathclist still empty
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+        listing = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:watchlist"), {"listing_id":listing.id})
+        self.assertQuerysetEqual(user_1.watchlist.all(), [listing])
+        self.assertQuerysetEqual(user_2.watchlist.all(), [])
+
+    def test_remove_from_watchlist(self):
+        """
+        If user is Authorized and trying to send request to remove listing from Watchlist - remove choosen listing from user's watchlist
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+        listing = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        user_1.watchlist.add(listing)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:watchlist"), {"listing_id":listing.id})
+        self.assertQuerysetEqual(user_1.watchlist.all(), [])
+
+    def test_two_users_remove_from_watchlist(self):
+        """
+        Exist two users and one listing, both have this listing in their watchlist, first user removing listing from his watchlist, then he has empty watchlist, second user still have this listing in his watchlist.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+        listing = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        user_1.watchlist.add(listing)
+        user_2.watchlist.add(listing)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:watchlist"), {"listing_id":listing.id})
+        self.assertQuerysetEqual(user_1.watchlist.all(), [])
+        self.assertQuerysetEqual(user_2.watchlist.all(), [listing])
+
+
     def test_own_and_other_owner_listings_in_watchlist(self):
         """
         If user(user_1) will add his own listings and listings of other user in watchlist - all added listings will displayed
@@ -793,3 +938,306 @@ class WatchlistViewTests(TestCase):
         self.client.login(username=user_name_1, password = user_password_1)
         response = self.client.get(reverse("market:watchlist"))
         self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_1, listing_active_user_1])
+
+    def test_one_active_not_own_listing(self):
+        """
+        Exist 4 listings. 2 own (Active and not Active) and same set from other owner. One Active listing of other owner added to own watchlist - only this listing will be displayed on Watchlist page.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        user_1.watchlist.add(listing_active_user_2)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_active_user_2])
+
+    def test_one_not_active_not_own_listing(self):
+        """ 
+        Exist 4 listings. 2 own (Active and not Active) and same set from other owner. One Not Active listing of other owner added to own watchlist - only this listing will be displayed on Watchlist page.
+        """ 
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        user_1.watchlist.add(listing_not_active_user_2)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_2])
+
+    def test_one_active_own_listing(self):
+        """
+        Exist 4 listings. 2 own (Active and not Active) and same set from other owner. One Active Own listing added to own watchlist - only this listing will be displayed on Watchlist page.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        user_1.watchlist.add(listing_active_user_1)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_active_user_1])
+
+    def test_one_not_active_own_listing(self):
+        """
+        Exist 4 listings. 2 own (Active and not Active) and same set from other owner. One Not Active Own listing added to own watchlist - only this listing will be displayed on Watchlist page.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+
+        #Not active - user_2
+        listing_not_active_user_2 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = False)
+        #Active - user_2
+        listing_active_user_2 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_2, startBid=100, days=30, active = True)
+
+        #Not active - user_1
+        listing_not_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        #Active - user_1
+        listing_active_user_1 = create_listing(name = "listing_4", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+
+        user_1.watchlist.add(listing_not_active_user_1)
+        self.client.login(username=user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:watchlist"))
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_1])
+
+class InboxViewTests(TestCase):
+    def test_uathorized_user_inbox(self):
+        """
+        if Not Authorized user trying to get inbox page - return login required page
+        """
+        response = self.client.get(reverse("market:inbox"))
+        self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:inbox')}")
+
+    def test_no_chats_with_user_exist_no_other_users_exist(self):
+        """
+        If no chats with current user as member exist.No other users exist. Show appropriate messages on inbox page
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:inbox"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You have no chat's yet")
+        self.assertQuerysetEqual(response.context['chats'],[])
+        self.assertContains(response, "There's no users to start chat with for now :(")
+        self.assertQuerysetEqual(response.context['site_users'], [])
+
+    def test_no_chats_with_user_exist_other_user_exist(self):
+        """
+        If no chats with current user as member exist.One other user exists. Show appropriate messages on inbox page
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:inbox"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You have no chat's yet")
+        self.assertQuerysetEqual(response.context['chats'], [])
+        self.assertContains(response, "Start!")
+        self.assertQuerysetEqual(response.context['site_users'], [user_2])
+
+    def test_chat_with_user_exist_other_user_exist(self):
+        """
+        If chat with current user as member exists.One other user exists. Show appropriate messages on inbox page
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        chat_new = Chat.objects.create()
+        chat_new.members.add(user_1, user_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:inbox"))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerysetEqual(response.context['chats'], [chat_new])
+        self.assertQuerysetEqual(response.context['site_users'], [])
+        self.assertContains(response, "There's no users to start chat with for now :(")
+
+
+    def test_no_chats_with_user_two_users_exist(self):
+        """
+        If no chats with current user as member exist.Two other users exist. Show appropriate messages on inbox page
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        user_password_3 = "password_2"
+        user_name_3 = "test_user_3"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        user_3 = create_user(username = user_name_3, password = user_password_3)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:inbox"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You have no chat's yet")
+        self.assertQuerysetEqual(response.context['chats'], [])
+        self.assertContains(response, "Start!")
+        self.assertQuerysetEqual(list(response.context['site_users']), [user_2, user_3])
+
+    def test_chat_with_user_exist_two_users_exist(self):
+        """
+        If one chat with current user as member exists.Two other users exist. Show appropriate messages on inbox page
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        user_password_3 = "password_2"
+        user_name_3 = "test_user_3"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        user_3 = create_user(username = user_name_3, password = user_password_3)
+        chat_new = Chat.objects.create()
+        chat_new.members.add(user_1,user_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:inbox"))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerysetEqual(response.context['chats'], [chat_new])
+        self.assertContains(response, "Start!")
+        self.assertQuerysetEqual(list(response.context['site_users']), [user_3])
+
+    def test_start_chat_with_user_unathorized(self):
+        """
+        If user Not Authorized and sends request to start chat with exists user - return login required page.       
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        
+        response = self.client.post(reverse("market:inbox"), {"user_id":user_1.id})
+        self.assertURLEqual(response.url, f"/accounts/login/?next={reverse('market:inbox')}")
+
+    def test_start_new_chat_with_user(self):
+        """
+        if user starts new chat with user - chat will be created and page will be showed
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id})
+        self.assertQuerysetEqual(list(Chat.objects.get(members=user_1).members.all()), [user_1, user_2])
+
+    def test_start_new_chat_with_user(self):
+        """
+        if user starts new chat with user, but chat between that users already exists - additional chat will be not created
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        
+        chat_new = Chat.objects.create()
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        chat_new.members.add(user_1, user_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id})
+        self.assertQuerysetEqual(Chat.objects.all(), [chat_new])
+        self.assertURLEqual(response.url, reverse("market:inbox"))
+
+    def test_start_exist_chat_with_user(self):
+        """
+        if user starts new chat with user, but chat between that users already exists - chat will be not created
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        chat_new = Chat.objects.create()
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        chat_new.members.add(user_1, user_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id})
+        self.assertQuerysetEqual(Chat.objects.all(), [chat_new])
+        self.assertURLEqual(response.url, reverse("market:inbox"))
+
+    def test_start_new_chat_with_wrong_user_id(self):
+        """
+        if user starts new chat with wrong user's id entered, chat will not be created - 404 page returns
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id + 10})
+        self.assertQuerysetEqual(Chat.objects.all(), [])
+        self.assertURLEqual(response.url, reverse("market:inbox"))
