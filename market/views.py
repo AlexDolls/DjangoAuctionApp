@@ -225,7 +225,10 @@ def logout_view(request):
 def watchlist(request):
     user = request.user
     if request.method == "POST":
-        listing = get_object_or_404(AuctionListing, pk = request.POST['listing_id'])
+        try:
+            listing = get_object_or_404(AuctionListing, pk = request.POST['listing_id'])
+        except KeyError:
+            return HttpResponseRedirect(reverse("market:index"))
         if listing not in user.watchlist.all():
             user.watchlist.add(listing)
         else:
