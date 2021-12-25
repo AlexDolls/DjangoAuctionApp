@@ -15,7 +15,7 @@ class Chat(models.Model):
     members = models.ManyToManyField("User", blank=True, related_name = "userChat")
 
 class Message(models.Model):
-    text = models.CharField(max_length = 100)
+    text = models.CharField(max_length = 300)
     sender_id = models.IntegerField()
     chat = models.ForeignKey("Chat", on_delete=models.CASCADE)
     unread = models.BooleanField(default = True)
