@@ -30,7 +30,7 @@
 			{% endfor %}
 		</ul>
 	{% endif %}
-	<h1 style = "text-align:center;"><strong>{{ auctionlisting.name }}</strong>{% if true_user %} <a class = "btn btn-primary" href={% url "market:editListing" auctionlisting.id %}>Edit</a>{% endif %}</h1>
+	<h1 style = "text-align:center;"><strong>{{ auctionlisting.name }}</strong>{% if true_user %} <a class = "btn btn-primary" href={% url "market:editListing" auctionlisting.id %} id = "edit-listing">Edit</a>{% endif %}</h1>
 	<hr>
 	<div class="image">
         	<img class="big" src="{{ auctionlisting.image }}" alt="{{ auctionlisting.id }}">
@@ -51,12 +51,12 @@
 	<form action = "{% url "market:watchlist" %}" method = "post" class = "add-category" style = "z-index:1;">
 		{% csrf_token %}
 			<input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
-			<input type = "submit" class = "btn-primary btn-lg" value = {% if auctionlisting in user.watchlist.all %}"Remove from watchlist"{% else %}"Add to Watchlist"{% endif %}>
+			<input type = "submit" class = "btn-primary btn-lg" id = "add-listing-to-watchlist"value = {% if auctionlisting in user.watchlist.all %}"Remove from watchlist"{% else %}"Add to Watchlist"{% endif %}>
 	</form>
 	{% endif %}
-	<h3 style = "font-size:30px;">Last Bid:<input type = 'text' id = 'last-bid'{% if bid is None%} value = "No bids yet :)"{% else %} value = "{{bid.value}}"${% endif %} readonly = "True" style = "width:auto;"></h3>
+	<h3 style = "font-size:30px;">Last Bid:<input type = 'text' id = "last-bid"{% if bid is None%} value = "No bids yet :)"{% else %} value = "{{bid.value}}"${% endif %} readonly = "True" style = "width:auto;"></h3>
         <div id="history">
-	<input type = "button" class = "btn-primary btn-lg" value = "Show history" OnClick = "bidhistory();">
+	<input type = "button" class = "btn-primary btn-lg" id = "show-history" value = "Show history" OnClick = "bidhistory();">
 	</div>
 	{% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
 		<div id = "new-bid-block">
@@ -69,12 +69,12 @@
 		</div>
 
 	{% elif not auctionlisting.active %}
-        <center><h3><strong>Last Price:</strong> {% if bid is None %} {{auctionlisting.startBid}}
+        <center><h3 id = "last-price"><strong>Last Price:</strong> {% if bid is None %} {{auctionlisting.startBid}}
                 {% else %} {{bid.value}} {% endif %} $</h3></center>
-        <center><h2><span class="badge bg-warning">Listing is Ended</span></h2></center>
+        <center><h2 id = "listing-is-ended"><span class="badge bg-warning">Listing is Ended</span></h2></center>
         {% endif %}
 	{% if auctionlisting in user.winlist.all %}
-	<center><h2><strong>You're the winner of that listing!</strong></h2></center>
+	<center><h2 id = "winner-of-listing"><strong>You're the winner of that listing!</strong></h2></center>
         {% endif %}
 
 	<div id = 'result'></div>
@@ -277,7 +277,7 @@
         <form action = "{% url "market:removeListing" %}" method = "post" class = "add-category-left" style="z-index:1;">
         {% csrf_token %}
                 <input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
-                <input type = "submit" class = "btn-danger btn-lg" value = "Delete Listing">
+                <input type = "submit" class = "btn-danger btn-lg" id = "delete-listing" value = "Delete Listing">
         </form>
         {% endif %}
         </center>
