@@ -359,11 +359,12 @@ def inbox(request):
     current_user_chats = Chat.objects.filter(members = user.id)
 
     for chat in current_user_chats:
-        if chat.members.all()[0].id == user.id:
-            all_users = all_users.exclude(pk = chat.members.all()[1].id)
-        else:
-            all_users = all_users.exclude(pk = chat.members.all()[0].id)
-     
+        if chat.members.count() == 2:
+            if chat.members.all()[0].id == user.id:
+                all_users = all_users.exclude(pk = chat.members.all()[1].id)
+            else:
+                all_users = all_users.exclude(pk = chat.members.all()[0].id)
+
     return render(request, "market/inbox.html", {
     "chats":chats,
     "site_users":all_users,
