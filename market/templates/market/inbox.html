@@ -16,7 +16,8 @@
   <div class="row">
     <div class="col">
 	{% for chat in chats %}
-	<h3>
+	<h3>	
+		{% if chat.members.count == 2%}
 		<a href = "{% url "market:chat" chat.id %}">
 		<button type="button" class="btn btn-primary position-relative">
   		{% if user.id == chat.members.all.0.id %}
@@ -29,6 +30,7 @@
   		</span>
 		</button>
 		</a>
+		{% endif %}
         </h3>
 	{% empty %}
 	<div class="alert alert-info text-center p-4 my-4 mx-2">You have no chat's yet</div>
