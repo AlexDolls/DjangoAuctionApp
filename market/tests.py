@@ -1190,24 +1190,6 @@ class InboxViewTests(TestCase):
         response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id})
         self.assertQuerysetEqual(list(Chat.objects.get(members=user_1).members.all()), [user_1, user_2])
 
-    def test_start_new_chat_with_user(self):
-        """
-        if user starts new chat with user, but chat between that users already exists - additional chat will be not created
-        """
-        user_password_1 = "password_1"
-        user_name_1 = "test_user_1"
-        user_password_2 = "password_2"
-        user_name_2 = "test_user_2"
-        
-        chat_new = Chat.objects.create()
-        user_1 = create_user(username = user_name_1, password = user_password_1)
-        user_2 = create_user(username = user_name_2, password = user_password_2)
-        chat_new.members.add(user_1, user_2)
-        self.client.login(username = user_name_1, password = user_password_1)
-        response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id})
-        self.assertQuerysetEqual(Chat.objects.all(), [chat_new])
-        self.assertURLEqual(response.url, reverse("market:inbox"))
-
     def test_start_exist_chat_with_user(self):
         """
         if user starts new chat with user, but chat between that users already exists - chat will be not created
@@ -1241,3 +1223,394 @@ class InboxViewTests(TestCase):
         response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id + 10})
         self.assertQuerysetEqual(Chat.objects.all(), [])
         self.assertURLEqual(response.url, reverse("market:inbox"))
+
+class ChatViewTests(TestCase):
+    def test_get_chat_user_unathorized(self):
+        """
+        if user is Not Authorized and try to get chat view - return login required page
+        """
+        response = self.client.get(reverse("market:chat", kwargs = {"chat_id":1}))
+        self.assertURLEqual(response.url, f"/accounts/login/?next="+reverse("market:chat",kwargs={"chat_id":1}))
+
+    def test_get_exists_chat_two_users(self):
+        """
+        if chat between two users as members exists.No messages exist. Display chat page with no messages.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        new_chat = Chat.objects.create()
+        new_chat.members.add(user_1, user_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:chat", kwargs = {"chat_id":new_chat.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, user_2.username)
+        self.assertEqual(response.context['chat'], new_chat)
+        self.assertQuerysetEqual(response.context['messages'], [])
+
+    def test_get_one_member_chat_two_users(self):
+        """
+        if chat exists only with one user of two existing. No messages exist. Display chat page with no messages. Only for one user.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        new_chat = Chat.objects.create()
+        new_chat.members.add(user_1)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:chat", kwargs = {"chat_id":new_chat.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['chat'], new_chat)
+        self.assertQuerysetEqual(response.context['messages'], [])
+
+    def test_get_user_is_not_member_chat_two_users(self):
+        """
+        if chat exist, but user is not that chat's member. No messages exist. Redirect to inbox page.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        new_chat = Chat.objects.create()
+        new_chat.members.add(user_2)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:chat", kwargs = {"chat_id":new_chat.id}))
+        self.assertEqual(response.status_code, 302)
+        self.assertURLEqual(response.url, reverse("market:inbox"))
+
+    def test_get_no_members_chat(self):
+        """
+        if chat exist, but user is not that chat's member. No messages exist. Redirect to inbox page.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        new_chat = Chat.objects.create()
+        new_chat.members.add()
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:chat", kwargs = {"chat_id":new_chat.id}))
+        self.assertEqual(response.status_code, 302)
+        self.assertURLEqual(response.url, reverse("market:inbox"))
+
+    def test_get_exists_chat_two_users_two_messages(self):
+        """
+        if chat between two users as members exists. Two messages exist. Display chat page with two messages.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        new_chat = Chat.objects.create()
+        new_chat.members.add(user_1, user_2)
+        message_user_1 = Message.objects.create(text="message_1", sender_id = user_1.id, chat = new_chat)
+        message_user_2 = Message.objects.create(text="message_2", sender_id = user_2.id, chat = new_chat)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:chat", kwargs = {"chat_id":new_chat.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, user_2.username)
+        self.assertEqual(response.context['chat'], new_chat)
+        self.assertQuerysetEqual(response.context['messages'], [message_user_1, message_user_2])
+
+    def test_get_one_member_chat_two_users_one_message(self):
+        """
+        if chat exists only with one user of two existing as member. One message exists. Display chat page with one messages. Only for one user.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        new_chat = Chat.objects.create()
+        new_chat.members.add(user_1)
+        message_user_1 = Message.objects.create(text="message_1", sender_id = user_1.id, chat = new_chat)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:chat", kwargs = {"chat_id":new_chat.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['chat'], new_chat)
+        self.assertQuerysetEqual(response.context['messages'], [message_user_1])
+
+    def test_get_not_exist_chat(self):
+        """
+        if chat is not exist. Redirect to inbox page.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:chat", kwargs = {"chat_id":1}))
+        self.assertEqual(response.status_code, 302)
+        self.assertURLEqual(response.url, reverse("market:inbox"))
+
+class DetailsViewTests(TestCase):
+    def test_active_listing_detail_page_unauthorized(self):
+        """
+        if user is Not Authorized - display page of active listing with full info, but without any manage or action interface elements: "Make bid", "End Listing", "Delete Listing", "Add to Watchlist" buttons, excluding "Show history" button. Comment-input form.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+        listing_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        response = self.client.get(reverse("market:details", kwargs = {"listing_id":listing_active_user_1.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["true_user"], False)
+        self.assertEqual(response.context['auctionlisting'], listing_active_user_1)
+        self.assertQuerysetEqual(response.context['bids'], [])
+        self.assertQuerysetEqual(response.context['comments'], [])
+        self.assertEqual(response.context['bid'], None)
+        self.assertContains(response, listing_active_user_1.name)
+        self.assertContains(response, listing_active_user_1.description)
+        self.assertContains(response, listing_active_user_1.user.username)
+        self.assertContains(response, listing_active_user_1.startBid)
+        self.assertContains(response, 'id = "show-history"')
+        self.assertNotContains(response, 'id = "new-bid-submit"')
+        self.assertNotContains(response, 'id = "newbid"')
+        self.assertNotContains(response, 'id = "comment-submit"')
+        self.assertNotContains(response, 'id = "add-listing-to_watchlist"')
+        self.assertNotContains(response, 'id = "edit-listing"')
+        self.assertNotContains(response, 'id = "end-listing-submit"')
+        self.assertNotContains(response, 'id = "delete-listing"')
+        self.assertNotContains(response, 'id = "winner-of-listing"')
+        self.assertNotContains(response, 'id = "listing-is-ended"')
+        self.assertNotContains(response, 'id = "last-price"')
+
+    def test_active_listing_detail_page(self):
+        """
+        if user is Authorized but not listing's creator - display page of active listing with full info, but without creator's manage or action interface elements: "End Listing", "Delete Listing" buttons, excluding "Show history" button
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+        listing_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        self.client.login(username = user_name_2, password = user_password_2)
+        response = self.client.get(reverse("market:details", kwargs = {"listing_id":listing_active_user_1.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["true_user"], False)
+        self.assertEqual(response.context['auctionlisting'], listing_active_user_1)
+        self.assertQuerysetEqual(response.context['bids'], [])
+        self.assertQuerysetEqual(response.context['comments'], [])
+        self.assertEqual(response.context['bid'], None)
+        self.assertContains(response, listing_active_user_1.name)
+        self.assertContains(response, listing_active_user_1.description)
+        self.assertContains(response, listing_active_user_1.user.username)
+        self.assertContains(response, listing_active_user_1.startBid)
+        self.assertContains(response, 'id = "new-bid-submit"')
+        self.assertContains(response, 'id = "newbid"')
+        self.assertContains(response, 'id = "comment-submit"')
+        self.assertContains(response, 'id = "add-listing-to-watchlist"')
+        self.assertNotContains(response, 'id = "edit-listing"')
+        self.assertNotContains(response, 'id = "end-listing-submit"')
+        self.assertNotContains(response, 'id = "delete-listing"')
+        self.assertNotContains(response, 'id = "winner-of-listing"')
+        self.assertNotContains(response, 'id = "listing-is-ended"')
+        self.assertNotContains(response, 'id = "last-price"')
+
+    def test_active_listing_detail_page_creator(self):
+        """
+        if user is Authorized and listing's creator - display page of active listing with full info and full lising's manage interface elements, but without "Make bid" button
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+        listing_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = True)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:details", kwargs = {"listing_id":listing_active_user_1.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["true_user"], True)
+        self.assertEqual(response.context['auctionlisting'], listing_active_user_1)
+        self.assertQuerysetEqual(response.context['bids'], [])
+        self.assertQuerysetEqual(response.context['comments'], [])
+        self.assertEqual(response.context['bid'], None)
+        self.assertContains(response, listing_active_user_1.name)
+        self.assertContains(response, listing_active_user_1.description)
+        self.assertContains(response, listing_active_user_1.user.username)
+        self.assertContains(response, listing_active_user_1.startBid)
+        self.assertContains(response, 'id = "last-bid"')
+        self.assertContains(response, 'id = "comment-submit"')
+        self.assertContains(response, 'id = "add-listing-to-watchlist"')
+        self.assertContains(response, 'id = "edit-listing"')
+        self.assertContains(response, 'id = "end-listing-submit"')
+        self.assertContains(response, 'id = "delete-listing"')
+        self.assertNotContains(response, 'id = "new-bid-submit"')
+        self.assertNotContains(response, 'id = "newbid"')
+        self.assertNotContains(response, 'id = "winner-of-listing"')
+        self.assertNotContains(response, 'id = "listing-is-ended"')
+        self.assertNotContains(response, 'id = "last-price"')
+
+    def test_not_active_listing_detail_page_unauthorized(self):
+        """
+        if user is Not Authorized - display page of not active listing with full info and message that listing is ended, but without any manage or action interface elements: "Make bid", "End Listing", "Delete Listing", "Add to Watchlist" buttons, excluding "Show history" button. Comment-input form.
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        category_1 = create_category(name = category_1_name)
+        listing_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        response = self.client.get(reverse("market:details", kwargs = {"listing_id":listing_active_user_1.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["true_user"], False)
+        self.assertEqual(response.context['auctionlisting'], listing_active_user_1)
+        self.assertQuerysetEqual(response.context['bids'], [])
+        self.assertQuerysetEqual(response.context['comments'], [])
+        self.assertEqual(response.context['bid'], None)
+        self.assertContains(response, listing_active_user_1.name)
+        self.assertContains(response, listing_active_user_1.description)
+        self.assertContains(response, listing_active_user_1.user.username)
+        self.assertContains(response, listing_active_user_1.startBid)
+        self.assertContains(response, 'id = "show-history"')
+        self.assertContains(response, 'id = "last-price"')
+        self.assertContains(response, 'id = "listing-is-ended"')
+        self.assertNotContains(response, 'id = "new-bid-submit"')
+        self.assertNotContains(response, 'id = "newbid"')
+        self.assertNotContains(response, 'id = "comment-submit"')
+        self.assertNotContains(response, 'id = "add-listing-to_watchlist"')
+        self.assertNotContains(response, 'id = "edit-listing"')
+        self.assertNotContains(response, 'id = "end-listing-submit"')
+        self.assertNotContains(response, 'id = "delete-listing"')
+        self.assertNotContains(response, 'id = "winner-of-listing"')
+
+    def test_not_active_listing_detail_page(self):
+            """
+            if user is Authorized but not listing's creator - display page of not active listing with full info and message that listing is ended, but without creator's manage or action interface elements: "End Listing", "Delete Listing" buttons, excluding "Show history" button
+            """
+            user_password_1 = "password_1"
+            user_name_1 = "test_user_1"
+            user_password_2 = "password_2"
+            user_name_2 = "test_user_2"
+            category_1_name = "category_1"
+
+            user_1 = create_user(username = user_name_1, password = user_password_1)
+            user_2 = create_user(username = user_name_2, password = user_password_2)
+            category_1 = create_category(name = category_1_name)
+            listing_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+            self.client.login(username = user_name_2, password = user_password_2)
+            response = self.client.get(reverse("market:details", kwargs = {"listing_id":listing_active_user_1.id}))
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.context["true_user"], False)
+            self.assertEqual(response.context['auctionlisting'], listing_active_user_1)
+            self.assertQuerysetEqual(response.context['bids'], [])
+            self.assertQuerysetEqual(response.context['comments'], [])
+            self.assertEqual(response.context['bid'], None)
+            self.assertContains(response, listing_active_user_1.name)
+            self.assertContains(response, listing_active_user_1.description)
+            self.assertContains(response, listing_active_user_1.user.username)
+            self.assertContains(response, listing_active_user_1.startBid)
+            self.assertContains(response, 'id = "last-price"')
+            self.assertContains(response, 'id = "listing-is-ended"')
+            self.assertNotContains(response, 'id = "new-bid-submit"')
+            self.assertNotContains(response, 'id = "newbid"')
+            self.assertNotContains(response, 'id = "comment-submit"')
+            self.assertNotContains(response, 'id = "edit-listing"')
+            self.assertNotContains(response, 'id = "end-listing-submit"')
+            self.assertNotContains(response, 'id = "delete-listing"')
+            self.assertNotContains(response, 'id = "winner-of-listing"')
+
+    def test_not_active_listing_detail_page_creator(self):
+        """
+        if user is Authorized and listing's creator - display page of not active listing with full info, and message that listing is ended and full lising's manage interface elements, but without "Make bid" button
+        """
+        user_password_1 = "password_1"
+        user_name_1 = "test_user_1"
+        user_password_2 = "password_2"
+        user_name_2 = "test_user_2"
+        category_1_name = "category_1"
+
+        user_1 = create_user(username = user_name_1, password = user_password_1)
+        user_2 = create_user(username = user_name_2, password = user_password_2)
+        category_1 = create_category(name = category_1_name)
+        listing_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+        self.client.login(username = user_name_1, password = user_password_1)
+        response = self.client.get(reverse("market:details", kwargs = {"listing_id":listing_active_user_1.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["true_user"], True)
+        self.assertEqual(response.context['auctionlisting'], listing_active_user_1)
+        self.assertQuerysetEqual(response.context['bids'], [])
+        self.assertQuerysetEqual(response.context['comments'], [])
+        self.assertEqual(response.context['bid'], None)
+        self.assertContains(response, listing_active_user_1.name)
+        self.assertContains(response, listing_active_user_1.description)
+        self.assertContains(response, listing_active_user_1.user.username)
+        self.assertContains(response, listing_active_user_1.startBid)
+        self.assertContains(response, 'id = "last-bid"')
+        self.assertContains(response, 'id = "add-listing-to-watchlist"')
+        self.assertContains(response, 'id = "edit-listing"')
+        self.assertContains(response, 'id = "delete-listing"')
+        self.assertContains(response, 'id = "last-price"')
+        self.assertContains(response, 'id = "listing-is-ended"')
+        self.assertNotContains(response, 'id = "new-bid-submit"')
+        self.assertNotContains(response, 'id = "newbid"')
+        self.assertNotContains(response, 'id = "comment-submit"')
+        self.assertNotContains(response, 'id = "end-listing-submit"')
+        self.assertNotContains(response, 'id = "winner-of-listing"')
+
+    def test_not_active_listing_detail_page_user_is_winner(self):
+            """
+            if user is Authorized but not listing's creator and winner of that listing - display page of not active listing with full info and message that listing is ended, but without creator's manage or action interface elements: "End Listing", "Delete Listing" buttons, excluding "Show history" button
+            """
+            user_password_1 = "password_1"
+            user_name_1 = "test_user_1"
+            user_password_2 = "password_2"
+            user_name_2 = "test_user_2"
+            category_1_name = "category_1"
+
+            user_1 = create_user(username = user_name_1, password = user_password_1)
+            user_2 = create_user(username = user_name_2, password = user_password_2)
+            category_1 = create_category(name = category_1_name)
+            listing_active_user_1 = create_listing(name = "listing_1", image = "None", description = "test_desc", category = category_1, user=user_1, startBid=100, days=30, active = False)
+            new_bid = Bid.objects.create(value = 150, listing = listing_active_user_1, user = user_2, date = timezone.now())
+            user_2.winlist.add(listing_active_user_1)
+            self.client.login(username = user_name_2, password = user_password_2)
+            response = self.client.get(reverse("market:details", kwargs = {"listing_id":listing_active_user_1.id}))
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.context["true_user"], False)
+            self.assertEqual(response.context['auctionlisting'], listing_active_user_1)
+            self.assertQuerysetEqual(response.context['bids'], [new_bid])
+            self.assertQuerysetEqual(response.context['comments'], [])
+            self.assertEqual(response.context['bid'], new_bid)
+            self.assertContains(response, listing_active_user_1.name)
+            self.assertContains(response, listing_active_user_1.description)
+            self.assertContains(response, listing_active_user_1.user.username)
+            self.assertContains(response, listing_active_user_1.startBid)
+            self.assertContains(response, 'id = "last-price"')
+            self.assertContains(response, 'id = "listing-is-ended"')
+            self.assertContains(response, 'id = "winner-of-listing"')
+            self.assertNotContains(response, 'id = "new-bid-submit"')
+            self.assertNotContains(response, 'id = "newbid"')
+            self.assertNotContains(response, 'id = "comment-submit"')
+            self.assertNotContains(response, 'id = "edit-listing"')
+            self.assertNotContains(response, 'id = "end-listing-submit"')
+            self.assertNotContains(response, 'id = "delete-listing"')
