@@ -1,12 +1,16 @@
-import json
 from django.urls import reverse
-import datetime
 from django.db.models import Max, Sum
-from asgiref.sync import async_to_sync
-from channels.generic.websocket import WebsocketConsumer
 from django.utils import timezone, dateformat
+from django.shortcuts import redirect
+
+from asgiref.sync import async_to_sync
+
+from channels.generic.websocket import WebsocketConsumer
 
 from .models import AuctionListing, Comment, User, Bid, Category, Chat, Message
+
+import datetime
+import json
 
 
 class ListingConsumer(WebsocketConsumer):
@@ -49,8 +53,14 @@ class ListingConsumer(WebsocketConsumer):
             listing.save()
             """Define winner"""
             bids = Bid.objects.filter(listing=listing)
-            if not bids:
-                redirect('market:details', listing_id = listing.id)
+            if not bids: 
+                async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,
+                {
+                'type': 'listing_winner',
+                'win_user_id': f"{listing.user.id}"
+                }
+            )
             else:
                 last_bid = bids.order_by('-value')[0]
                 win_user = last_bid.user
