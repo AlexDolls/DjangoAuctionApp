@@ -5,12 +5,18 @@ from django.shortcuts import redirect
 
 from asgiref.sync import async_to_sync
 
+from channels.db import database_sync_to_async
 from channels.generic.websocket import WebsocketConsumer
+from channels.auth import login, get_user
 
 from .models import AuctionListing, Comment, User, Bid, Category, Chat, Message
 
 import datetime
 import json
+
+def toFixed(numObj, digits=0):
+    return f"{numObj:.{digits}f}"
+        
 
 
 class ListingConsumer(WebsocketConsumer):
@@ -82,49 +88,28 @@ class ListingConsumer(WebsocketConsumer):
                 }
             )
 
-
-    #Receive message from WebSocket
-    def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        try:
-            listing = AuctionListing.objects.get(pk = int(text_data_json['listing_id']))
-        except KeyError:
-            return redirect('market:index')
+    def new_bid_placement(self, listing, new_bid): 
+        if listing.user == self.user:
+            self.send(text_data=json.dumps({
+        'error-socket': "You can't do bids on own listing.",
+                }))
         else:
-            pass
-
-        try:
-            comment_text = text_data_json['post_comment']
-        except KeyError:
-            print("No post_comment")
-        else:
-            print("letsgo")
-            self.new_comment(comment_text, listing)
-
-        try:
-            endlisting  = text_data_json['endlisting']
-        except KeyError:
-            pass
-        else:
-            self.end_listing(listing)
-
-        try:
-            new_bid = float(text_data_json['newbid'])
-        except (KeyError, AuctionListing.DoesNotExist, ValueError):
-            pass
-        else:
-            if listing.user == self.user:
-                pass
+            try:
+                new_bid = float(new_bid)
+            except ValueError:
+                self.send(text_data=json.dumps({
+                        'error-socket':"Non-numeric new-bid value or does not exist.",
+                                }))
             else:
+                new_bid = float(toFixed(new_bid, 2))
                 bids = Bid.objects.filter(listing=listing)
                 date = timezone.now()
                 max_value = bids.aggregate(Max('value'))['value__max']
                 if max_value is None:
                     max_value = 0
-                if new_bid > max_value and new_bid > float(listing.startBid):
+                if new_bid > max_value and new_bid > float(listing.startBid) and new_bid <= 99999.99:
                     new_bid_object = Bid.objects.create(value=float(new_bid), user = self.user, listing=listing, date = date)
                     new_bid_object.save()
-
                     # Send message to room group
                     async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
@@ -134,7 +119,51 @@ class ListingConsumer(WebsocketConsumer):
             }
         )
                 else:
+                    self.send(text_data=json.dumps({
+            'error-socket':"Wrong new-bid value.",
+                    }))
+
+    #Receive message from WebSocket
+    def receive(self, text_data):
+        if self.user.is_active == True and self.user.is_anonymous == False:
+            text_data_json = json.loads(text_data)
+            try:
+                listing = AuctionListing.objects.get(pk = int(text_data_json['listing_id']))
+            except (KeyError, AuctionListing.DoesNotExist):
+                self.send(text_data=json.dumps({
+                'error-socket': "Can't find the asked listing object.",
+                        }))
+            if listing.active:
+                try:
+                    comment_text = text_data_json['post_comment']
+                except KeyError:
                     pass
+                else:
+                    self.new_comment(comment_text, listing)
+
+                try:
+                    endlisting  = text_data_json['endlisting']
+                except KeyError:
+                    pass
+                else:
+                    self.end_listing(listing)
+
+                try:
+                    new_bid = text_data_json['newbid']
+                except KeyError:
+                    self.send(text_data=json.dumps({
+                    'error-socket':"No tasks to do was given",
+                            }))
+                else:
+                    self.new_bid_placement(listing, new_bid)
+            else:
+                self.send(text_data=json.dumps({
+                    'error-socket':"Listing is not active. You can't do anything.",
+                            }))
+        else:
+            self.send(text_data=json.dumps({
+                    'error-socket':"You must be logged in to make some actions.",
+                            }))
     
     def new_bid_listing(self, event):
         new_bid_set = event['new_bid_set']
