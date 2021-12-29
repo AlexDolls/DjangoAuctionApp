@@ -79,7 +79,6 @@ WSGI_APPLICATION = 'auctsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-"""USE IT ONLY FOR TEST. NOT IN PRODCTION"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -87,20 +86,18 @@ DATABASES = {
     }
 }
 
-
 """
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME':'django_db',
         'USER':'alexdolls',
-        'PASSWORD':'strongpassword',
+        'PASSWORD':'strong_password',
         'HOST': '127.0.0.1',
         'PORT':'5432',
     }
 }
 """
-
 AUTH_USER_MODEL = 'market.User'
 
 # Password validation
