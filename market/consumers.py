@@ -234,10 +234,13 @@ class ChatConsumer(WebsocketConsumer):
  
     def disconnect(self, close_code):
         # Leave room group
-        async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
-        )
+        try:
+            async_to_sync(self.channel_layer.group_discard)(
+                self.room_group_name,
+                self.channel_name
+            )
+        except AttributeError:
+            pass
 
     # Receive message from WebSocket
     def new_message_chat_exist(self, chat, message_text):
