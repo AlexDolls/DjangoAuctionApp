@@ -127,13 +127,10 @@
         document.querySelector('#message-submit').onclick = function(e) {
             const messageInputDom = document.querySelector('#message-input');
             const message = messageInputDom.value;
-            const sender_id = '{{ user.id }}';
             const chat_id = '{{ chat.id }}';
             chatSocket.send(JSON.stringify({
                 'new_message_text': message,
-                'sender_id':sender_id,
                 'chat_id':chat_id,
-                'new_chat':'',
             }));
             messageInputDom.value = '';
         };
