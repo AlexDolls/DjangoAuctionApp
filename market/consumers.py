@@ -37,29 +37,40 @@ class ListingConsumer(WebsocketConsumer):
             self.room_group_name,
             self.channel_name
                 )
+
     def new_comment(self, comment_text, listing):
-        comment_text = comment_text.strip()
-        if comment_text:
-            date = timezone.localtime()
-            comment = Comment.objects.create(listing = listing, user = self.user, date = date, text = comment_text)
-            comment.save()
-            async_to_sync(self.channel_layer.group_send)(
-                self.room_group_name,
-                {
-                    'type': 'post_new_comment',
-                    'comment': f"{comment.text}",
-                    'username': f"{comment.user.username}",
-                    'comment_date':f'{dateformat.format(comment.date, "M d, h:i a")}'
-                }
-            )       
+        try:
+            comment_text = comment_text.strip()
+        except AttributeError:
+            self.send(text_data=json.dumps({
+        'error-socket': "Wrong data type. Only string values for New Comment allowed",
+                }))
+        else:
+            if comment_text:
+                date = timezone.localtime()
+                comment = Comment.objects.create(listing = listing, user = self.user, date = date, text = comment_text)
+                comment.save()
+                async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name,
+                    {
+                        'type': 'post_new_comment',
+                        'comment': f"{comment.text}",
+                        'username': f"{comment.user.username}",
+                        'comment_date':f'{dateformat.format(comment.date, "M d, h:i a")}'
+                    }
+                )
+            else:
+                self.send(text_data=json.dumps({
+            'error-socket': "New comment text can't be empty string",
+                    }))
 
     def end_listing(self, listing):
         if self.user == listing.user:
             listing.active = False
             listing.save()
-            """Define winner"""
+            #Define winner
             bids = Bid.objects.filter(listing=listing)
-            if not bids: 
+            if not bids:
                 async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
                 {
@@ -87,6 +98,10 @@ class ListingConsumer(WebsocketConsumer):
                 'win_user_id': f"{win_user.id}"
                 }
             )
+        else:
+            self.send(text_data=json.dumps({
+        'error-socket': "Only listing's owner can end the listing",
+                }))
 
     def new_bid_placement(self, listing, new_bid): 
         if listing.user == self.user:
@@ -125,6 +140,7 @@ class ListingConsumer(WebsocketConsumer):
 
     #Receive message from WebSocket
     def receive(self, text_data):
+        task_checker = False
         if self.user.is_active == True and self.user.is_anonymous == False:
             text_data_json = json.loads(text_data)
             try:
@@ -139,6 +155,7 @@ class ListingConsumer(WebsocketConsumer):
                 except KeyError:
                     pass
                 else:
+                    task_checker = True
                     self.new_comment(comment_text, listing)
 
                 try:
@@ -146,16 +163,20 @@ class ListingConsumer(WebsocketConsumer):
                 except KeyError:
                     pass
                 else:
+                    task_checker = True
                     self.end_listing(listing)
 
                 try:
                     new_bid = text_data_json['newbid']
                 except KeyError:
+                    pass
+                else:
+                    task_checker = True
+                    self.new_bid_placement(listing, new_bid)
+                if not task_checker:
                     self.send(text_data=json.dumps({
                     'error-socket':"No tasks to do was given",
                             }))
-                else:
-                    self.new_bid_placement(listing, new_bid)
             else:
                 self.send(text_data=json.dumps({
                     'error-socket':"Listing is not active. You can't do anything.",
@@ -196,19 +217,21 @@ class ListingConsumer(WebsocketConsumer):
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
-        print("HELLO")
         self.user = self.scope['user']
-        self.room_group_name = f'chat_{self.user.id}'
-        print(f"{self.room_group_name} --- {self.user.username} --- {self.user.id}")
+        if self.user.is_active == True and self.user.is_anonymous == False:
+            self.room_group_name = f'chat_{self.user.id}'
+            print(f"{self.room_group_name} --- {self.user.username} --- {self.user.id}")
 
-        # Join room group
-        async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
-            self.channel_name
-        )
+            # Join room group
+            async_to_sync(self.channel_layer.group_add)(
+                self.room_group_name,
+                self.channel_name
+            )
 
-        self.accept()
-
+            self.accept()
+        else:
+            self.close()
+ 
     def disconnect(self, close_code):
         # Leave room group
         async_to_sync(self.channel_layer.group_discard)(
@@ -217,53 +240,81 @@ class ChatConsumer(WebsocketConsumer):
         )
 
     # Receive message from WebSocket
-    def new_message_chat_exist(self, chat, sender, message_text):
+    def new_message_chat_exist(self, chat, message_text):
         date = timezone.localtime()
-        message_text = message_text.strip()
-        if message_text and len(message_text)<=300:
-            message = Message.objects.create(text = message_text, sender_id = sender.id, chat = chat, date = date)
-            message.save()
-            chat_members = chat.members.all()
-            receiver = chat.members.exclude(id=sender.id).first()
-            unread_messages_all = 0
-            
-            for chat_item in Chat.objects.filter(members=receiver):
-                for message_item in chat_item.message_set.filter(sender_id = sender.id):
-                    if message_item.unread: #BooleanField 'unread' in Message
-                        unread_messages_all += 1
-
-            receiver.inbox = unread_messages_all
-            receiver.save()
-
-            async_to_sync(self.channel_layer.group_send)(
-                f'chat_{receiver.id}',
-                {
-                    'type': 'chat_message',
-                    'message': message.text,
-                    'user_inbox': receiver.inbox,
-                    'message_date':f'{dateformat.format(message.date, "M d, h:i a")}'
-                }
-            )
+        try:
+            message_text = message_text.strip()
+        except (AttributeError, ValueError):
             self.send(text_data = json.dumps(
-                    {
-                        'message':message.text,
-                        'message_date':f'{dateformat.format(message.date, "M d, h:i a")}',
-                        'send_self':'yes',
-                        }))
+                        {
+                            'error-socket':"Message text must be string value",
+                            }))
+        else:
+            if message_text and len(message_text)<=300:
+                sender = User.objects.get(username=f"{self.user}")
+                chat_members = chat.members.all()
+                if sender in chat.members.all():
+                    receiver = chat.members.exclude(id=sender.id).first()
+                    if receiver:
+                        message = Message.objects.create(text = message_text, sender_id = sender.id, chat = chat, date = date)
+                        message.save()
+                        unread_messages_all = 0
+        # This is exhaustive recount i think
+        #            for chat_item in Chat.objects.filter(members=receiver):
+        #                for message_item in chat_item.message_set.filter(sender_id = sender.id):
+        #                    if message_item.unread: #BooleanField 'unread' in Message
+        #                        unread_messages_all += 1
+                        for message_item in chat.message_set.filter(sender_id = sender.id):
+                            if message_item.unread: #BooleanField 'unread' in Message
+                                    unread_messages_all += 1
+
+                        receiver.inbox = unread_messages_all
+                        receiver.save()
+
+                        async_to_sync(self.channel_layer.group_send)(
+                            f'chat_{receiver.id}',
+                            {
+                                'type': 'chat_message',
+                                'message': message.text,
+                                'user_inbox': receiver.inbox,
+                                'message_date':f'{dateformat.format(message.date, "M d, h:i a")}'
+                            }
+                        )
+                        self.send(text_data = json.dumps(
+                                {
+                                    'message':message.text,
+                                    'message_date':f'{dateformat.format(message.date, "M d, h:i a")}',
+                                    'send_self':'yes',
+                                    }))
+                    else:
+                        self.send(text_data = json.dumps(
+                            {
+                                'error-socket':"You're single user in the chat, can't send message",
+                                }))
+                else:
+                    self.send(text_data = json.dumps(
+                            {
+                                'error-socket':"Sender is not member of the chat. Can't send the message",
+                                }))
+
+            else:
+                self.send(text_data = json.dumps(
+                        {
+                            'error-socket':"The message text can't be empty string",
+                            }))
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        if text_data_json['new_chat']:
-            pass
+        try:
+            chat = Chat.objects.get(pk = int(text_data_json['chat_id']))
+            message_text = text_data_json['new_message_text']
+        except (KeyError, Chat.DoesNotExist):
+            self.send(text_data = json.dumps(
+                        {
+                            'error-socket':"The message requires correct 'chat_id' and 'new_message_text' values",
+                            }))
         else:
-            try:
-                chat = Chat.objects.get(pk = int(text_data_json['chat_id']))
-                message_text = text_data_json['new_message_text']
-                sender = User.objects.get(pk = int(text_data_json['sender_id']))
-            except (KeyError, Chat.DoesNotExist, User.DoesNotExist):
-                pass
-            else:
-                self.new_message_chat_exist(chat, sender, message_text)
+            self.new_message_chat_exist(chat, message_text)
 
 
     # Receive message from room group
