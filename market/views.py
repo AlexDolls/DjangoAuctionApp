@@ -15,12 +15,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 import datetime
+import string
 
 from .models import AuctionListing, Comment, User, Bid, Category, Chat, Message
 from .serializers import BidSerializer
 from .forms import UserAvatarForm
 
 # Create your views here.
+
+# Checks if given string contains other symnols that allowed
+def uses_other_chars(s, given = frozenset(string.ascii_letters + string.digits + '-._')):
+    return not set(s) <= given
 
 class GetListingBidInfoView(APIView):
     def get(self, request, listing_id):
@@ -174,18 +179,28 @@ def editListing(request, listing_id):
 def signup(request):
     if request.method == "POST":
         try:
-            username = request.POST['username']
-            email = request.POST['email']
-            password = request.POST['password']
-            confirm_password = request.POST['confirm_password']
-        except KeyError:
+            username = request.POST['username'].strip()
+            email = request.POST['email'].strip()
+            password = request.POST['password'].strip()
+            confirm_password = request.POST['confirm_password'].strip()
+        except (ValueError, KeyError, AttributeError):
             messages.warning(request, "You did't fill all fields.")
             return HttpResponseRedirect(reverse('market:signup'))
         else:
+            if (len(username) == 0 or len(email) == 0):
+                messages.warning(request, "All fields must be filled.")
+                return HttpResponseRedirect(reverse('market:signup'))
+            if (uses_other_chars(username) or uses_other_chars(email, given = frozenset(string.ascii_letters + string.digits + '-._' + '@')) or uses_other_chars(password)):
+                messages.warning(request, "Unsupported characters was given in fields. \
+                                            Supported symbols: '-_.', letters, digits, \
+                                            '@' for email field")
+                return HttpResponseRedirect(reverse('market:signup'))
             if password != confirm_password:
                 messages.warning(request, "Passwords doesn't match.")
                 return HttpResponseRedirect(reverse('market:signup'))
-            
+            if len(password) < 8:
+                messages.warning(request, "Password must have 8 or more symbols.")
+                return HttpResponseRedirect(reverse('market:signup'))
             try:
                 user = User.objects.create_user(username = username, email=email, password = password)
                 user.save()
@@ -255,6 +270,8 @@ def mylistings(request):
     return render(request, "market/index.html", {
         "active_listing_list":AuctionListing.objects.filter(user = user),
         "mylistings":"My Listings",})
+
+# Don't need this for now cause few functions for listing was replaced on websocket
 """
 @login_required
 def endlisting(request):
@@ -353,20 +370,15 @@ def inbox(request):
             else:
                 messages.warning(request, "Chat exist :(")
                 return HttpResponseRedirect(reverse("market:inbox"))
-        
-    chats = Chat.objects.filter(members=user)
     all_users = User.objects.all().exclude(pk = user.id)
     current_user_chats = Chat.objects.filter(members = user.id)
-
     for chat in current_user_chats:
         if chat.members.count() == 2:
-            if chat.members.all()[0].id == user.id:
-                all_users = all_users.exclude(pk = chat.members.all()[1].id)
-            else:
-                all_users = all_users.exclude(pk = chat.members.all()[0].id)
+            to_delete_member = chat.members.all().exclude(id = user.id)
+            all_users = all_users.exclude(pk = to_delete_member.first().id)
 
     return render(request, "market/inbox.html", {
-    "chats":chats,
+    "chats":current_user_chats,
     "site_users":all_users,
         })
 
