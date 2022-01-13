@@ -6,11 +6,12 @@ from django.core.asgi import get_asgi_application
 from django.conf.urls import url
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auctsite.settings')
+django_asgi_app = get_asgi_application()
 
 from market.consumers import ListingConsumer, ChatConsumer
 
 application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
+    "http": django_asgi_app,
     
     "websocket": AuthMiddlewareStack(
         URLRouter([
