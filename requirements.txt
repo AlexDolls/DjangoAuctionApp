@@ -1,7 +1,10 @@
 Django==3.2.9
+daphne==3.0.2
 djangorestframework==3.12.4
 channels==3.0.4
+channels-redis==3.3.1
 Pillow==8.4.0
 pytest_asyncio==0.16.0
 pytest_django==4.5.2
 pytest==6.2.5
+psycopg2==2.9.3
