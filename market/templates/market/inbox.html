@@ -20,11 +20,11 @@
 		{% if chat.members.count == 2%}
 		<a href = "{% url "market:chat" chat.id %}">
 		<button type="button" class="btn btn-primary position-relative">
-  		{% if user.id == chat.members.all.0.id %}
-                {{ chat.members.all.1.username }}
-                {% else %}
-                {{ chat.members.all.0.username }}
-                {% endif %}
+		{% for member in chat.members.all %}
+			{% if member.id != user.id %}
+			{{member.username}}
+			{% endif %}
+		{% endfor %}
 		<span id = "numbers_chat_unread_{{chat.id}}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
     		<span class="visually-hidden">unread messages</span>
   		</span>
