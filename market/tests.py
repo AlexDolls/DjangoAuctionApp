@@ -1160,7 +1160,9 @@ class InboxViewTests(TestCase):
         user_2 = create_user(username = user_name_2, password = user_password_2)
         user_3 = create_user(username = user_name_3, password = user_password_3)
         chat_new = Chat.objects.create()
+        chat_new.save()
         chat_new.members.add(user_1,user_2)
+        chat_new.save()
         self.client.login(username = user_name_1, password = user_password_1)
         response = self.client.get(reverse("market:inbox"))
         self.assertEqual(response.status_code, 200)
@@ -1192,7 +1194,7 @@ class InboxViewTests(TestCase):
         user_2 = create_user(username = user_name_2, password = user_password_2)
         self.client.login(username = user_name_1, password = user_password_1)
         response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id})
-        self.assertQuerysetEqual(list(Chat.objects.get(members=user_1).members.all()), [user_1, user_2])
+        self.assertQuerysetEqual(list(Chat.objects.get(members=user_1).members.all()), [user_2, user_1])
 
     def test_start_exist_chat_with_user(self):
         """
