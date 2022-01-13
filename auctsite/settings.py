@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-85aht)a^0d)l-9$3^&2g)o*!y=zvay@pm_1^+$nmeox2jq867j'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", default = 0))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 
 # Application definition
@@ -81,23 +81,16 @@ WSGI_APPLICATION = 'auctsite.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        'NAME': os.environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
+        'USER': os.environ.get("SQL_USER"),
+        'PASSWORD': os.environ.get("SQL_PASSWORD"),
+        'HOST': os.environ.get("SQL_HOST", "localhost"),
+        'PORT': os.environ.get("SQL_PORT", "5432"),
     }
 }
 
-"""
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME':'django_db',
-        'USER':'alexdolls',
-        'PASSWORD':'strong_password',
-        'HOST': '127.0.0.1',
-        'PORT':'5432',
-    }
-}
-"""
+
 AUTH_USER_MODEL = 'market.User'
 
 # Password validation
@@ -137,6 +130,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -145,24 +139,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ASGI_APPLICATION = 'auctsite.asgi.application'
 
-
-"""USE IT JUST FOR TEST. NOT IN PRODUCTION"""
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    }
-}
-
-"""
-CHANNEL_LAYERS = {
+# Changing channel_layers configs depends on environment variable
+is_no_sql_engine = os.environ.get("NOSQL_ENGINE", False)
+if is_no_sql_engine != False:
+    ch_layer_temp = {
     'default':{
-        'BACKEND':'channels_redis.core.RedisChannelLayer',
+        'BACKEND': os.environ.get("NOSQL_ENGINE"),
         'CONFIG':{
-            'hosts':[('127.0.0.1', 6379)],
+            'hosts': [(os.environ.get("NOSQL_HOST", "localhost"), int(os.environ.get("NOSQL_PORT", "6379")))],
         },
     },
 }
-"""
+else:
+    ch_layer_temp = {
+    "default": {
+        "BACKEND": os.environ.get("NOSQL_ENGINE", "channels.layers.InMemoryChannelLayer")
+    }
+}
+
+CHANNEL_LAYERS = ch_layer_temp
 
 #Main url for manage media
 MEDIA_URL = '/media/'
