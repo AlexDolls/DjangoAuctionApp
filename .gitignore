@@ -1,0 +1,10 @@
+.pytest_cache
+db.sqlite3
+__pycache*	
+*.pyc
+*.swp
+*.swo
+.env.prod
+.env.db.prod
+.env.dev
+media

@@ -1,0 +1,33 @@
+# pull official base image
+FROM python:3.9.7
+RUN mkdir /home/app
+# create the app user
+RUN addgroup --system app && adduser --system --group app
+
+# create dirs for project
+ENV HOME=/home/app
+ENV APP_HOME=/home/app/web
+RUN mkdir $APP_HOME \
+	&& mkdir $APP_HOME/static \
+	&& mkdir $APP_HOME/media \
+	&& mkdir $APP_HOME/media/images
+
+# set workdir
+WORKDIR $APP_HOME
+
+#set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install deps
+COPY ./requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# copy project
+COPY . $APP_HOME
+
+# chown all the file to the app user
+RUN chown -R app:app $APP_HOME
+
+# change to the app user
+USER app

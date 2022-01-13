@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+    web:
+      build:
+        context: ./
+        dockerfile: Dockerfile.prod
+      command: daphne -b 0.0.0.0 -p 8000 auctsite.asgi:application
+      volumes:
+        - static_volume:/home/app/web/static
+        - media_volume:/home/app/web/media
+      expose:
+        - 8000
+      env_file:
+        - ./.env.prod-sample
+      depends_on:
+        - db_psql
+        - db_redis
+
+    db_psql:
+      image: postgres:14.1-alpine
+      volumes:
+        - postgres_data:/postgresql/data
+      env_file:
+        - ./.env.db.prod-sample
+    
+    db_redis:
+      image: redis:6.2.6
+      volumes:
+        - redis_data:/redis/data
+
+    nginx:
+      build: ./nginx
+      volumes:
+        - static_volume:/home/app/web/static
+        - media_volume:/home/app/web/media
+      ports:
+        - 1337:80
+      depends_on:
+        - web
+
+volumes:
+  redis_data:
+  postgres_data:
+  static_volume:
+  media_volume:
