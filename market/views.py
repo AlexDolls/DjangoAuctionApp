@@ -1,9 +1,10 @@
 import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login, authenticate, logout
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.views import generic
+from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 from django.db.models import Max, Sum
 from django.utils import timezone
@@ -14,12 +15,15 @@ from django.db.models import F
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from celery.result import AsyncResult
+
 import datetime
 import string
 
 from .models import AuctionListing, Comment, User, Bid, Category, Chat, Message
 from .serializers import BidSerializer
 from .forms import UserAvatarForm
+from .tasks import create_task
 
 # Create your views here.
 
@@ -113,10 +117,10 @@ def makebid(request, listing_id):
 def createListing(request):
     if request.method == "POST":
         user = request.user
-        current_date = timezone.now()
-        end_date = current_date + datetime.timedelta(days=30)
         active = True
+        current_date = timezone.now()
         try: 
+            hours = int(request.POST['expiretime'])
             name = f"{request.POST['listingname']}"
             category = request.POST['category']
             startBid = float(request.POST['startBid'])
@@ -145,8 +149,11 @@ def createListing(request):
                 else:
                     if not image:
                         image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
+                    end_date = current_date + datetime.timedelta(hours = hours)
                     new_listing = AuctionListing.objects.create(name = name, description = description,image=image, category = category, user = user, startBid = startBid, creationDate = current_date, endDate = end_date, active = active)
                     new_listing.save()
+                    seconds_to_end = int(datetime.timedelta.total_seconds(new_listing.endDate - new_listing.creationDate))
+                    task = create_task.apply_async(kwargs = {"listing_id": new_listing.id}, countdown = seconds_to_end)
                     return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":new_listing.id}))
     return render(request, "market/createListing.html", {"categories":Category.objects.all()})
 
@@ -260,7 +267,7 @@ def removeListing(request):
     user = request.user
     if request.method == "POST":
         listing = get_object_or_404(AuctionListing, pk = request.POST["listing_id"])
-        if listing.user == request.user:
+        if listing.user == request.user and listing.active == False:
             listing.delete()
             return HttpResponseRedirect(reverse("market:index"))
 
@@ -441,3 +448,12 @@ def add_user_avatar(request, user_id):
     else:
         return render(request, "market/index.html")
 
+@csrf_exempt
+def get_status(request, task_id):
+    task_result = AsyncResult(task_id)
+    result = {
+        "task_id": task_id,
+        "task_status": task_result.status,
+        "task_result": task_result.result
+    }
+    return JsonResponse(result, status=200)
