@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
     web:
+      restart: always
       build:
         context: ./
         dockerfile: Dockerfile.prod
@@ -17,7 +18,40 @@ services:
         - db_psql
         - db_redis
 
+    celery:
+      restart: always
+      build:
+        context: ./
+        dockerfile: Dockerfile.prod
+      command: python3 start_prod_server.py
+      env_file:
+        - ./.env.prod-sample
+      depends_on:
+        - db_redis
+        - db_psql
+        - nginx
+        - web
+
+    dashboard:
+      restart: always
+      build:
+        context: ./
+        dockerfile: Dockerfile.prod
+      command: celery flower -A auctsite --port=5555 --broker=redis://redis:6379/0
+      ports:
+        - 5555:5555
+      env_file:
+        - ./.env.prod-sample
+      depends_on:
+        - web
+        - nginx
+        - db_redis
+        - celery
+        - db_psql
+
+
     db_psql:
+      restart: always
       image: postgres:14.1-alpine
       volumes:
         - postgres_data:/postgresql/data
@@ -25,11 +59,13 @@ services:
         - ./.env.db.prod-sample
     
     db_redis:
+      restart: always
       image: redis:6.2.6
       volumes:
         - redis_data:/redis/data
 
     nginx:
+      restart: always
       build: ./nginx
       volumes:
         - static_volume:/home/app/web/static
