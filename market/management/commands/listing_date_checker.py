@@ -1,24 +1,22 @@
 from django.core.management.base import BaseCommand
 from market.models import AuctionListing
+from market.tasks import create_task
 from django.utils import timezone
 
+import urllib.request
 import time
 import datetime
 from threading import Thread
 
 def listing_date_checker():
-    while True:
-        time.sleep(60)
-        all_listings = AuctionListing.objects.all()
-        if all_listings:
-            for listing in all_listings:
-                if listing.endDate < timezone.now():
-                    listing.active = False
-                    listing.save()
-        
+    listings = AuctionListing.objects.all()
+    for listing in listings:
+        seconds_to_end = datetime.timedelta.total_seconds(listing.endDate - timezone.now())
+        if seconds_to_end > 0:
+            task = create_task.apply_async(kwargs = {"listing_id":listing.id}, countdown = seconds_to_end)
 
 class Command(BaseCommand):
-    help = "The listing date checker"
+    help = "Sample task creator"
 
     def handle(self, *args, **options):
         background_thread = Thread(target = listing_date_checker)
