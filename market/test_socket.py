@@ -873,1202 +873,1203 @@ async def test_listing_decimal_value_new_bid_placement_anonymous():
     await communicator.disconnect()
     await clear_all_bd()
 
-#End Listing
-"""
-END LISTING ACTIVE LISTING - LOGGED USER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing():
-    """
-    If logged in user trying to end active listing, return Error from websocket that non-owner can't stop the listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-        'error-socket': "Only listing's owner can end the listing",
-                }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_value():
-    """
-    If logged in user trying to end active listing by giving numeric value in key 'endlisting', return Error from websocket that non-owner can't stop the listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-        'error-socket': "Only listing's owner can end the listing",
-                }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_bid_exist():
-    """
-    If logged in user trying to end active listing and of another user exist, return Error from websocket that non-owner can't stop the listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-        'error-socket': "Only listing's owner can end the listing",
-                }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_bid_exist():
-    """
-    If logged in user trying to end active listing and gives numeric value in "endlisting" message key, bid of another user exists, return Error from websocket that non-owner can't stop the listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-        'error-socket': "Only listing's owner can end the listing",
-                }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-"""
-END LISTING ACTIVE LISTING - OWNER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_owner_no_bids():
-    """
-    If listing's owner trying to end active listing without bids, return message from websocket that owner is listing's winner
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-            'win_user_id':f"{user.id}",
-            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_owner_no_bids():
-    """
-    If listing's owner trying to end active listing without bids and gives numeric data in "endlisting" message key, return message from websocket that owner is listing's winner
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-            'win_user_id':f"{user.id}",
-            }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_owner_bid_exist():
-    """
-    If listing's owner trying to end active listing with bid, return message from websocket that bid maker is listing's winner
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_winner = await async_create_user(username = "user_winner", password = "user_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-            'win_user_id':f"{user_winner.id}",
-            }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_owner_bid_exist():
-    """
-    If listing's owner trying to end active listing with bid and gives numeric value in "endlisting" message key, return message from websocket that bid maker is listing's winner
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_winner = await async_create_user(username = "user_winner", password = "user_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-            'win_user_id':f"{user_winner.id}",
-            }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-
-"""
-END LISTING ACTIVE LISTING - ANONYMOUS USER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_anonymous():
-    """
-    If anonymous trying to end active listing, return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_anonymous():
-    """
-    If anonymous trying to end active listing and gives numeric value to "endlisting" message key, return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_anonymous_bid_exist():
-    """
-    If anonymous trying to end active listing and another user bid exists - return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_anonymous_bid_exist():
-    """
-    If anonymous trying to end active listing and gives numeric value in "endlisting" message key, another user bid exists - return Error from websocket that user need to be logged in.
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
-"""
-END LISTING ACTIVE LISTING - LOGGED USER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing():
-    """
-    If logged in user trying to end active listing, return Error from websocket that non-owner can't stop the listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-        'error-socket': "Only listing's owner can end the listing",
-                }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_value():
-    """
-    If logged in user trying to end active listing by giving numeric value in key 'endlisting', return Error from websocket that non-owner can't stop the listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-        'error-socket': "Only listing's owner can end the listing",
-                }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_bid_exist():
-    """
-    If logged in user trying to end active listing and of another user exist, return Error from websocket that non-owner can't stop the listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-        'error-socket': "Only listing's owner can end the listing",
-                }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_bid_exist():
-    """
-    If logged in user trying to end active listing and gives numeric value in "endlisting" message key, bid of another user exists, return Error from websocket that non-owner can't stop the listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-        'error-socket': "Only listing's owner can end the listing",
-                }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-"""
-END LISTING ACTIVE LISTING - OWNER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_owner_no_bids():
-    """
-    If listing's owner trying to end active listing without bids, return message from websocket that owner is listing's winner
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-            'win_user_id':f"{user.id}",
-            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_owner_no_bids():
-    """
-    If listing's owner trying to end active listing without bids and gives numeric data in "endlisting" message key, return message from websocket that owner is listing's winner
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-            'win_user_id':f"{user.id}",
-            }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_owner_bid_exist():
-    """
-    If listing's owner trying to end active listing with bid, return message from websocket that bid maker is listing's winner
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_winner = await async_create_user(username = "user_winner", password = "user_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-            'win_user_id':f"{user_winner.id}",
-            }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_owner_bid_exist():
-    """
-    If listing's owner trying to end active listing with bid and gives numeric value in "endlisting" message key, return message from websocket that bid maker is listing's winner
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_winner = await async_create_user(username = "user_winner", password = "user_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-            'win_user_id':f"{user_winner.id}",
-            }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-
-"""
-END LISTING ACTIVE LISTING - ANONYMOUS USER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_anonymous():
-    """
-    If anonymous trying to end active listing, return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_anonymous():
-    """
-    If anonymous trying to end active listing and gives numeric value to "endlisting" message key, return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_anonymous_bid_exist():
-    """
-    If anonymous trying to end active listing and another user bid exists - return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_anonymous_bid_exist():
-    """
-    If anonymous trying to end active listing and gives numeric value in "endlisting" message key, another user bid exists - return Error from websocket that user need to be logged in.
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
-    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
-#End listing - Not Active Listing
-"""
-END LISTING NOT ACTIVE LISTING - LOGGED USER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing():
-    """
-    If logged in user trying to end not active listing, return Error from websocket that can't do actoins with non-active listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"Listing is not active. You can't do anything.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_value():
-    """
-    If logged in user trying to end non-active listing by giving numeric value in key 'endlisting', return Error that can't do actions with non-active listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"Listing is not active. You can't do anything.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_bid_exist():
-    """
-    If logged in user trying to end non-active listing and of another user exist, return Error from websocket that can't do actions with non-active listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"Listing is not active. You can't do anything.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_bid_exist():
-    """
-    If logged in user trying to end non-active listing and gives numeric value in "endlisting" message key, bid of another user exists, return Error from websocket that can't do actions with non-active listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
-    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
-    client_login = await async_login_client(client, "test_user_2", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"Listing is not active. You can't do anything.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-"""
-END LISTING NOT ACTIVE LISTING - OWNER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_owner_no_bids():
-    """
-    If listing's owner trying to end non-active listing without bids, return message from websocket that can't do actions with non-active listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"Listing is not active. You can't do anything.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_owner_no_bids():
-    """
-    If listing's owner trying to end non-active listing without bids and gives numeric data in "endlisting" message key, return message from websocket that can't do actions with non-active listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"Listing is not active. You can't do anything.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_owner_bid_exist():
-    """
-    If listing's owner trying to end non-active listing with bid, return message from websocket that can't do actions with non-active listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_winner = await async_create_user(username = "user_winner", password = "user_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"Listing is not active. You can't do anything.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_owner_bid_exist():
-    """
-    If listing's owner trying to end non-active listing with bid and gives numeric value in "endlisting" message key, return message from websocket that can't do actions with non-active listing
-    """
-    client = Client()
-    user = await async_create_user(username = "test_user", password = "test_password")
-    user_winner = await async_create_user(username = "user_winner", password = "user_password")
-    client_login = await async_login_client(client, "test_user", "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
-    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"Listing is not active. You can't do anything.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd(client_login)
-
-
-"""
-END LISTING NOT ACTIVE LISTING - ANONYMOUS USER
-"""
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_anonymous():
-    """
-    If anonymous trying to end non-active listing, return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            } 
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_anonymous():
-    """
-    If anonymous trying to end non-active listing and gives numeric value to "endlisting" message key, return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_anonymous_bid_exist():
-    """
-    If anonymous trying to end non-active listing and another user bid exists - return Error from websocket that user need to be logged in
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
-@pytest.mark.asyncio
-@pytest.mark.django_db
-async def test_end_listing_numeric_anonymous_bid_exist():
-    """
-    If anonymous trying to end non-active listing and gives numeric value in "endlisting" message key, another user bid exists - return Error from websocket that user need to be logged in.
-    """
-    user = await async_create_user(username = "test_user", password = "test_password")
-    category = await async_create_category(name = "test_category")
-    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
-    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
-    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
-    application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
-                    ])
-        ),
-})
-    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
-    connected, subprotocol = await communicator.connect()
-    assert connected
-    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
-    response = await communicator.receive_json_from()
-    assert response == {
-                    'error-socket':"You must be logged in to make some actions.",
-                            }
-    await communicator.disconnect()
-    await clear_all_bd()
-
+# COMMENTED IN REASON OF TRANSPORTING ENDLISTING FUNC FROM WEBSOCKET TO CELERY IN market/tasks.py    
+##End Listing
+#"""
+#END LISTING ACTIVE LISTING - LOGGED USER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing():
+#    """
+#    If logged in user trying to end active listing, return Error from websocket that non-owner can't stop the listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#        'error-socket': "Only listing's owner can end the listing",
+#                }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_value():
+#    """
+#    If logged in user trying to end active listing by giving numeric value in key 'endlisting', return Error from websocket that non-owner can't stop the listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#        'error-socket': "Only listing's owner can end the listing",
+#                }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_bid_exist():
+#    """
+#    If logged in user trying to end active listing and of another user exist, return Error from websocket that non-owner can't stop the listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#        'error-socket': "Only listing's owner can end the listing",
+#                }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_bid_exist():
+#    """
+#    If logged in user trying to end active listing and gives numeric value in "endlisting" message key, bid of another user exists, return Error from websocket that non-owner can't stop the listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#        'error-socket': "Only listing's owner can end the listing",
+#                }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#"""
+#END LISTING ACTIVE LISTING - OWNER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_owner_no_bids():
+#    """
+#    If listing's owner trying to end active listing without bids, return message from websocket that owner is listing's winner
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#            'win_user_id':f"{user.id}",
+#            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_owner_no_bids():
+#    """
+#    If listing's owner trying to end active listing without bids and gives numeric data in "endlisting" message key, return message from websocket that owner is listing's winner
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#            'win_user_id':f"{user.id}",
+#            }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_owner_bid_exist():
+#    """
+#    If listing's owner trying to end active listing with bid, return message from websocket that bid maker is listing's winner
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_winner = await async_create_user(username = "user_winner", password = "user_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#            'win_user_id':f"{user_winner.id}",
+#            }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_owner_bid_exist():
+#    """
+#    If listing's owner trying to end active listing with bid and gives numeric value in "endlisting" message key, return message from websocket that bid maker is listing's winner
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_winner = await async_create_user(username = "user_winner", password = "user_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#            'win_user_id':f"{user_winner.id}",
+#            }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#
+#"""
+#END LISTING ACTIVE LISTING - ANONYMOUS USER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_anonymous():
+#    """
+#    If anonymous trying to end active listing, return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_anonymous():
+#    """
+#    If anonymous trying to end active listing and gives numeric value to "endlisting" message key, return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_anonymous_bid_exist():
+#    """
+#    If anonymous trying to end active listing and another user bid exists - return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_anonymous_bid_exist():
+#    """
+#    If anonymous trying to end active listing and gives numeric value in "endlisting" message key, another user bid exists - return Error from websocket that user need to be logged in.
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#"""
+#END LISTING ACTIVE LISTING - LOGGED USER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing():
+#    """
+#    If logged in user trying to end active listing, return Error from websocket that non-owner can't stop the listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#        'error-socket': "Only listing's owner can end the listing",
+#                }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_value():
+#    """
+#    If logged in user trying to end active listing by giving numeric value in key 'endlisting', return Error from websocket that non-owner can't stop the listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#        'error-socket': "Only listing's owner can end the listing",
+#                }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_bid_exist():
+#    """
+#    If logged in user trying to end active listing and of another user exist, return Error from websocket that non-owner can't stop the listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#        'error-socket': "Only listing's owner can end the listing",
+#                }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_bid_exist():
+#    """
+#    If logged in user trying to end active listing and gives numeric value in "endlisting" message key, bid of another user exists, return Error from websocket that non-owner can't stop the listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#        'error-socket': "Only listing's owner can end the listing",
+#                }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#"""
+#END LISTING ACTIVE LISTING - OWNER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_owner_no_bids():
+#    """
+#    If listing's owner trying to end active listing without bids, return message from websocket that owner is listing's winner
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#            'win_user_id':f"{user.id}",
+#            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_owner_no_bids():
+#    """
+#    If listing's owner trying to end active listing without bids and gives numeric data in "endlisting" message key, return message from websocket that owner is listing's winner
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#            'win_user_id':f"{user.id}",
+#            }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_owner_bid_exist():
+#    """
+#    If listing's owner trying to end active listing with bid, return message from websocket that bid maker is listing's winner
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_winner = await async_create_user(username = "user_winner", password = "user_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#            'win_user_id':f"{user_winner.id}",
+#            }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_owner_bid_exist():
+#    """
+#    If listing's owner trying to end active listing with bid and gives numeric value in "endlisting" message key, return message from websocket that bid maker is listing's winner
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_winner = await async_create_user(username = "user_winner", password = "user_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#            'win_user_id':f"{user_winner.id}",
+#            }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#
+#"""
+#END LISTING ACTIVE LISTING - ANONYMOUS USER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_anonymous():
+#    """
+#    If anonymous trying to end active listing, return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_anonymous():
+#    """
+#    If anonymous trying to end active listing and gives numeric value to "endlisting" message key, return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_anonymous_bid_exist():
+#    """
+#    If anonymous trying to end active listing and another user bid exists - return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_anonymous_bid_exist():
+#    """
+#    If anonymous trying to end active listing and gives numeric value in "endlisting" message key, another user bid exists - return Error from websocket that user need to be logged in.
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = True)
+#    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+##End listing - Not Active Listing
+#"""
+#END LISTING NOT ACTIVE LISTING - LOGGED USER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing():
+#    """
+#    If logged in user trying to end not active listing, return Error from websocket that can't do actoins with non-active listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"Listing is not active. You can't do anything.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_value():
+#    """
+#    If logged in user trying to end non-active listing by giving numeric value in key 'endlisting', return Error that can't do actions with non-active listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"Listing is not active. You can't do anything.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_bid_exist():
+#    """
+#    If logged in user trying to end non-active listing and of another user exist, return Error from websocket that can't do actions with non-active listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"Listing is not active. You can't do anything.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_bid_exist():
+#    """
+#    If logged in user trying to end non-active listing and gives numeric value in "endlisting" message key, bid of another user exists, return Error from websocket that can't do actions with non-active listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_2 = await async_create_user(username = "test_user_2", password = "test_password")
+#    user_bid = await async_create_user(username = "test_bid_user", password = "test_bid_user")
+#    client_login = await async_login_client(client, "test_user_2", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    new_bid = await async_create_bid_object(user = user_bid, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"Listing is not active. You can't do anything.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#"""
+#END LISTING NOT ACTIVE LISTING - OWNER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_owner_no_bids():
+#    """
+#    If listing's owner trying to end non-active listing without bids, return message from websocket that can't do actions with non-active listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"Listing is not active. You can't do anything.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_owner_no_bids():
+#    """
+#    If listing's owner trying to end non-active listing without bids and gives numeric data in "endlisting" message key, return message from websocket that can't do actions with non-active listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"Listing is not active. You can't do anything.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_owner_bid_exist():
+#    """
+#    If listing's owner trying to end non-active listing with bid, return message from websocket that can't do actions with non-active listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_winner = await async_create_user(username = "user_winner", password = "user_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"Listing is not active. You can't do anything.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_owner_bid_exist():
+#    """
+#    If listing's owner trying to end non-active listing with bid and gives numeric value in "endlisting" message key, return message from websocket that can't do actions with non-active listing
+#    """
+#    client = Client()
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    user_winner = await async_create_user(username = "user_winner", password = "user_password")
+#    client_login = await async_login_client(client, "test_user", "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    new_bid_user_winner = await async_create_bid_object(user = user_winner, listing = listing, value = 200)
+#    headers = [(b'origin', b'...'), (b'cookie', client_login.cookies.output(header='', sep='; ').encode())]
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}),headers)
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"Listing is not active. You can't do anything.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd(client_login)
+#
+#
+#"""
+#END LISTING NOT ACTIVE LISTING - ANONYMOUS USER
+#"""
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_anonymous():
+#    """
+#    If anonymous trying to end non-active listing, return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            } 
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_anonymous():
+#    """
+#    If anonymous trying to end non-active listing and gives numeric value to "endlisting" message key, return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_anonymous_bid_exist():
+#    """
+#    If anonymous trying to end non-active listing and another user bid exists - return Error from websocket that user need to be logged in
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":"end", "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
+#@pytest.mark.asyncio
+#@pytest.mark.django_db
+#async def test_end_listing_numeric_anonymous_bid_exist():
+#    """
+#    If anonymous trying to end non-active listing and gives numeric value in "endlisting" message key, another user bid exists - return Error from websocket that user need to be logged in.
+#    """
+#    user = await async_create_user(username = "test_user", password = "test_password")
+#    category = await async_create_category(name = "test_category")
+#    user_bid = await async_create_user(username = "test_user_bid", password = "test_user_password")
+#    listing = await async_create_listing(name = "test_listing", image = "None", description = "test_desc", category = category, user=user, startBid=100, days=30, active = False)
+#    new_bid = await async_create_bid_object(value = 200, listing = listing, user = user_bid)
+#    application = ProtocolTypeRouter({
+#    "http": get_asgi_application(),
+#
+#    "websocket": AuthMiddlewareStack(
+#        URLRouter([
+#                    re_path((r"^ws/market/(?P<listing_id>\w+)/$"),ListingConsumer.as_asgi()),
+#                    ])
+#        ),
+#})
+#    communicator = WebsocketCommunicator(application, "ws" + reverse("market:details", kwargs = {"listing_id":listing.id}))
+#    connected, subprotocol = await communicator.connect()
+#    assert connected
+#    await communicator.send_json_to({"endlisting":1, "listing_id":listing.id})
+#    response = await communicator.receive_json_from()
+#    assert response == {
+#                    'error-socket':"You must be logged in to make some actions.",
+#                            }
+#    await communicator.disconnect()
+#    await clear_all_bd()
+#
 #Post new comment on Listing page
 """
 POST NEW COMMENT ACTIVE LISTING - LOGGED USER
