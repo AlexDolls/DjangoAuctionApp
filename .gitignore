@@ -8,3 +8,5 @@ __pycache*
 .env.db.prod
 .env.dev
 media
+migrations
+!__init__.py
