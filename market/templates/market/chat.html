@@ -1,6 +1,7 @@
 {% extends "market/layout.html" %}
 
 {% block body %}
+
 <div class = "modal-body">
 	<div class="container">
   <div class="row">
@@ -35,7 +36,6 @@
 	<p>{{message.text}}</p>
 	<span class="time-left">{{ message.date|date:"M d, h:i a" }}</span>
         </div>
-
 	{% else %}
 	<div class="container-for-chat" style = "word-wrap: break-word; word-break: break-all;">
         <p>{{message.text}}</p>
