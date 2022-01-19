@@ -1,6 +1,9 @@
 Django==3.2.9
 daphne==3.0.2
 djangorestframework==3.12.4
+celery==5.2.3
+redis==4.1.0
+flower==1.0.0
 channels==3.0.4
 channels-redis==3.3.1
 Pillow==8.4.0
