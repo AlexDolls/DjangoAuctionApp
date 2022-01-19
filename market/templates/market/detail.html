@@ -45,6 +45,7 @@
 		<li>User : {{ auctionlisting.user }}</li>
 		<li>Start price: {{ auctionlisting.startBid }} $</li>
 		<li>Creation date: {{ auctionlisting.creationDate }}</li>
+		<li>Expire date: {{ auctionlisting.endDate }}</li>
 	</ul>
 	
 	{% if user.is_authenticated %}
@@ -80,6 +81,9 @@
         {% endif %}
 
 	<div id = 'result'></div>
+{% comment %}
+
+Commented cause endlisting fucntion now is auto and can't be called by manual actions from user side...
 
 {% if user == auctionlisting.user and auctionlisting.active == True %}
 		<div id = "end-listing-block">
@@ -88,7 +92,7 @@
 		</center>
 		</div>
 {% endif %}
-	
+{% endcomment %}
 
 	<script type = 'text/javascript'>
 		const listing_id = "{{auctionlisting.id}}"	
@@ -302,7 +306,7 @@
 		{% endfor %}
 		</div>
 	</fieldset>
-        {% if user == auctionlisting.user %}
+        {% if user == auctionlisting.user and not auctionlisting.active %}
         <form action = "{% url "market:removeListing" %}" method = "post" class = "add-category-left" style="z-index:1;">
         {% csrf_token %}
                 <input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
