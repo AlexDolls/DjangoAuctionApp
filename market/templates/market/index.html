@@ -7,7 +7,7 @@
     <a href="{% url 'market:details' listing.id %}">
         <div class="item text-center" {% if listing.active != True %}style="background-color: rgba(255, 220, 220, 0.7);"
             {% endif %}>
-		<img src = "{{ listing.image }}" alt = "Loading...">
+		<img src="{%if listing.loaded_image %}{{ listing.loaded_image.url }}{% else %}{{ listing.image }}{% endif %}" alt = "Loading...">
             <div class="details">
                 <h5>{{ listing.name }}</h5>
                 <h6>Price: $<strong>{{ listing.startBid }}</strong></h6>
