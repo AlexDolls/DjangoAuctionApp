@@ -27,5 +27,6 @@ urlpatterns = [
             path('user/<int:user_id>', views.add_user_avatar, name = "add_user_avatar"),
             path('signup/', views.signup, name = 'signup'),
             path('api/<int:listing_id>/last_bid', views.GetListingBidInfoView.as_view()),
+            path('api/<int:listing_id>/all_bids', views.GetListingBidsTotalInfoView.as_view()),
             path('task/<task_id>', views.get_status, name="get_task_status"),
         ]

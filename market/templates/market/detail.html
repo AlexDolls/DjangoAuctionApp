@@ -1,28 +1,52 @@
 {% extends "market/layout.html" %}
 {% block body %}
-
+<input type = "hidden" id = "is_open" value ="0">
 <script type = "text/javascript">
+	
 	function bidhistory()
-	{	
+	{
+		const is_open = document.getElementById("is_open").getAttribute("value")
+			if (is_open === "1"){
 		var historyList = ""
-		{% for bid in auctionlisting.bid_set.all %}
-			var username = "{{ bid.user.username }}"
-			var bid_date = "{{ bid.date }}"
-			var value = "{{ bid.value }}"
-			historyList += "<li class = 'p-1' style='margin: 0.5rem 0;'>" +"<strong> "+ username +" </strong> :"+ value +"$ — "+ bid_date + "</li>";
-		{% endfor %}
-			document.getElementById("history").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Hide history' OnClick = 'clearhistory();'>";
-			document.getElementById("history").innerHTML += "<div id = 'history_list' style = 'padding:10px; background-color:rgba(255,255,255,0.4); margin: 1rem 0; border-radius:1rem; height: auto; width: auto;'></div>";
-			document.getElementById("history_list").innerHTML = historyList
+		$.ajax({
+                                type:"GET",
+                                url:"/market/api/"+listing_id+"/all_bids",
+                                success:function(result){
+				for (var bid_item in result){
+				var username = result[bid_item].user.username;
+                        	var bid_date = new Date(result[bid_item].date);
+				var value = result[bid_item].value;
+						historyList += "<tr><li class = 'p-1' style='margin: 0.5rem 0;'>" +"<strong> "+ username +" </strong> :"+ value +"$ — "+ bid_date + "</li></tr>";
+								}
+				document.getElementById("history-button").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Hide history' OnClick = 'clearhistory();'>";
+						document.getElementById("history-list-row").innerHTML = "<div class = 'modal-body-history'><div class = 'modal-content-history'><table class = 'table'><tbody id = 'history-row'></tbody></div></div></div>"
+				document.getElementById("history-row").innerHTML = historyList
+
+				if ((document.getElementById("autoupdate").checked))
+                                setTimeout(function() {
+                                  bidhistory();
+                                        }, 5000);
+
+				}
+                                });
+		}
 	}
 
 	function clearhistory()
 	{
-		document.getElementById("history").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Show history' OnClick = 'bidhistory();'>";
+		document.getElementById("history-button").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Show history' OnClick = 'turn_is_open();'>";
+		document.getElementById("is_open").setAttribute("value", "0");
+		document.getElementById("history-list-row").innerHTML = "";
 	}
+
+	function  turn_is_open(){
+                        document.getElementById("is_open").setAttribute("value", "1");
+                        bidhistory();
+                }
+
 </script>
 
-<div class = "detail-page">
+<div class = "detail-page p-4">
 	{% if messages %}
 		<ul class = "messages">
 			{% for message in messages%}
@@ -35,19 +59,45 @@
 	<div class="image">
         	<img class="big" src="{{ auctionlisting.image }}" alt="{{ auctionlisting.id }}">
     	</div>	
-	<hr>
-	<h4 style = "text-align:left;">Description:</h4>
-	<div class = "item-description">{% if auctionlisting.description %} {{ auctionlisting.description }} {% else %} No description {% endif %}</div>
-	<hr>
-	<h4>Listing details</h4>
-	<hr style = "width:10rem;">
-	<ul style = "font-size:20px;">
-		<li>User : {{ auctionlisting.user }}</li>
-		<li>Start price: {{ auctionlisting.startBid }} $</li>
-		<li>Creation date: {{ auctionlisting.creationDate }}</li>
-		<li>Expire date: {{ auctionlisting.endDate }}</li>
-	</ul>
-	
+	<table class = "table" style = "font-size:larger;">
+	<thead>
+		<tr>
+			<th scope = "col">Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>{% if auctionlisting.description %} Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.{{ auctionlisting.description }} {% else %} No description {% endif %}<td>
+		</tr>
+	</tbody>
+	</table>
+
+<table class="table" style = "font-size:larger;">
+  <thead>
+    <tr>
+      <th scope="col">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">User</th>
+      <td>{{ auctionlisting.user }}</td>
+    </tr>
+    <tr>
+      <th scope="row">Start price</th>
+      <td>{{ auctionlisting.startBid }} $</td>
+    </tr>
+    <tr>
+      <th scope="row">Creation date</th>
+      <td>{{ auctionlisting.creationDate|date:'Y-m-d H:i' }}</td>
+    </tr>
+    <tr>
+      <th scope="row">Expire date</th>
+      <td>{{ auctionlisting.endDate|date:'Y-m-d H:i' }}</td>
+    </tr>
+  </tbody>
+</table>
+
 	{% if user.is_authenticated %}
 	<form action = "{% url "market:watchlist" %}" method = "post" class = "add-category" style = "z-index:1;">
 		{% csrf_token %}
@@ -55,14 +105,38 @@
 			<input type = "submit" class = "btn-primary btn-lg" id = "add-listing-to-watchlist"value = {% if auctionlisting in user.watchlist.all %}"Remove from watchlist"{% else %}"Add to Watchlist"{% endif %}>
 	</form>
 	{% endif %}
-	<h3 style = "font-size:30px;">Last Bid:<input type = 'text' id = "last-bid"{% if bid is None%} value = "No bids yet :)"{% else %} value = "{{bid.value}}"${% endif %} readonly = "True" style = "width:40%;"></h3>
-        <div id="history">
-	<input type = "button" class = "btn-primary btn-lg" id = "show-history" value = "Show history" OnClick = "bidhistory();">
+	<table class = "table">
+	<tbody>
+		<tr>
+			<td style = "width:50%; text-align:center; font-size: 20px;">
+				Time to close
+				<strong><p id = "demo"></p></strong>
+			</td>
+			<td style = "text-align:center; width:50%; font-size: 20px;">
+				<p>Last Bid</p><p><input type = 'text' id = "last-bid"{% if bid is None%} value = "No bids yet :)"{% else %} value = "{{bid.value}}"${% endif %} readonly = "True" style = "width:80%; border-radius:12.5px; text-align: center;"></p>
+			</td>
+		</tr>
+	</tbody>
+	</table>
+	<div class = "container">
+	<div class = "row p-3">
+	<div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id="autoupdate" checked>
+          <label class="form-check-label" for="autoupdate">Auto-update</label>
+        </div>
 	</div>
+	<div class = "row">
+        <div id="history-button">
+	<input type = "button" class = "btn-primary btn-lg" id = "show-history" value = "Show history" OnClick = "turn_is_open();">
+	</div>
+	</div>
+	<div class = "row p-3" id = "history-list-row"></div>
+	</div>
+	<p>
 	{% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
 		<div id = "new-bid-block">
 		<center>
-		<input type = "number" id = "newbid" name = "newbid" style = "height:2.4rem; width:9rem; font-size:30px;"
+		<input type = "number" id = "newbid" name = "newbid" style = "height:2.4rem; width:220px; font-size:30px; text-align: center; border-radius:12.5px;"
 		{% if bid is None %} min = {{auctionlisting.startBid}} max = 99999 value = {{auctionlisting.startBid}}
                 {% else %} min ={{bid.value}} max = 99999 value = {{bid.value}}
 		       {% endif %}><br>
@@ -93,6 +167,35 @@ Commented cause endlisting fucntion now is auto and can't be called by manual ac
 		</div>
 {% endif %}
 {% endcomment %}
+
+	<script>
+	// Set the date we're counting down to
+		var countDownDate = new Date("{{auctionlisting.endDate|date:'Y-m-d H:i:s'}}").getTime();
+		var now = new Date("{{server_datetime|date:'Y-m-d H:i:s'}}").getTime();
+		var distance = countDownDate - now;
+
+	
+	var x = setInterval(function() {
+
+	    distance = distance - 1000
+	    
+	    // Time calculations for days, hours, minutes and seconds
+	    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+	    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+	    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+	    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+	    
+	    // Output the result in an element with id="demo"
+	    document.getElementById("demo").innerHTML = days + "d " + hours + "h "
+	    + minutes + "m " + seconds + "s ";
+	    
+	    // If the count down is over, write some text 
+	    if (distance < 0) {
+		clearInterval(x);
+		document.getElementById("demo").innerHTML = "EXPIRED";
+	    }
+	}, 1000);
+	</script>
 
 	<script type = 'text/javascript'>
 		const listing_id = "{{auctionlisting.id}}"	
@@ -131,6 +234,7 @@ Commented cause endlisting fucntion now is auto and can't be called by manual ac
 				document.querySelector('#newbid').value = Number(data.new_bid_set)+1;
 					}
 			if (data.comment){
+			document.querySelector('#modal-body-comments').setAttribute("style","")
                         document.querySelector('#all-comments').innerHTML += '<div class = "card comment">'
                         +'<div class = "card-body">'
                         +'<div class = "card-title">'
@@ -149,6 +253,15 @@ Commented cause endlisting fucntion now is auto and can't be called by manual ac
 			+'</div>'
 			+'</div>';
 			document.querySelector('#comment-input').value = "";
+			
+			const comments = document.getElementsByClassName("card comment")
+
+			const scroll_check = document.querySelector('#autoscroll-check').checked
+                	if (scroll_check){
+                	if (comments.length > 0){
+                	comments[(comments.length-1)].scrollIntoView();}
+                        }
+
                                                         }
 			if (data.win_user_id){
 			
@@ -289,21 +402,46 @@ Commented cause endlisting fucntion now is auto and can't be called by manual ac
 
 	</script>
 
-		<div id = "all-comments" style = "text-align:left;">
-		{% for comment in comments %}
-		<div class = "card comment">
-			<div class = "card-body">
-			<div class = "card-title">
-				<span class="badge bg-dark mb-2" style = "font-size:13px;">{{ comment.user.username }}</span>
-				<h5>{{ comment.text }}</h5>
+	<div class = "modal-body-comments" {% if comments %}{%else%}style = "display:none;"{% endif %} id = "modal-body-comments">
+		<div class = "modal-content">
+			<div id = "all-comments">
+				{% for comment in comments %}
+				<div class = "card comment">
+					<div class = "card-body">
+						<div class = "card-title">
+							<span class = "badge bg-dark mb-2" style = "font-size:13px">{{ comment.user.username }}
+						</div>
+						<div class = "card-text">
+							<h5>{{comment.text}}</h5>
+							<small>Commented on: <strong>{{comment.date|date:"M d, h:i a"}}</strong></small>
+						</div>
+					</div>
+				</div>
+				{% endfor %}
 			</div>
-			<div class = "card-text">
-				<small>Commented on: <strong>{{ comment.date|date:"M d, h:i a" }}</strong></small>
+		</div>
+	</div>
+
+	{% if auctionlisting.active and user.is_authenticated %}
+		<div class = "form-floating mb-3" id = "comment-input-form">
+			<textarea class = "form-control mb-3" name = "comment" id = "comment-input" style = "height:100px;" placeholder = "comment_text"></textarea>
+			<label for = "comment">Comment</label>
+			<div class = "container">
+			<div class = "row">
+			<center><input type = "button" id = "comment-submit" class = "btn-info btn-lg" value = "Post comment"></center> 
+			</div>
+			<div class = "row">
+			<div class="form-check">
+			  <input class="form-check-input" type="checkbox" value="" id="autoscroll-check" checked>
+			  <label class="form-check-label" for="autoscroll-check">
+			    Autoscroll
+			  </label>
 			</div>
 			</div>
+		</div>
+	{% endif %}
 
 		</div>
-		{% endfor %}
 		</div>
 	</fieldset>
         {% if user == auctionlisting.user and not auctionlisting.active %}
@@ -314,14 +452,4 @@ Commented cause endlisting fucntion now is auto and can't be called by manual ac
         </form>
         {% endif %}
         </center>
-        <fieldset>
-                {% if auctionlisting.active and user.is_authenticated %}
-                                <div class = "form-floating mb-3" id = "comment-input-form">
-                                <textarea class = "form-control mb-3" name = "comment" id = "comment-input" style = "height:100px;" placeholder = "comment_text"></textarea>
-                                <label for = "comment">Comment</label>
-                                <center><input type = "button" id = "comment-submit" class = "btn-info btn-lg" value = "Post comment"></center>
-                                </div>
-                {% endif %}
-
-</div>
 {% endblock %}

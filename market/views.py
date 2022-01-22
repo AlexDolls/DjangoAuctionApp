@@ -31,6 +31,23 @@ from .tasks import create_task
 def uses_other_chars(s, given = frozenset(string.ascii_letters + string.digits + '-._')):
     return not set(s) <= given
 
+class GetListingBidsTotalInfoView(APIView):
+    def get(self, request, listing_id):
+        listing = get_object_or_404(AuctionListing, pk=listing_id)
+        bids = Bid.objects.filter(listing=listing)
+        if not bids:
+            pass
+        else:
+            all_bids = Bid.objects.filter(listing=listing).order_by('-date')
+            queryset = all_bids
+            serializer_for_queryset = BidSerializer(
+            instance = queryset,
+            many = True
+                    )
+            return Response(serializer_for_queryset.data)
+        return Response(json.dumps({'value':'No bids yet :)'}))
+
+
 class GetListingBidInfoView(APIView):
     def get(self, request, listing_id):
         listing = get_object_or_404(AuctionListing, pk=listing_id)
@@ -56,6 +73,7 @@ class IndexView(generic.ListView):
         return AuctionListing.objects.all()
 
 def details(request, listing_id):
+    server_datetime = timezone.now()
     listing = get_object_or_404(AuctionListing, pk=listing_id)
     bids = Bid.objects.filter(listing=listing)
     comments = Comment.objects.filter(listing = listing)
@@ -68,6 +86,7 @@ def details(request, listing_id):
     if listing.user == request.user:
         true_user = True
     return render (request, "market/detail.html",{
+        "server_datetime":server_datetime,
         'true_user':true_user,
         'auctionlisting':listing,
         'bids':bids,
