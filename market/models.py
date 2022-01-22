@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from django.core import validators
 
 # Create your models here.
 
@@ -30,6 +31,7 @@ class Category(models.Model):
 class AuctionListing(models.Model):
     name = models.CharField(max_length = 32)
     image = models.URLField(blank=True)
+    loaded_image = models.ImageField(upload_to="images", validators=[validators.FileExtensionValidator(['jpg','png'],message="File must be image")], blank = True)
     description = models.CharField(max_length = 150)
     category = models.ForeignKey('Category', on_delete = models.CASCADE)
     user = models.ForeignKey('User', on_delete = models.CASCADE)

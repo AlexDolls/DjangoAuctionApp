@@ -11,8 +11,8 @@
             <div class="details">
                 <h5>{{ listing.name }}</h5>
                 <h6>Price: $<strong>{{ listing.startBid }}</strong></h6>
-                <small>Created: <strong>{{ listing.creationDate|date:"d-m-Y" }}</strong></small><br>
-		<small>Estimation date: <strong>{{ listing.endDate|date:"d-m-Y" }}</strong></small><br>
+                <small>Created: <strong>{{ listing.creationDate|date:"d-m-Y H:i" }}</strong></small><br>
+		<small>Estimation date: <strong>{{ listing.endDate|date:"d-m-Y H:i" }}</strong></small><br>
                 {% if listing.active %}
                 <span class="badge status--active">Active</span>
                 {% else %}

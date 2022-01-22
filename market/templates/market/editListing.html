@@ -1,6 +1,24 @@
 {% extends 'market/layout.html' %}
 {% block body %}
-        <form action = "{% url 'market:editListing' listing.id %}" method = 'post'>
+
+<script type = "text/javascript">
+		function seturl(){
+		document.getElementById("set-image-url").setAttribute("disabled", "true")
+		document.getElementById("set-image-url").setAttribute("class", "btn btn-secondary")
+		document.getElementById("load-image-from-pc").removeAttribute("disabled")
+		document.getElementById("load-image-from-pc").setAttribute("class", "btn btn-primary")
+		document.getElementById("form-load-image").innerHTML = "<div class = 'form-floating mb-3 col-6' style = 'width:100%;'><input class = 'form-control' type = 'text' name = 'imageurl' id = 'imageurl' placeholder = 'Image URL'><label for = 'Imageurl'>Image URL</label></div>"
+			}
+		function loadfrompc(){
+		document.getElementById("load-image-from-pc").setAttribute("disabled", "true")
+		document.getElementById("load-image-from-pc").setAttribute("class", "btn btn-secondary")
+		document.getElementById("set-image-url").removeAttribute("disabled")
+		document.getElementById("set-image-url").setAttribute("class", "btn btn-primary")
+		document.getElementById("form-load-image").innerHTML = "<p><div class='mb-3'><label for='loaded-image' class='form-label'>Choose image file for listing from your PC</label><input class='form-control' type='file' id='loaded-imaged' name = 'loaded-image'></div>"
+			}
+</script>
+
+        <form action = "{% url 'market:editListing' listing.id %}" method = 'post' enctype="multipart/form-data">
         {% csrf_token %}
         <fieldset class = "detail-parasha">
                 {% if messages %}
@@ -19,10 +37,14 @@
 			<textarea class = "form-control" id = "listingdesc" name = "listingdesc" maxlength = "150" placeholder = "Listing Description">{{listing.description}}</textarea>
 			<label for = "listingdesc">Listing Description</label>
 		</div>
-		<div class = "form-floating mb-3 col-6" style = "width:100%;">
-			<input class = "form-control" type = "text" id = "imageurl" name = "imageurl" value = {% if listing.image %}{{ listing.image }} {% else %} "" {% endif %} placeholder = "imageurl">
-			<label for = "imageurl">Image URL</label>
-		</div>
+		                <button type = "button" class = "btn btn-secondary" OnClick = "seturl();" id = "set-image-url" disabled>Image from URL</button>
+                <button type = "button" class = "btn btn-primary"  OnClick = "loadfrompc();" id = "load-image-from-pc">Load from PC</button>
+                <div id = "form-load-image">
+                <div class = "form-floating mb-3 col-6" style = "width:100%;">
+                        <input class = "form-control" type = "text" name = "imageurl" id = "imageurl" placeholder = "Image URL">
+                        <label for = "imageurl">Image URL</label>
+                </div>
+                </div>
 
 		<input type = "hidden" value = {{ listing.id }} name = "listing_id">
                 <input type = "submit" value = "Create">

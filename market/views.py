@@ -38,7 +38,7 @@ class GetListingBidsTotalInfoView(APIView):
         if not bids:
             pass
         else:
-            all_bids = Bid.objects.filter(listing=listing).order_by('-date')
+            all_bids = Bid.objects.filter(listing=listing).order_by('date')
             queryset = all_bids
             serializer_for_queryset = BidSerializer(
             instance = queryset,
@@ -144,36 +144,45 @@ def createListing(request):
             category = request.POST['category']
             startBid = float(request.POST['startBid'])
             description = f"{request.POST['listingdesc']}"
-            image = f"{request.POST['imageurl']}"
         except (KeyError, ValueError):
             messages.warning(request, "Some of fields is empty, check this out and try again")
             return HttpResponseRedirect(reverse("market:createListing"))
-        
+
+        try:
+            image_file = request.FILES.get("loaded-image")
+        except(KeyError, ValueError):
+            image_file = ""
+            pass
+        try:
+            image = f"{request.POST['imageurl']}"
+        except(KeyError, ValueError):
+            image = ""
+        try:
+            category = Category.objects.get(pk=category)
+        except(ValueError, KeyError, Category.DoesNotExist):
+            messages.warning(request, "You didn't select a category")
+            return HttpResponseRedirect(reverse("market:createListing"))
         else:
-            try:
-                category = Category.objects.get(pk=category)
-            except(ValueError, KeyError, Category.DoesNotExist):
-                messages.warning(request, "You didn't select a category")
+            if len(name) > 32:
+                messages.warning(request, "Name for listing is too long, must be less than 33")
+                return HttpResponseRedirect(reverse("market:createListing"))
+            elif startBid > 99999.00 or startBid < 0.01:
+                messages.warning(request, "Listing Start Price must be bigger than 0.01 and less than 99999.00")
+                return HttpResponseRedirect(reverse("market:createListing"))
+            elif len(description) > 150:
+                messages.warning(request, "Description length must be less than 151")
                 return HttpResponseRedirect(reverse("market:createListing"))
             else:
-                if len(name) > 32:
-                    messages.warning(request, "Name for listing is too long, must be less than 33")
-                    return HttpResponseRedirect(reverse("market:createListing"))
-                elif startBid > 99999.00 or startBid < 0.01:
-                    messages.warning(request, "Listing Start Price must be bigger than 0.01 and less than 99999.00")
-                    return HttpResponseRedirect(reverse("market:createListing"))
-                elif len(description) > 150:
-                    messages.warning(request, "Description length must be less than 151")
-                    return HttpResponseRedirect(reverse("market:createListing"))
-                else:
-                    if not image:
-                        image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
-                    end_date = current_date + datetime.timedelta(hours = hours)
-                    new_listing = AuctionListing.objects.create(name = name, description = description,image=image, category = category, user = user, startBid = startBid, creationDate = current_date, endDate = end_date, active = active)
-                    new_listing.save()
-                    seconds_to_end = int(datetime.timedelta.total_seconds(new_listing.endDate - new_listing.creationDate))
-                    task = create_task.apply_async(kwargs = {"listing_id": new_listing.id}, countdown = seconds_to_end)
-                    return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":new_listing.id}))
+                if not image:
+                    image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
+                end_date = current_date + datetime.timedelta(hours = hours)
+                
+                new_listing = AuctionListing.objects.create(name = name, description = description,loaded_image=image_file,image = image, category = category, user = user, startBid = startBid, creationDate = current_date, endDate = end_date, active = active)
+
+                new_listing.save()
+                seconds_to_end = int(datetime.timedelta.total_seconds(new_listing.endDate - new_listing.creationDate))
+                task = create_task.apply_async(kwargs = {"listing_id": new_listing.id}, countdown = seconds_to_end)
+                return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":new_listing.id}))
     return render(request, "market/createListing.html", {"categories":Category.objects.all()})
 
 @login_required
@@ -188,18 +197,28 @@ def editListing(request, listing_id):
             try:
                 description = request.POST['listingdesc']
                 name = request.POST['listingname']
-                image = request.POST['imageurl']
             except KeyError:
                 messages.warning(request, "You didn't give any values")
                 return HttpResponseRedirect(reverse("market:editListingPage", kwargs = {'listing_id':listing.id}))
-            else:
-                if not image:
-                    image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
-                listing.name = name
-                listing.description = description
-                listing.image = image
-                listing.save()
-                return HttpResponseRedirect(reverse("market:details", kwargs = {'listing_id':listing.id}))
+            try:
+                image_file = request.FILES.get("loaded-image")
+            except(KeyError, ValueError):
+                image_file = ""
+                pass
+            try:
+                image = f"{request.POST['imageurl']}"
+            except(KeyError, ValueError):
+                image = ""
+                pass
+            if not image:
+                image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
+            
+            listing.image = image
+            listing.loaded_image = image_file
+            listing.name = name
+            listing.description = description
+            listing.save()
+            return HttpResponseRedirect(reverse("market:details", kwargs = {'listing_id':listing.id}))
     return render(request, "market/editListing.html", {'listing':listing})
 
 def signup(request):

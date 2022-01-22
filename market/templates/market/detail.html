@@ -2,31 +2,53 @@
 {% block body %}
 <input type = "hidden" id = "is_open" value ="0">
 <script type = "text/javascript">
-	
+	// Func that loads listing's bids info by REST API using AJAX
 	function bidhistory()
-	{
-		const is_open = document.getElementById("is_open").getAttribute("value")
+	{	
+		const is_open = document.getElementById("is_open").getAttribute("value");
+			
 			if (is_open === "1"){
-		var historyList = ""
+		var historyList = []
 		$.ajax({
                                 type:"GET",
-                                url:"/market/api/"+listing_id+"/all_bids",
+                                add element differences to the pageurl:"/market/api/"+listing_id+"/all_bids",
                                 success:function(result){
 				for (var bid_item in result){
 				var username = result[bid_item].user.username;
                         	var bid_date = new Date(result[bid_item].date);
 				var value = result[bid_item].value;
-						historyList += "<tr><li class = 'p-1' style='margin: 0.5rem 0;'>" +"<strong> "+ username +" </strong> :"+ value +"$ — "+ bid_date + "</li></tr>";
-								}
+				historyList.push("<tr><li class = 'p-1' style='margin: 0.5rem 0;'>" +"<strong> "+ username +" </strong> :"+ value +"$ — "+ bid_date + "</li></tr>");
+				}
+				// Previous result is what placed on client's page
+				previous_result = document.getElementsByClassName("p-1");
+				
+				const previous_result_length = previous_result.length;
+				const historyList_length = historyList.length;
+				
+				// Add main HTML element for bids history list if no elements exists
+				if (previous_result.length === 0){
+                                document.getElementById("history-list-row").innerHTML = "<div class = 'modal-body-history'><div class = 'modal-content-history'><table class = 'table'><tbody id = 'history-row'></tbody></div></div></div>"}
+				// If length of New result and previous same - just wait for next AJAX
+				if (historyList_length === previous_result_length){
+					if ((document.getElementById("autoupdate").checked))
+                                	setTimeout(function() {
+                                  	bidhistory();
+                                        }, 5000);
+				}
+				else{
+				// Add element differences to the page
+				for (var i = previous_result_length; i < historyList_length; i++){
+					document.getElementById("history-row").innerHTML += historyList[i];
+					}
+
 				document.getElementById("history-button").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Hide history' OnClick = 'clearhistory();'>";
-						document.getElementById("history-list-row").innerHTML = "<div class = 'modal-body-history'><div class = 'modal-content-history'><table class = 'table'><tbody id = 'history-row'></tbody></div></div></div>"
-				document.getElementById("history-row").innerHTML = historyList
 
 				if ((document.getElementById("autoupdate").checked))
                                 setTimeout(function() {
                                   bidhistory();
                                         }, 5000);
 
+				}
 				}
                                 });
 		}
@@ -57,7 +79,7 @@
 	<h1 style = "text-align:center;"><strong>{{ auctionlisting.name }}</strong>{% if true_user %} <a class = "btn btn-primary" href={% url "market:editListing" auctionlisting.id %} id = "edit-listing">Edit</a>{% endif %}</h1>
 	<hr>
 	<div class="image">
-        	<img class="big" src="{{ auctionlisting.image }}" alt="{{ auctionlisting.id }}">
+		<img class="big" src="{%if auctionlisting.loaded_image %}{{ auctionlisting.loaded_image.url }}{% else %}{{ auctionlisting.image }}{% endif %}" alt="{{ auctionlisting.id }}">
     	</div>	
 	<table class = "table" style = "font-size:larger;">
 	<thead>
