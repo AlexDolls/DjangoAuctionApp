@@ -66,6 +66,7 @@ class ListingCreationViewTests(TestCase):
         user_password = "password"
         user_name = "test_user"
         category_1_name = "category_1"
+        hours = "12"
         
         user = create_user(username = user_name, password = user_password)
         category = create_category(name = category_1_name)
@@ -73,7 +74,8 @@ class ListingCreationViewTests(TestCase):
                 "category":category.id,
                 "startBid":100,
                 "imageurl":"None",
-                "listingdesc":"Test_Description",}
+                "listingdesc":"Test_Description",
+                "expiretime":hours,}
         self.client.login(username = user_name, password = user_password)
         response = self.client.post(reverse("market:createListing"), post_data)
         self.assertURLEqual(response.url, reverse("market:details", kwargs = {"listing_id":AuctionListing.objects.get(name = "Test_Listing").id,}))
@@ -209,6 +211,7 @@ class ListingCreationViewTests(TestCase):
         user_password = "password"
         user_name = "test_user"
         category_1_name = "category_1"
+        hours = "12"
 
         user = create_user(username = user_name, password = user_password)
         category = create_category(name = category_1_name)
@@ -216,7 +219,8 @@ class ListingCreationViewTests(TestCase):
                 "category":category.id,
                 "startBid":100,
                 "imageurl":"None",
-                "listingdesc":"Test_Description",}
+                "listingdesc":"Test_Description",
+                "expiretime":hours,}
         self.client.login(username = user_name, password = user_password)
         response = self.client.post(reverse("market:createListing"), post_data)
         self.assertEqual(response.url, reverse("market:details", kwargs = {"listing_id":AuctionListing.objects.get(name ="1").id,}))
@@ -266,6 +270,7 @@ class ListingCreationViewTests(TestCase):
         user_password = "password"
         user_name = "test_user"
         category_1_name = "category_1"
+        hours = "12"
 
         user = create_user(username = user_name, password = user_password)
         category = create_category(name = category_1_name)
@@ -273,7 +278,8 @@ class ListingCreationViewTests(TestCase):
                 "category":category.id,
                 "startBid":100,
                 "imageurl":1,
-                "listingdesc":"Test_Description",}
+                "listingdesc":"Test_Description",
+                "expiretime":hours}
         self.client.login(username = user_name, password = user_password)
         response = self.client.post(reverse("market:createListing"), post_data)
         self.assertEqual(response.url, reverse("market:details", kwargs = {"listing_id":AuctionListing.objects.get(name = "Test_Listing").id,}))
@@ -285,6 +291,7 @@ class ListingCreationViewTests(TestCase):
         user_password = "password"
         user_name = "test_user"
         category_1_name = "category_1"
+        hours = "12"
 
         user = create_user(username = user_name, password = user_password)
         category = create_category(name = category_1_name)
@@ -292,7 +299,8 @@ class ListingCreationViewTests(TestCase):
                 "category":category.id,
                 "startBid":100,
                 "imageurl":"None",
-                "listingdesc":1,}
+                "listingdesc":1,
+                "expiretime":hours}
         self.client.login(username = user_name, password = user_password)
         response = self.client.post(reverse("market:createListing"), post_data)
         self.assertEqual(response.url, reverse("market:details", kwargs = {"listing_id":AuctionListing.objects.get(name = "Test_Listing").id,}))
@@ -853,7 +861,7 @@ class WatchlistViewTests(TestCase):
         user_1.watchlist.add(listing_not_active_user_2, listing_active_user_2, listing_not_active_user_1, listing_active_user_1)
         self.client.login(username=user_name_1, password = user_password_1)
         response = self.client.get(reverse("market:watchlist"))
-        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_not_active_user_2, listing_active_user_2, listing_not_active_user_1, listing_active_user_1])
+        self.assertQuerysetEqual(list(response.context['active_listing_list']), [listing_active_user_1, listing_not_active_user_1, listing_active_user_2, listing_not_active_user_2], ordered = False)
 
     def test_no_listings_in_watchlist(self):
         """
@@ -1194,7 +1202,7 @@ class InboxViewTests(TestCase):
         user_2 = create_user(username = user_name_2, password = user_password_2)
         self.client.login(username = user_name_1, password = user_password_1)
         response = self.client.post(reverse("market:inbox"), {"user_id":user_2.id})
-        self.assertQuerysetEqual(list(Chat.objects.get(members=user_1).members.all()), [user_2, user_1])
+        self.assertQuerysetEqual(list(Chat.objects.get(members=user_1).members.all()), [user_1, user_2], ordered = False)
 
     def test_start_exist_chat_with_user(self):
         """
@@ -1468,8 +1476,6 @@ class DetailsViewTests(TestCase):
         self.assertContains(response, 'id = "comment-submit"')
         self.assertContains(response, 'id = "add-listing-to-watchlist"')
         self.assertContains(response, 'id = "edit-listing"')
-        self.assertContains(response, 'id = "end-listing-submit"')
-        self.assertContains(response, 'id = "delete-listing"')
         self.assertNotContains(response, 'id = "new-bid-submit"')
         self.assertNotContains(response, 'id = "newbid"')
         self.assertNotContains(response, 'id = "winner-of-listing"')
