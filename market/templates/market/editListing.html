@@ -32,6 +32,7 @@
 		<div class = "form-floating mb-3 col-6" style = "width:100%;">
 			<input class = "form-control" type = "text" id = "listingname" name = "listingname" maxlength = "32" value = {% if listing.name %}{{ listing.name }} {% endif %} placeholder = "listingname">
                 	<label for = "listingname">Name for listing</label>
+			<div id = 'name-alarm' style = 'color:red; display:none;'><h6>Please, enter the name of listing</h6></div>
 		</div>
 		<div class = "form-floating mb-3 col-6" style = "width:100%;">
 			<textarea class = "form-control" id = "listingdesc" name = "listingdesc" maxlength = "150" placeholder = "Listing Description">{{listing.description}}</textarea>
@@ -47,8 +48,65 @@
                 </div>
 
 		<input type = "hidden" value = {{ listing.id }} name = "listing_id">
-                <input type = "submit" value = "Create">
+		<div id = "submit-button-block">
+                <input type = "submit" class = "btn btn-success btn-lg" value = "Confirm" id = "submit-edit">
+		</div>
         </fieldset>
         </form>
+	
+	<script type = "text/javascript">
+
+                const name_alarm = document.getElementById("name-alarm");
+
+                function removealarm(){
+                        name_alarm.setAttribute("style","color:red; display:none;");
+                }
+
+                function checkallinputs(tellmewhy){
+                const name_dom = document.getElementById("listingname");
+
+                const name = (name_dom.value).replace(/\s+/g, ' ').trim();
+		console.log(name);
+
+                const submit_button = document.getElementById("submit-edit");
+
+                const name_alarm = document.getElementById("name-alarm");
+
+                if (tellmewhy === "0") {
+
+                        removealarm();
+
+                        if (name != ""){
+                                        submit_button.removeAttribute("disabled");
+                                        submit_button.setAttribute("class", "btn btn-success btn-lg");
+                                        }
+                        else{
+                                        submit_button.setAttribute("disabled", "true");
+                                        submit_button.setAttribute("class", "btn btn-secondary btn-lg");
+                                        }
+                                }
+                else {
+
+                        removealarm();
+
+                if(name === ""){
+                        name_alarm.setAttribute("style","color:red;")
+                }
+               	}
+		}
+
+		$("#listingname").click(function(){
+                checkallinputs("0");    
+                                });
+                $("#listingname").keyup(function(){
+                checkallinputs("0");
+                               });
+		$("#submit-button-block").click(function(){
+                checkallinputs("1");
+                                });
+
+	</script>
+
+
 {% endblock %}
 

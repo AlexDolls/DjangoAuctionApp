@@ -11,7 +11,7 @@
 		var historyList = []
 		$.ajax({
                                 type:"GET",
-                                add element differences to the pageurl:"/market/api/"+listing_id+"/all_bids",
+                                url:"/market/api/"+listing_id+"/all_bids",
                                 success:function(result){
 				for (var bid_item in result){
 				var username = result[bid_item].user.username;
@@ -61,7 +61,7 @@
 		document.getElementById("history-list-row").innerHTML = "";
 	}
 
-	function  turn_is_open(){
+	function turn_is_open(){
                         document.getElementById("is_open").setAttribute("value", "1");
                         bidhistory();
                 }
@@ -149,7 +149,7 @@
 	</div>
 	<div class = "row">
         <div id="history-button">
-	<input type = "button" class = "btn-primary btn-lg" id = "show-history" value = "Show history" OnClick = "turn_is_open();">
+	<input type = "button" class = "btn-primary btn-lg" id = "show-history" value = "Show history" onclick = "turn_is_open()">
 	</div>
 	</div>
 	<div class = "row p-3" id = "history-list-row"></div>

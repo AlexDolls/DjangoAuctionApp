@@ -32,18 +32,21 @@
 		<div class = "form-floating mb-3 col-6" style = "width:100%;">
 			<input class = "form-control" type = "text" id = "listingname" name = "listingname" maxlength = "32" placeholder = "listingname">
 			<label for = "listingname">Name for listing</label>
+			<div id = 'name-alarm' style = 'color:red; display:none;'><h6>Please, enter the name of listing</h6></div>
 		</div>
 		<small>Select Category</small>
-		<select class="form-control mb-3" name="category" style = "width:50%;">
+		<select class="form-control mb-3" name="category" style = "width:50%;" id = "listingcategory-input">
                 	{% for category in categories %}
                     		<option value={{ category }}>
                         	{{ category.name }}
                     		</option>
                 	{% endfor %}
                 </select>
+		<div id = 'category-alarm' style = 'color:red; display:none;'><h6>Please, select the category of listing</h6></div>
 		<div class="form-floating mb-3 col-6" style = "width:100%;">
-			<input type="number" class="form-control" name = "startBid" id="floatingInput" placeholder="name@example.com">
+		<input type="number" class="form-control" name = "startBid" id="floatingInput" placeholder="name@example.com" step = "any" min="1" max="99999">
 			<label for="floatingInput">Listing's start Price</label>
+		<div id = 'startprice-alarm' style = 'color:red; display:none;'><h6>Please, enter the start price of listing</h6></div>
 		</div>
 		<button type = "button" class = "btn btn-secondary" OnClick = "seturl();" id = "set-image-url" disabled>Image from URL</button>
 		<button type = "button" class = "btn btn-primary"  OnClick = "loadfrompc();" id = "load-image-from-pc">Load from PC</button>
@@ -58,7 +61,7 @@
   			<label for="floatingTextarea2">Listing Description</label>
 		</div>
 		<div class = "container mb-3">
-		<small>Select expire time for Listing</small>
+		<h6>Select expire time for Listing</h6>
 		<div class = "row">
 		<div class = "col">
 		<div class="form-check">
@@ -95,9 +98,109 @@
 		</div>
 		</div>
 
-		<div class = "d-grid gap-2 col-6 mx-auto">
-		<input class = "btn-primary btn-lg" type = "submit" value = "Create">
+		<div class = "d-grid gap-2 col-6 mx-auto" id = "submit-button-block">
+		<input class = "btn btn-secondary btn-lg" type = "submit" value = "Create listing" disabled = "true" id = "submit-listing">
 		</div>
 	</fieldset>
 	</form>
+
+	<script type = "text/javascript">
+
+		const name_alarm = document.getElementById("name-alarm");
+                const category_alarm = document.getElementById("category-alarm");
+                const startprice_alarm = document.getElementById("startprice-alarm");
+
+		function removealarm(){
+			name_alarm.setAttribute("style","color:red; display:none;");
+                       	category_alarm.setAttribute("style","color:red; display:none;");
+                        startprice_alarm.setAttribute("style","color:red; display:none;");
+		}
+
+		function checkallinputs(tellmewhy){
+		const name_dom = document.getElementById("listingname");
+		const category_dom = document.getElementById("listingcategory-input");
+		const startprice_dom = document.getElementById("floatingInput");
+
+		const name = (name_dom.value).replace(/\s+/g, ' ').trim();
+		const category = category_dom.value;
+		const startprice = (startprice_dom.value).replace(/\s+/g, ' ').trim();
+		
+		const submit_button = document.getElementById("submit-listing");
+
+		const name_alarm = document.getElementById("name-alarm");
+		const category_alarm = document.getElementById("category-alarm");
+		const startprice_alarm = document.getElementById("startprice-alarm");
+
+		if (tellmewhy === "0") {
+
+			removealarm();
+
+			if ((name != "")&&(category != "")&&(startprice != "")){
+					submit_button.removeAttribute("disabled");
+					submit_button.setAttribute("class", "btn btn-success btn-lg");
+					}
+			else{
+					submit_button.setAttribute("disabled", "true");
+					submit_button.setAttribute("class", "btn btn-secondary btn-lg");
+					}
+				}
+		else {
+
+			removealarm();
+
+		if(name === ""){
+			name_alarm.setAttribute("style","color:red;")
+		}
+		if(category === ""){
+			category_alarm.setAttribute("style","color:red;")
+                }
+		if(startprice === ""){
+			startprice_alarm.setAttribute("style", "color:red;")
+                }
+		}
+
+				}
+		$("#listingname").click(function(){
+		checkallinputs("0");	
+				});
+		$("#listingname").keyup(function(){
+                checkallinputs("0");
+                                });
+
+		$("#listingcategory-input").click(function(){
+                checkallinputs("0");
+                                });
+                $("#listingcategory-input").keyup(function(){
+                checkallinputs("0");
+                                });
+
+		$("#floatingInput").click(function(){
+                checkallinputs("0");
+                                });
+                $("#floatingInput").keyup(function(){
+                checkallinputs("0");
+                                });
+
+		$("#floatingTextarea2").click(function(){
+                checkallinputs("0");
+                                });
+                $("#floatingTextarea2").keyup(function(){
+                checkallinputs("0");
+                                });
+
+		$("#imageurl").click(function(){
+                checkallinputs("0");       
+                                });
+                $("#imageurl").keyup(function(){
+                checkallinputs("0");
+                                });
+
+		$("#submit-button-block").click(function(){
+                checkallinputs("1");
+                                });
+
+
+
+	</script>
+
 {% endblock %}

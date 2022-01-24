@@ -15,46 +15,63 @@
   </div>
   <div class="row">
     <div class="col">
+	<div class = "modal-body-chat-users">
+	<div class = "modal-content-chat-users">
 	{% for chat in chats %}
-	<h3>	
+	<h5>	
 		{% if chat.members.count == 2%}
 		<a href = "{% url "market:chat" chat.id %}">
-		<button type="button" class="btn btn-primary position-relative">
 		{% for member in chat.members.all %}
 			{% if member.id != user.id %}
-			{{member.username}}
+			<div class = "chat-username-line">
+			<div class = "container">
+				<div class = "row">
+					<div class = "col-md-auto">
+						<div class = "user-avatar" style="background-image: url({% if member.avatar %}{{ member.avatar.url}}{% else %}https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg{% endif %});" alt="connect"></div>
+
+					</div>
+					<div class = "col-md-auto" style = "display:flex;">
+						<div class = "username-flex-center">
+						{{member.username}}
+						</div>
+						<span id="numbers_chat_unread_{{chat.id}}" class="badge rounded-pill bg-danger" id = "numbers_chat_unread_{{chat.id}}" style = "margin:auto; margin-left:10px;"></span>
+
+					</div>
+				</div>
+			</div>
+			</div>
 			{% endif %}
 		{% endfor %}
-		<span id = "numbers_chat_unread_{{chat.id}}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-    		<span class="visually-hidden">unread messages</span>
-  		</span>
-		</button>
 		</a>
 		{% endif %}
         </h3>
 	{% empty %}
 	<div class="alert alert-info text-center p-4 my-4 mx-2">You have no chat's yet</div>
 	{% endfor %}
+		</div>
+	</div>
     </div>
     <div class="col">
+	    <div class = "modal-body-chat-users">
+		<div class = "modal-content-chat-users">
 	    {% if site_users %}
 	    <form action = "{% url 'market:inbox' %}" method = "post">
 	    {% csrf_token %}
 	    <div id = "user-list">
+		<select class = "form-select" size = "13" name = "user_id">
 		{% for item in site_users %}
-		<div class="form-check">
-			<input class="form-check-input" type="radio" name="user_id" id="flexRadioDefault{{item.id}}" value = '{{item.id}}'>
-		<label class="form-check-label" for="flexRadioDefault{{item.id}}">
-			{{ item.username }}
-                </label>
-		</div>
+		<option value = '{{item.id}}' >{{item.username}}</option>
 		{% endfor %}
-		<input type = 'submit' class = "btn-primary btn-lg" value = "Start!">
+		</select>
 	    </div>
-	    </form>
+
 	    {% else %}
 	    <div class="alert alert-info text-center p-4 my-4 mx-2">There's no users to start chat with for now :(</div>
 	    {% endif %}
+	    </div>
+	</div>
+	{% if site_users %}<input type = 'submit' class = "btn btn-primary" value = "Create chat!" style = "margin-top:1rem; width:90%;"> {% endif %}
+	</form>
     </div>
   </div>
 </div>
@@ -87,6 +104,15 @@
 		document.querySelector('#numbers_chat_unread_{{chat_item.id}}').innerHTML = sum_chat_unread;
 		sum_chat_unread = 0;
         {% endfor %}
+
+	var n = 0;
+	
+	$(".chat-username-line").mouseenter(function() {
+	    $(this).attr("style", "background-color:rgba(255, 255, 255, 0.4); border-radius:7px; padding: 5px;");
+	}).mouseleave(function() {
+	    $(this).attr("style", "");
+	});
+
         </script>
 
 {% endblock %}
