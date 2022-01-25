@@ -12,16 +12,19 @@
 </p>
 <h2>Technologies used in project</h2>
 <ol>
-<li>Python3</li>
-<li>Django</li>
-<li>DRF (Django Rest Framework)</li>
-<li>Django Channels</li>
-<li>Celery</li>
-<li>Docker</li>
+<li><strong>Python3</strong></li>
+<li><strong>Django3</strong></li>
+<li><strong>DRF (Django Rest Framework)</strong> - <i>getting actual info by using REST (in this project by AJAX on frontend)</i></li>
+<li><strong>Django Channels</strong> - <i>websocket connection for bid system and chat</i></li>
+<li><strong>Celery</strong> - <i>automatic listing's completion by task with countdown</i></li>
+<li><strong>Docker</strong> - <i>project deploying (dev and prod deploying versions)</i></li>
 </ol>
 <h2>Description</h2>
-<h3>Listing Creation<h4>
+<h3>Listing Creation</h3>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/createlisting2.png">
+  The listing creation process is simple, there are three fields that must be filled - Name, Category and Start Price. Image and Description are optional.
+  When listing is created, <strong>Celery</strong> task is starting with countdown for created listing, countdown depends on the number of hours that was selected in the last field on Creation page.
+<hr>
 <h3>Index Page (Main page with all listings that exist)</h3>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/indexpage.png">
 <h3>Detail Listing's page</h3>
