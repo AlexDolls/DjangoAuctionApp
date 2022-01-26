@@ -26,6 +26,20 @@
   <br><i>Name, Category, Start Price. Image and Description are optional.</i>
   <br>
   <br>When listing is created, <strong>Celery</strong> task is starting with countdown for created listing, countdown depends on the number of hours that was selected in the last field on Creation page.
+  <br>
+  <br><strong>Celery task:</strong><br>
+  https://github.com/AlexDolls/DjangoAuctionApp/blob/0666b2d0fc0bac519a4e146953e12d79a3f89775/market/tasks.py#L14
+  <br>
+  <strong>Task starting with new listing creation:</strong>
+  https://github.com/AlexDolls/DjangoAuctionApp/blob/0666b2d0fc0bac519a4e146953e12d79a3f89775/market/views.py#L136
+  
+```Python
+new_listing = AuctionListing.objects.create(name = name, description = description,loaded_image=image_file,image = image, category = category, user = user, startBid = startBid, creationDate = current_date, endDate = end_date, active = active)
+new_listing.save()
+seconds_to_end = int(datetime.timedelta.total_seconds(new_listing.endDate - new_listing.creationDate))
+task = create_task.apply_async(kwargs = {"listing_id": new_listing.id}, countdown = seconds_to_end)
+```
+  
 <hr>
 <h3>Index Page (Main page with all listings that exist)</h3>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/indexpage.png">
@@ -39,6 +53,24 @@ All information about listing displayed on it's detail page:
 <br><i>Name, image, price, last bid, time to end <strong>(JS live timer)</strong> and Owner</i>
 <br>
 <br><strong>Websocket</strong> connection automatically opens with anyone, who entered on this page. (separed connection groups for each listing). Websocket connection makes "live" <strong>bid</strong> system and comments.
+<br>
+https://github.com/AlexDolls/DjangoAuctionApp/blob/0666b2d0fc0bac519a4e146953e12d79a3f89775/market/consumers.py#L22
+
+```Python
+class ListingConsumer(WebsocketConsumer):
+    def connect(self):
+        self.user = self.scope['user']
+        self.room_name = self.scope['url_route']['kwargs']['listing_id']
+        self.room_group_name = 'market_%s' % self.room_name
+        print(self.room_group_name)
+        #Join room group by listing url
+        async_to_sync(self.channel_layer.group_add)(
+            self.room_group_name,
+            self.channel_name
+            )
+        self.accept()
+```
+
 <hr>
 <h3>Inbox and Chat</h3>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/inbox.png">
