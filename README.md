@@ -54,7 +54,7 @@ All information about listing displayed on it's detail page:
 <br>
 <br><strong>Websocket</strong> connection automatically opens with anyone, who entered on this page. (separed connection groups for each listing). Websocket connection makes "live" <strong>bid</strong> system and comments.
 <br>
-https://github.com/AlexDolls/DjangoAuctionApp/blob/0666b2d0fc0bac519a4e146953e12d79a3f89775/market/consumers.py#L22
+https://github.com/AlexDolls/DjangoAuctionApp/blob/f8f678442d88b397c10aa1a1e0df40a8ab5700bd/market/consumers.py#L22
 
 ```Python
 class ListingConsumer(WebsocketConsumer):
@@ -81,7 +81,7 @@ On inbox page you can enter to chat that exists between you and other user, or y
 <br>
 <i>Every Authorized user connects to websocket on <strong>Chat Consumer</strong> and have it's own "connection group" with himself only. It's safety, cause only target user will get websocket message on his client and there are still posible to show new messages count in 'live' with Inbox NavBar menu</small></i>
 <br>
-https://github.com/AlexDolls/DjangoAuctionApp/blob/a8af74b78190171b49d882bee5c67f26f0ab1424/market/consumers.py#L222
+https://github.com/AlexDolls/DjangoAuctionApp/blob/f8f678442d88b397c10aa1a1e0df40a8ab5700bd/market/consumers.py#L222
 
 ```Python
 class ChatConsumer(WebsocketConsumer):
