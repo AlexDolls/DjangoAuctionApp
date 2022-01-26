@@ -24,7 +24,7 @@ class ListingConsumer(WebsocketConsumer):
         self.user = self.scope['user']
         self.room_name = self.scope['url_route']['kwargs']['listing_id']
         self.room_group_name = 'market_%s' % self.room_name
-        print(self.room_group_name)
+
         #Join room group by listing url
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
@@ -224,7 +224,6 @@ class ChatConsumer(WebsocketConsumer):
         self.user = self.scope['user']
         if self.user.is_active == True and self.user.is_anonymous == False:
             self.room_group_name = f'chat_{self.user.id}'
-            print(f"{self.room_group_name} --- {self.user.username} --- {self.user.id}")
 
             # Join room group
             async_to_sync(self.channel_layer.group_add)(
