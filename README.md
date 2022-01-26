@@ -22,7 +22,9 @@
 <h2>Description</h2>
 <h3>Listing Creation</h3>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/createlisting2.png">
-  The listing creation process is simple, there are three fields that must be filled - Name, Category and Start Price. Image and Description are optional.
+  The listing creation process is simple, there are three fields that must be filled:
+  <br><i>Name, Category, Start Price. Image and Description are optional.</i>
+  <br>
   <br>When listing is created, <strong>Celery</strong> task is starting with countdown for created listing, countdown depends on the number of hours that was selected in the last field on Creation page.
 <hr>
 <h3>Index Page (Main page with all listings that exist)</h3>
@@ -33,17 +35,43 @@ There are opportunity to show only Active, yours or with special Category listin
 <h3>Detail Listing's page</h3>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/listing2.png">
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/listing2_1.png">
-All information about listing displayed on it's detail page.
+All information about listing displayed on it's detail page:
+<br><i>Name, image, price, last bid, time to end <strong>(JS live timer)</strong> and Owner</i>
+<br>
 <br><strong>Websocket</strong> connection automatically opens with anyone, who entered on this page. (separed connection groups for each listing). Websocket connection makes "live" <strong>bid</strong> system and comments.
 <hr>
 <h3>Inbox and Chat</h3>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/inbox.png">
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/chat.png">
 On inbox page you can enter to chat that exists between you and other user, or you can create new chat, but only if you haven't chat created with target user already.
+<br>
 <br><strong>Websocket</strong> connection for chat system is active on every page and only for Authorized user's.
-<br><i style = "color:gray">Every Authorized user connects to websocket on Chat Consumer and have it's own "connection group" with himself only. It's safety, cause only target user will get websocket message on his client and there are still posible to show new messages count in 'live' with Inbox NavBar menu</i>
+<br>
+<i>Every Authorized user connects to websocket on <strong>Chat Consumer</strong> and have it's own "connection group" with himself only. It's safety, cause only target user will get websocket message on his client and there are still posible to show new messages count in 'live' with Inbox NavBar menu</small></i>
+<br>
+https://github.com/AlexDolls/DjangoAuctionApp/blob/a8af74b78190171b49d882bee5c67f26f0ab1424/market/consumers.py#L222
+
+```Python
+class ChatConsumer(WebsocketConsumer):
+    def connect(self):
+        self.user = self.scope['user']
+        if self.user.is_active == True and self.user.is_anonymous == False:
+            self.room_group_name = f'chat_{self.user.id}'
+
+            # Join room group
+            async_to_sync(self.channel_layer.group_add)(
+                self.room_group_name,
+                self.channel_name
+            )
+
+            self.accept()
+        else:
+            self.close()
+
+```
+
 <hr>
 <h3>User Cabinet</h3>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/usercabinet.png">
 It is simple user's cabinet, where possible to see main information about User.
-<br>There are also opportunity to change user's Avatar. Using template Django form and Pillow allow to save media files in safety way. (To make sure that is really media files)
+<br>There are also opportunity to change user's Avatar. Using template Django form and <strong>Pillow</strong> allow to save media files in safety way. (To make sure that is really media files)
