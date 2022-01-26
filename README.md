@@ -110,3 +110,37 @@ class ChatConsumer(WebsocketConsumer):
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/usercabinet.png">
 It is simple user's cabinet, where possible to see main information about User.
 <br>There are also opportunity to change user's Avatar. Using template Django form and <strong>Pillow</strong> allow to save media files in safety way. (To make sure that is really media files)
+<br>
+<h2>Installation</h2>
+<h3>Basic requirements</h3>
+Install <a href = "https://docs.docker.com/get-docker/"><strong>Docker Engine</strong></a> and <a href = "https://docs.docker.com/compose/install/"><strong>Docker Compose</strong></a> on your PC.
+<h3>Development</h3>
+
+1. Rename *.env.dev-sample* to *.env.dev*.
+1. Update the environment variables in the *docker-compose.yml* and *.env.dev* files.
+1. Build the images and run the containers:
+
+    ```bash
+    $ docker-compose up -d --build
+    ```
+<h3>Production</h3>
+Uses daphne + nginx.
+
+1. Rename *.env.prod-sample* to *.env.prod* and *.env.prod.db-sample* to *.env.prod.db*. Update the environment variables as you need.
+1. Build the images and run the containers:
+
+    ```sh
+    $ docker-compose -f docker-compose.prod.yml up -d --build
+    ```
+1. Make migartions to DB
+
+    ```sh
+    $ docker-compose -f docker-compose.prod.yml exec web python3 manage.py makemigrations
+    $ docker-compose -f docker-compose.prod.yml exec web python3 manage.py migrate
+    ```
+    
+1. Collect staticfiles
+    
+    ```sh
+    $ docker-compose -f docker-compose.prod.yml exec web python3 manage.py collectstatic
+    ```
