@@ -21,6 +21,7 @@
 </ol>
 <h2>Description</h2>
 <h3>Listing Creation</h3>
+<hr>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/createlisting2.png">
   The listing creation process is simple, there are three fields that must be filled:
   <br><i>Name, Category, Start Price. Image and Description are optional.</i>
@@ -39,14 +40,16 @@ new_listing.save()
 seconds_to_end = int(datetime.timedelta.total_seconds(new_listing.endDate - new_listing.creationDate))
 task = create_task.apply_async(kwargs = {"listing_id": new_listing.id}, countdown = seconds_to_end)
 ```
-  
-<hr>
+<br>  
 <h3>Index Page (Main page with all listings that exist)</h3>
+<hr>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/indexpage.png">
 On this page just displayed all listings that currently exist with main info about them in boxes.
 There are opportunity to show only Active, yours or with special Category listings.
-<hr>
+<br>
+<br>
 <h3>Detail Listing's page</h3>
+<hr>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/listing2.png">
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/listing2_1.png">
 All information about listing displayed on it's detail page:
@@ -70,9 +73,9 @@ class ListingConsumer(WebsocketConsumer):
             )
         self.accept()
 ```
-
-<hr>
+<br>
 <h3>Inbox and Chat</h3>
+<hr>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/inbox.png">
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/chat.png">
 On inbox page you can enter to chat that exists between you and other user, or you can create new chat, but only if you haven't chat created with target user already.
@@ -101,9 +104,9 @@ class ChatConsumer(WebsocketConsumer):
             self.close()
 
 ```
-
-<hr>
+<br>
 <h3>User Cabinet</h3>
+<hr>
 <img src = "https://github.com/AlexDolls/DjangoAuctionApp/blob/master/screenshots_readme/usercabinet.png">
 It is simple user's cabinet, where possible to see main information about User.
 <br>There are also opportunity to change user's Avatar. Using template Django form and <strong>Pillow</strong> allow to save media files in safety way. (To make sure that is really media files)
