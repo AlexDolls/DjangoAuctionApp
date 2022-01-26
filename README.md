@@ -123,6 +123,7 @@ Install <a href = "https://docs.docker.com/get-docker/"><strong>Docker Engine</s
     ```bash
     $ docker-compose up -d --build
     ```
+ Test it out at [http://localhost:8000](http://localhost:8000)(http://127.0.0.1:8000).
 <h3>Production</h3>
 Uses daphne + nginx.
 
@@ -144,3 +145,4 @@ Uses daphne + nginx.
     ```sh
     $ docker-compose -f docker-compose.prod.yml exec web python3 manage.py collectstatic
     ```
+Test it out at [http://localhost:1337](http://localhost:1337)(http://127.0.0.1:1337). To apply changes, the image must be re-built.
