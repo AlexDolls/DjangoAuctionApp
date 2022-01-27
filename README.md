@@ -123,6 +123,12 @@ Install <a href = "https://docs.docker.com/get-docker/"><strong>Docker Engine</s
     ```bash
     $ docker-compose up -d --build
     ```
+1. Don't forget to create superuser (needs to get access to admin panel)
+
+    ```bash
+    $ docker-compose exec web python3 manage.py createsuperuser
+    ```
+
  Test it out at [http://localhost:8000](http://localhost:8000)(http://127.0.0.1:8000).
 <h3>Production</h3>
 Uses daphne + nginx.
@@ -144,5 +150,25 @@ Uses daphne + nginx.
     
     ```sh
     $ docker-compose -f docker-compose.prod.yml exec web python3 manage.py collectstatic
+    ``` 
+1. Don't forget to create superuser (needs to get access to admin panel)
+
+    ```bash
+    $ docker-compose exec web python3 manage.py createsuperuser
     ```
+    
+<h3>Autotests</h3>
+It's nice practice to run tests before and after making some changes and before deploying.
+Major part of project's fucntions are covered by autotests, to <strong>run</strong> it execute command below:
+<h4>Development</h4>
+
+```bash
+$ docker-compose exec web pytest
+```
+ <h4>Production</h4>
+ 
+   ```bash
+   $ docker-compose -f docker-compose.prod.yml exec web pytest
+   ```
+ 
 Test it out at [http://localhost:1337](http://localhost:1337)(http://127.0.0.1:1337). To apply changes, the image must be re-built.
