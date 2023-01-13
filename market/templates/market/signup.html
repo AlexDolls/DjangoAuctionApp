@@ -7,13 +7,12 @@
 	<fieldset>
 		<br>
 		<legend>SIGN UP</legend><hr>
-		{% if messages %}
-		<ul class = "messages">
-			{% for message in messages%}
-			<li {% if message.tag %} class = "{{ message.tag }}" {% endif %}>{{ message }}</li>
-			{% endfor %}
-		</ul>
-		{% endif %}
+        {% if messages %}{% for message in messages %}
+        <div class="alert alert-danger bg-danger text-white border-0" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}{% endif %}
+
 	<form action = "{% url 'market:signup' %}" method="post" class = "card-text mb-3">
 	{% csrf_token %}
 		<div class="form-group p-2">

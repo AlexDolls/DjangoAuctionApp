@@ -23,10 +23,20 @@
       href="https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap"
       rel="stylesheet"
     />
+    <link href="{% static 'market/style.css' %}" rel="stylesheet" />
 
+    <!-- third party css -->
     <link
-      href="{% static 'theme/css/icons.min.css' %}"
+      href="{% static 'theme/css/vendor/jquery-jvectormap-1.2.2.css' %}"
       rel="stylesheet"
+      type="text/css"
+    />
+    <!-- third party css end -->
+
+    <!-- App css -->
+    <link
+      href="{% static 'theme/css/icons.min.css"
+      rel="stylesheet' %}"
       type="text/css"
     />
     <link
@@ -41,15 +51,13 @@
       type="text/css"
       id="dark-style"
     />
-    <script src="{% static 'theme/js/vendor.min.js' %}"></script>
-    <script src="{% static 'theme/js/app.min.js' %}"></script>
   </head>
   <body>
     <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'market:index' %}">
           <img
-            src="{% static 'market/alexdollslogo.svg' %}"
+            src="{% static 'market/alexdollslogo.svg'%}"
             alt=""
             width="40"
             height="40"
@@ -202,6 +210,15 @@
         };
       </script>
       {% endblock %}
+      <!-- bundle -->
+      <script src="{% static 'theme/js/vendor.min.js' %}"></script>
+      <script src="{% static   'theme/js/app.min.js' %}"></script>
+
+      <!-- third party js -->
+      <script src="{% static   'theme/js/vendor/apexcharts.min.js' %}"></script>
+      <script src="{% static   'theme/js/vendor/jquery-jvectormap-1.2.2.min.js' %}"></script>
+      <script src="{% static   'theme/js/vendor/jquery-jvectormap-world-mill-en.js' %}"></script>
+      <!-- third party js ends -->
     </div>
   </body>
 </html>

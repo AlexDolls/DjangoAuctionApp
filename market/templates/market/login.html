@@ -1,22 +1,23 @@
-{% extends "market/layout.html" %} {% load static %} {% block body %}
+{% extends "market/layout.html" %} {% block body %}
 <div class="container p-4 text-center" style="max-width: 600px">
   {% if message %}
-  <div class="alert alert-danger">{{ message }}</div>
+  <div class="alert alert-danger bg-danger text-white border-0" role="alert">
+    {{ message }}
+  </div>
   {% endif %}
 
   <div class="card inout">
     <div class="card-body m-4">
       <h2 class="card-title">LOGIN</h2>
       <hr />
-      {% if messages %}
-      <ul>
-        {% for message in messages %}
-        <li {% if message.tag %}class="{{ message.tag }}" {% endif %}>
-          {{ message }}
-        </li>
-        {% endfor %}
-      </ul>
-      {% endif %}
+      {% if messages %}{% for message in messages %}
+      <div
+        class="alert alert-danger bg-danger text-white border-0"
+        role="alert"
+      >
+        {{ message }}
+      </div>
+      {% endfor %} {% endif %}
       <form
         action="{% url 'market:login' %}"
         method="post"
