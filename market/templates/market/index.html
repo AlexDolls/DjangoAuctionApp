@@ -1,33 +1,61 @@
-{% extends 'market/layout.html' %}
-{% block body %}
-<h2 class="py-3 m-3"><strong><font color = "white">{% if winlist %}Winlist{% elif watchlist %}Watchlist{% elif mylistings %}My Listings{% else %}Auction Listings{% endif %}</font></strong></h2>
+{% extends 'market/layout.html' %} {% block body %}
+<h2 class="page-title">
+  {% if winlist %}Winlist{% elif watchlist %}Watchlist{% elif mylistings %}My
+  Listings{% else %}Auction Listings{% endif %}
+</h2>
 
-<div class="items-list">
-    {% for listing in active_listing_list %}
-    <a href="{% url 'market:details' listing.id %}">
-        <div class="item text-center" {% if listing.active != True %}style="background-color: rgba(255, 220, 220, 0.7);"
-            {% endif %}>
-		<img src="{%if listing.loaded_image %}{{ listing.loaded_image.url }}{% else %}{{ listing.image }}{% endif %}" alt = "Loading...">
-            <div class="details">
-                <h5>{{ listing.name }}</h5>
-                <h6>Price: $<strong>{{ listing.startBid }}</strong></h6>
-                <small>Created: <strong>{{ listing.creationDate|date:"d-m-Y H:i" }}</strong></small><br>
-		<small>Estimation date: <strong>{{ listing.endDate|date:"d-m-Y H:i" }}</strong></small><br>
-                {% if listing.active %}
-                <span class="badge status--active">Active</span>
-                {% else %}
-                <span class="badge status--inactive">Ended</span>
-                {% endif %}
-                {% if listing in user.watchlist.all %}
-                <span class="badge status--watching">Watching</span>
-                {% else %}
-                <span class="badge status--notwatching">Not Watching</span>
-                {% endif %}
-            </div>
-        </div>
-    </a>
-    {% empty %}
-    <div class="alert alert-info text-center p-4 my-4 mx-2">No items Available</div>
-    {% endfor %}
+<div class="row">
+  {% for listing in active_listing_list %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card">
+      <img
+        src="{%if listing.loaded_image %}{{ listing.loaded_image.url }}{% else %}{{ listing.image }}{% endif %}"
+        class="card-img-top"
+        alt=""
+      />
+      <div class="card-body">
+        <h5 class="card-title">
+          <a
+            href="{% url 'market:details' listing.id %}"
+            class="text-success stretched-link"
+            >{{ listing.name }}</a
+          >
+        </h5>
+        <p class="card-text">
+          <span class="text-success">Price: </span
+          ><strong>${{ listing.startBid }}</strong>
+        </p>
+        <p class="card-text">
+          <span class="text-success">Created: </span
+          ><strong>{{ listing.creationDate|date:"d-m-Y H:i" }}</strong>
+        </p>
+
+        <p class="card-text">
+          <span class="text-success">Estimation date: </span
+          ><strong>{{ listing.endDate|date:"d-m-Y H:i" }}</strong>
+        </p>
+
+        <p>
+          {% if listing.active %}
+
+          <span class="badge badge-success-lighten">Active</span>
+          {% else %}
+          <span class="badge badge-danger-lighten">Ended</span>
+          {% endif %} {% if listing in user.watchlist.all %}
+          <span class="badge badge-primary-lighten">Watching</span>
+          {% else %}
+          <span class="badge badge-primary-lighten">Not Watching</span>
+          {% endif %}
+        </p>
+      </div>
+      <!-- end card-body -->
+    </div>
+    <!-- end card -->
+  </div>
+  {% empty %}
+  <div class="alert alert-info text-center p-4 my-4 mx-2" role="alert">
+    <h4 class="alert-heading">No items Available</h4>
+  </div>
+  {% endfor %}
 </div>
 {% endblock %}

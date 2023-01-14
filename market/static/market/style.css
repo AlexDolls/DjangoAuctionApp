@@ -1,7 +1,23 @@
 a,
+a:visited,
+a:active,
+a:focus,
 a:hover {
   text-decoration: none;
-  color: black;
+}
+
+.nav-link,
+.nav-link:visited,
+.nav-link:active,
+.nav-link:focus,
+.nav-link:hover {
+  color: white;
+}
+
+.btn {
+  outline: none;
+  border: none;
+  background-color: transparent;
 }
 
 .navbar-nav a {
