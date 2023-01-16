@@ -1,39 +1,157 @@
-{% extends "market/layout.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Log In</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap"
+      rel="stylesheet"
+    />
 
-{% block body %}
-<div class="container p-4 text-center" style="max-width: 600px;">
+    <link rel="shortcut icon" href="{% static 'market/alexdollslogo.svg' %}" />
+    <link href="{% static 'market/style.css' %}" rel="stylesheet" />
+    <link
+      href="{% static 'theme/css/vendor/jquery-jvectormap-1.2.2.css' %}"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="{% static 'theme/css/icons.min.css' %}"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="{% static 'theme/css/app-creative.min.css' %}"
+      rel="stylesheet"
+      type="text/css"
+      id="light-style"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </head>
 
-    {% if message %}
-    <div class="alert alert-danger">{{ message }}</div>
-    {% endif %}
-
-    <div class="card inout">
-        <div class="card-body m-4">
-            <h2 class="card-title">LOGIN</h2><hr>
-	    {% if messages %}
-	    	<ul>
-	    	{% for message in messages %}
-		<li {% if message.tag %}class="{{ message.tag }}"{% endif %}>{{ message }}</li>
-		{% endfor %}
-		</ul>
-	    {% endif %}
-            <form action="{% url 'market:login' %}" method="post" class="card-text mb-3">
-                {% csrf_token %}
-                <div class="form-floating mb-3">
-                    <input class="form-control" autofocus type="text" name="username" placeholder="Username">
-		    <label for = "username">Username</label>
+  <body class="authentication-bg" data-layout-config='{"darkMode":false}'>
+    <div class="account-pages mt-5 mb-5">
+      {% if message %}
+      <div
+        class="alert alert-danger bg-danger text-white border-0"
+        role="alert"
+      >
+        {{ message }}
+      </div>
+      {% endif %}
+      <!-- SignIn container -->
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-5">
+            <div class="card">
+              <!-- Logo -->
+              <div class="card-header pt-4 pb-4 text-center bg-primary">
+                <span
+                  ><a href="{% url 'market:index' %}">
+                    <img
+                      src="{% static 'market/alexdollslogo-dark.png' %}"
+                      alt=""
+                      height="50"
+                    /> </a
+                ></span>
+              </div>
+              <!-- card body -->
+              <div class="card-body p-4">
+                <div class="text-center w-75 m-auto">
+                  <h4 class="text-dark-50 text-center mt-0 font-weight-bold">
+                    Log In
+                  </h4>
                 </div>
-                <div class="form-floating mb-3">
-                    <input class="form-control" type="password" name="password" placeholder="Password">
-		    <label for = "floatingInput">Password</label>
+                {% if messages %}{% for message in messages %}
+                <div
+                  class="alert alert-danger bg-danger text-white text-center border-0"
+                  role="alert"
+                >
+                  {{ message }}
                 </div>
-		<div class = "d-grid gap-2 col-6 mx-auto">
-                <input class="btn btn-primary" type="submit" value="LOGIN">
-		</div>
-            </form>
+                {% endfor %} {% endif %}
+                <form
+                  action="{% url 'market:login' %}"
+                  method="post"
+                  class="card-text mb-3"
+                >
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <label for="username">Username</label>
+                    <input
+                      class="form-control"
+                      autofocus
+                      type="text"
+                      name="username"
+                      placeholder="Enter your username"
+                    />
+                  </div>
 
+                  <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-group input-group-merge">
+                      <input
+                        class="form-control"
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password"
+                      />
+
+                      <div class="input-group-append" data-password="false">
+                        <div class="input-group-text">
+                          <span class="password-eye"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group mb-0 text-center">
+                    <input
+                      class="btn btn-primary"
+                      type="submit"
+                      value="Log In"
+                    />
+                  </div>
+                </form>
+              </div>
+              <!-- end card body -->
+            </div>
+
+            <!-- SignUp Link -->
+            <div class="row mt-3">
+              <div class="col-12 text-center">
+                <p class="text-muted">
+                  Don't have an account?
+                  <a href="{% url 'market:signup' %}" class="text-muted ml-1"
+                    ><b>Sign Up</b></a
+                  >
+                </p>
+              </div>
+              <!-- end col -->
+            </div>
+            <!-- end signup -->
+          </div>
         </div>
+      </div>
+      <!-- end container -->
     </div>
-
-</div>
-{% endblock %}
+    <!-- bundle -->
+    <script src="{% static 'theme/js/vendor.min.js' %}"></script>
+    <script src="{% static 'theme/js/app.min.js' %}"></script>
+  </body>
+</html>

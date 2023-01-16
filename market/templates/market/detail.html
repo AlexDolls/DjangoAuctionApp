@@ -67,156 +67,303 @@
                 }
 
 </script>
+<div class="row">
+    {% if messages %}
+        <ul class = "messages">
+            {% for message in messages%}
+            <li {% if message.tags %} class = "{{message.tags}}" {% endif %}> {{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
-<div class = "detail-page p-4">
-	{% if messages %}
-		<ul class = "messages">
+    <!-- Listing -->
+    <div class="col-md-15 col-lg-15">
+        <div class="card">
+            <div class="row no-gutters align-items-center">
+                <div class="col-md-5">
+                    <img class="card-img" src="{%if auctionlisting.loaded_image %}{{ auctionlisting.loaded_image.url }}{% else %}{{ auctionlisting.image }}{% endif %}" alt="{{ auctionlisting.id }}">
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card-body">
+                        <h2 class="card-title text-success">{{ auctionlisting.name }}</h2>
+                        {% if user.is_authenticated %}
+                            {% if true_user %}
+                            <!-- Edit -->
+                            <a class="btn btn-primary btn-rounded float-right" href="{% url 'market:editListing' auctionlisting.id %}" id="edit-listing">Edit</a>
+                            {% else %}
+                            <!-- Add To Watchlist -->
+                            <form 
+                                action="{% url "market:watchlist" %}" 
+                                method="post"
+                                >
+                                {% csrf_token %}
+                                    <input type="hidden" name="listing_id" value={{ auctionlisting.id }}>
+                                    <input 
+                                        type="submit" 
+                                        class="btn btn-primary btn-rounded float-right" 
+                                        id="add-listing-to-watchlist" 
+                                        value={% if auctionlisting in user.watchlist.all %}"Remove from watchlist"{% else %}"Add to Watchlist"{% endif %}
+                                    >
+                            </form>
+                            {% endif %}
+                        {% endif %}
+                        <!-- Description -->
+                        <h4 class="card-title text-info">Description</h4>
+                        <p class="card-text">{% if auctionlisting.description %}{{ auctionlisting.description }} {% else %} No description {% endif %}</p>
+                        <!-- Details -->
+                        <h4 class="card-text text-info">Details</h4>
+                        <!-- Listing Table Details-->
+                        <table class="table table-striped table-centered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Start Price</th>
+                                    <th>Creation Date</th>
+                                    <th>Expire Date</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ auctionlisting.user }}</td>
+                                    <td>${{ auctionlisting.startBid }}</td>
+                                    <td>{{ auctionlisting.creationDate|date:'Y-m-d H:i' }}</td>
+                                    <td>{{ auctionlisting.endDate|date:'Y-m-d H:i' }}</td>
+                                    <td>{% if auctionlisting.description %}{{ auctionlisting.description }} {% else %} No description {% endif %}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time to close, bid, auto-update -->
+    <div class="col-md-15 col-lg-15">
+        <div class="card">
+            <div class="row no-gutters align-items-center">              
+                <div class="col-md-15">
+                    <div class="card-body">                        
+                        <!-- Bid Info -->
+                        <table class="table table-striped table-centered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Time to close</th>
+                                    <th>Last Bid</th>
+                                    <th>Auto-update</th>
+                                    <th>History</th>
+                                    {% if not auctionlisting.active and user.is_authenticated %}
+                                    <th>Winner</th>
+                                    {% else %}
+                                    {% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
+                                    <th>Make Bid</th>
+                                    {% else %}
+                                    {% endif %}
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td id="demo"></td>
+                                    <!-- Last Bid -->
+                                    <td>
+                                        {% if bid is None%} 
+                                        No bids yet
+                                        {% else %} 
+                                        ${{bid.value}}
+                                        {% endif %}
+                                    </td>
+                                    <!-- Auto-Update -->
+                                    <td>
+                                        <!-- Switch-->
+                                        <div>
+                                            <input type="checkbox" id="switch1" data-switch="success" checked/>
+                                            <label for="switch1" data-on-label="Yes" data-off-label="No" class="mb-0 d-block"></label>
+                                        </div>
+                                    </td>
+                                    <!-- History -->
+                                    <td>
+                                        <button class="btn btn-primary btn-rounded" 
+                                        onclick="turn_is_open()">Show</button>
+                                    </td>
+                                    {% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
+                                    <!-- Make Bid -->
+                                    <td>
+                                        <div class="input-group">
+                                            <input 
+                                            type="number" 
+                                            class="form-control col-sm-4"
+                                            id="newbid"
+                                            name="newbid"
+                                            placeholder="Make bid" 
+                                            aria-label="Make bid"
+                                            {% if bid is None %}
+                                            min={{auctionlisting.startBid}}
+                                            max=99999
+                                            value={{auctionlisting.startBid}}
+                                            {% else %} 
+                                            min={{bid.value}} 
+                                            max=99999 
+                                            value={{bid.value}}
+                                            {% endif %}
+                                            >
+                                            <div class="input-group-append">
+                                                <input 
+                                                class="btn btn-dark"
+                                                type="button"
+                                                id="new-bid-submit"
+                                                type="button"
+                                                value="Make Bid"/>
+
+                                            </div>
+                                        </div>
+                                        <div id="bid-warning" style="color:red;"></div>
+                                    </td>
+                                    {% endif %}
+
+                                    {% if not auctionlisting.active %}
+                                        {% if auctionlisting in user.winlist.all %} 
+                                        <td>
+                                            <span class="badge badge-primary-lighten">
+                                                Congratulations! You're the winner!
+                                            </span>
+                                        </td>
+                                        {% else %}
+                                        <td>
+                                            <span id='result'>{{ bid.user }}</span>
+                                        </td>
+                                        {% endif %}
+                                    {% else %}
+                                    {% endif %}
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="row p-3" id="history-list-row"></div>
+                    </div> <!-- end card-body-->
+                </div> <!-- end col -->
+            </div> <!-- end row-->
+        </div> <!-- end card-->
+    </div> <!-- end col-->
+
+    <!-- Comments -->
+    <div class="col-md-15 col-lg-15">
+        <div class="card">
+            <div class="row no-gutters align-items-center">              
+                <div class="col-md-15">
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <div class="tab-pane show active p-3" id="newpost">
+                                <table class="table table-centered  mb-0">
+                                    <thead>
+                                        <h3>Comments</h3>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <!-- Show all comments -->
+                                            <td>
+                                                <div data-simplebar style="max-height: 250px; width: 400px;">
+                                                    {% for comment in comments %}
+                                                        <div class="media">
+                                                            {% if comment.user.avatar %}
+                                                                <img
+                                                                    src="{{ comment.user.avatar.url }}"
+                                                                    alt=""
+                                                                    class="mr-2 rounded"
+                                                                    height="32"
+                                                                />
+                                                                {% else %}
+                                                                <img
+                                                                    src="https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg"
+                                                                    alt=""
+                                                                    class="mr-2 rounded"
+                                                                    height="32"
+                                                                />
+                                                            {% endif %}
+                                                            <div class="media-body">
+                                                                <h5 class="m-0">{{ comment.user.username }}</h5>
+                                                                <p class="text-muted mb-0"><small>{{comment.date|date:"M d, h:i a"}}</small></p>
+                                                                <p class="my-1">{{comment.text}}</p>
+                                                            </div>
+                                                        </div>
+                                                        <hr>
+                                                    {% endfor %}
+                                                </div>
+                                            </td>
+                                            <!-- Make a comment -->
+                                            {% if auctionlisting.active and user.is_authenticated %}
+                                                <td>
+                                                    <div class="border rounded" style="width: 400px;">
+                                                        <form action="#" class="comment-area-box">
+                                                            <textarea id="comment-input" rows="4" class="form-control border-0 resize-none" placeholder="Write something...."></textarea>
+                                                            <div class="p-2 bg-light d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <a href="#" class="btn btn-sm px-2 font-16 btn-light"><i class="uil uil-scenery"></i></a>
+                                                                    <a href="#" class="btn btn-sm px-2 font-16 btn-light"><i class="uil uil-location"></i></a>
+                                                                    <a href="#" class="btn btn-sm px-2 font-16 btn-light"><i class="uil uil-paperclip"></i></a>
+                                                                </div>
+                                                                <button id="comment-submit" type="submit" class="btn btn-sm btn-success"><i class="uil uil-message mr-1"></i>Comment</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                    </br>
+                                                    <div class="custom-control custom-checkbox mb-2">
+                                                        <input type="checkbox" class="custom-control-input" id="autoscroll-check" checked>
+                                                        <label class="custom-control-label" for="autoscroll-check">Autoscroll</label>
+                                                    </div>               
+                                                </td>
+                                            {% else %}
+                                                <td><h4>Login to make a comment...</h4></td>    
+                                            {% endif %}
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div> <!-- end preview-->
+                        </div>
+                    </div> <!-- end card-body-->
+                </div> <!-- end col -->
+            </div> <!-- end row-->
+        </div> <!-- end card-->
+    </div> <!-- end col-->
+</div>
+
+    {% if messages %}
+		<ul class="messages">
 			{% for message in messages%}
-			<li {% if message.tags %} class = "{{message.tags}}" {% endif %}> {{ message }}</li>
+			<li {% if message.tags %} class="{{message.tags}}" {% endif %}> {{ message }}</li>
 			{% endfor %}
 		</ul>
 	{% endif %}
-	<h1 style = "text-align:center;"><strong>{{ auctionlisting.name }}</strong>{% if true_user %} <a class = "btn btn-primary" href={% url "market:editListing" auctionlisting.id %} id = "edit-listing">Edit</a>{% endif %}</h1>
-	<hr>
-	<div class="image">
-		<img class="big" src="{%if auctionlisting.loaded_image %}{{ auctionlisting.loaded_image.url }}{% else %}{{ auctionlisting.image }}{% endif %}" alt="{{ auctionlisting.id }}">
-    	</div>	
-	<table class = "table" style = "font-size:larger;">
-	<thead>
-		<tr>
-			<th scope = "col">Description</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td>{% if auctionlisting.description %}{{ auctionlisting.description }} {% else %} No description {% endif %}<td>
-		</tr>
-	</tbody>
-	</table>
-
-<table class="table" style = "font-size:larger;">
-  <thead>
-    <tr>
-      <th scope="col">Details</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">User</th>
-      <td>{{ auctionlisting.user }}</td>
-    </tr>
-    <tr>
-      <th scope="row">Start price</th>
-      <td>{{ auctionlisting.startBid }} $</td>
-    </tr>
-    <tr>
-      <th scope="row">Creation date</th>
-      <td>{{ auctionlisting.creationDate|date:'Y-m-d H:i' }}</td>
-    </tr>
-    <tr>
-      <th scope="row">Expire date</th>
-      <td>{{ auctionlisting.endDate|date:'Y-m-d H:i' }}</td>
-    </tr>
-  </tbody>
-</table>
-
-	{% if user.is_authenticated %}
-	<form action = "{% url "market:watchlist" %}" method = "post" class = "add-category" style = "z-index:1;">
-		{% csrf_token %}
-			<input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
-			<input type = "submit" class = "btn-primary btn-lg" id = "add-listing-to-watchlist"value = {% if auctionlisting in user.watchlist.all %}"Remove from watchlist"{% else %}"Add to Watchlist"{% endif %}>
-	</form>
-	{% endif %}
-	<table class = "table">
-	<tbody>
-		<tr>
-			<td style = "width:50%; text-align:center; font-size: 20px;">
-				Time to close
-				<strong><p id = "demo"></p></strong>
-			</td>
-			<td style = "text-align:center; width:50%; font-size: 20px;">
-				<p>Last Bid</p><p><input type = 'text' id = "last-bid"{% if bid is None%} value = "No bids yet :)"{% else %} value = "{{bid.value}}"${% endif %} readonly = "True" style = "width:80%; border-radius:12.5px; text-align: center;"></p>
-			</td>
-		</tr>
-	</tbody>
-	</table>
-	<div class = "container">
-	<div class = "row p-3">
-	<div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id="autoupdate" checked>
-          <label class="form-check-label" for="autoupdate">Auto-update</label>
-        </div>
-	</div>
-	<div class = "row">
-        <div id="history-button">
-	<input type = "button" class = "btn-primary btn-lg" id = "show-history" value = "Show history" onclick = "turn_is_open()">
-	</div>
-	</div>
-	<div class = "row p-3" id = "history-list-row"></div>
-	</div>
 	<p>
-	{% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
-		<div id = "new-bid-block">
-		<center>
-		<input type = "number" id = "newbid" name = "newbid" style = "height:2.4rem; width:220px; font-size:30px; text-align: center; border-radius:12.5px;"
-		{% if bid is None %} min = {{auctionlisting.startBid}} max = 99999 value = {{auctionlisting.startBid}}
-                {% else %} min ={{bid.value}} max = 99999 value = {{bid.value}}
-		       {% endif %}><br>
-		<div id = "bid-warning" style = "color:red;"></div>
-		       <br>
-		<input class="btn btn-primary mb-3" id = "new-bid-submit" type = "button" value = "Make Bid!" style = "width:10rem; height:4rem; font-size:30px;">
-		</div>
-
-	{% elif not auctionlisting.active %}
-        <center><h3 id = "last-price"><strong>Last Price:</strong> {% if bid is None %} {{auctionlisting.startBid}}
-                {% else %} {{bid.value}} {% endif %} $</h3></center>
-        <center><h2 id = "listing-is-ended"><span class="badge bg-warning">Listing is Ended</span></h2></center>
-        {% endif %}
-	{% if auctionlisting in user.winlist.all %}
-	<center><h2 id = "winner-of-listing"><strong>You're the winner of that listing!</strong></h2></center>
-        {% endif %}
-
-	<div id = 'result'></div>
-{% comment %}
-
-Commented cause endlisting fucntion now is auto and can't be called by manual actions from user side...
-
-{% if user == auctionlisting.user and auctionlisting.active == True %}
-		<div id = "end-listing-block">
-		<center>
-                <input type = "button" id = "end-listing-submit" class = "btn-dark btn-lg" value = "End Listing">
-		</center>
-		</div>
-{% endif %}
-{% endcomment %}
 
 	<script>
-	// Set the date we're counting down to
-		var countDownDate = new Date("{{auctionlisting.endDate|date:'Y-m-d H:i:s'}}").getTime();
-		var now = new Date("{{server_datetime|date:'Y-m-d H:i:s'}}").getTime();
-		var distance = countDownDate - now;
+        // Set the date we're counting down to
+            var countDownDate = new Date("{{auctionlisting.endDate|date:'Y-m-d H:i:s'}}").getTime();
+            var now = new Date("{{server_datetime|date:'Y-m-d H:i:s'}}").getTime();
+            var distance = countDownDate - now;
 
-	
-	var x = setInterval(function() {
+        
+        var x = setInterval(function() {
 
-	    distance = distance - 1000
-	    
-	    // Time calculations for days, hours, minutes and seconds
-	    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-	    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-	    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-	    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-	    
-	    // Output the result in an element with id="demo"
-	    document.getElementById("demo").innerHTML = days + "d " + hours + "h "
-	    + minutes + "m " + seconds + "s ";
-	    
-	    // If the count down is over, write some text 
-	    if (distance < 0) {
-		clearInterval(x);
-		document.getElementById("demo").innerHTML = "EXPIRED";
-	    }
-	}, 1000);
+            distance = distance - 1000
+            
+            // Time calculations for days, hours, minutes and seconds
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // Output the result in an element with id="demo"
+            document.getElementById("demo").innerHTML = days + "d " + hours + "h "
+            + minutes + "m " + seconds + "s ";
+            
+            // If the count down is over, write some text 
+            if (distance < 0) {
+            clearInterval(x);
+            document.getElementById("demo").innerHTML = "EXPIRED";
+            }
+        }, 1000);
 	</script>
 
 	<script type = 'text/javascript'>
@@ -424,48 +571,8 @@ Commented cause endlisting fucntion now is auto and can't be called by manual ac
 
 	</script>
 
-	<div class = "modal-body-comments" {% if comments %}{%else%}style = "display:none;"{% endif %} id = "modal-body-comments">
-		<div class = "modal-content">
-			<div id = "all-comments">
-				{% for comment in comments %}
-				<div class = "card comment">
-					<div class = "card-body">
-						<div class = "card-title">
-							<span class = "badge bg-dark mb-2" style = "font-size:13px">{{ comment.user.username }}
-						</div>
-						<div class = "card-text">
-							<h5>{{comment.text}}</h5>
-							<small>Commented on: <strong>{{comment.date|date:"M d, h:i a"}}</strong></small>
-						</div>
-					</div>
-				</div>
-				{% endfor %}
-			</div>
-		</div>
-	</div>
 
-	{% if auctionlisting.active and user.is_authenticated %}
-		<div class = "form-floating mb-3" id = "comment-input-form">
-			<textarea class = "form-control mb-3" name = "comment" id = "comment-input" style = "height:100px;" placeholder = "comment_text"></textarea>
-			<label for = "comment">Comment</label>
-			<div class = "container">
-			<div class = "row">
-			<center><input type = "button" id = "comment-submit" class = "btn-info btn-lg" value = "Post comment"></center> 
-			</div>
-			<div class = "row">
-			<div class="form-check">
-			  <input class="form-check-input" type="checkbox" value="" id="autoscroll-check" checked>
-			  <label class="form-check-label" for="autoscroll-check">
-			    Autoscroll
-			  </label>
-			</div>
-			</div>
-		</div>
-	{% endif %}
-
-		</div>
-		</div>
-	</fieldset>
+    </fieldset>
         {% if user == auctionlisting.user and not auctionlisting.active %}
         <form action = "{% url "market:removeListing" %}" method = "post" class = "add-category-left" style="z-index:1;">
         {% csrf_token %}
