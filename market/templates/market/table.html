@@ -1,0 +1,37 @@
+<table class="table table-centered mb-0">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Last Bid</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+        </tr>
+    </tbody>
+</table>
+
+<div class="media">
+    {% if comment.user.avatar %}
+        <img
+            src="{{ comment.user.avatar.url }}"
+            alt=""
+            class="mr-2 rounded"
+            height="32"
+        />
+        {% else %}
+        <img
+            src="https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg"
+            alt=""
+            class="mr-2 rounded"
+            height="32"
+        />
+    {% endif %}
+    <div class="media-body">
+        <h5 class="m-0">{{ comment.user.username }}</h5>
+        <p class="text-muted mb-0"><small>{{ comment.date|date:"M d, h:i a" }}</small></p>
+        <p class="my-1">{{comment.text}}</p>
+    </div>
+</div>
+<hr>

@@ -25,11 +25,13 @@ from .serializers import BidSerializer
 from .forms import UserAvatarForm
 from .tasks import create_task
 
+
 # Create your views here.
 
 # Checks if given string contains other symnols that allowed
-def uses_other_chars(s, given = frozenset(string.ascii_letters + string.digits + '-._')):
+def uses_other_chars(s, given=frozenset(string.ascii_letters + string.digits + '-._')):
     return not set(s) <= given
+
 
 class GetListingBidsTotalInfoView(APIView):
     def get(self, request, listing_id):
@@ -41,11 +43,11 @@ class GetListingBidsTotalInfoView(APIView):
             all_bids = Bid.objects.filter(listing=listing).order_by('date')
             queryset = all_bids
             serializer_for_queryset = BidSerializer(
-            instance = queryset,
-            many = True
-                    )
+                instance=queryset,
+                many=True
+            )
             return Response(serializer_for_queryset.data)
-        return Response(json.dumps({'value':'No bids yet :)'}))
+        return Response(json.dumps({'value': 'No bids yet :)'}))
 
 
 class GetListingBidInfoView(APIView):
@@ -58,11 +60,12 @@ class GetListingBidInfoView(APIView):
             last_bid = Bid.objects.filter(listing=listing).order_by('-value')[0]
             queryset = last_bid
             serializer_for_queryset = BidSerializer(
-            instance = queryset,
-            many = False
-                    )
+                instance=queryset,
+                many=False
+            )
             return Response(serializer_for_queryset.data)
-        return Response(json.dumps({'value':'No bids yet :)'}))
+        return Response(json.dumps({'value': 'No bids yet :)'}))
+
 
 class IndexView(generic.ListView):
     template_name = 'market/index.html'
@@ -72,11 +75,12 @@ class IndexView(generic.ListView):
         """Return all listing that exist."""
         return AuctionListing.objects.all()
 
+
 def details(request, listing_id):
     server_datetime = timezone.now()
     listing = get_object_or_404(AuctionListing, pk=listing_id)
     bids = Bid.objects.filter(listing=listing)
-    comments = Comment.objects.filter(listing = listing)
+    comments = Comment.objects.filter(listing=listing)
     comments = comments.order_by("date")
     max_value = bids.aggregate(Max('value'))['value__max']
     bid_item = None
@@ -85,22 +89,24 @@ def details(request, listing_id):
         bid_item = Bid.objects.filter(value=max_value)[0]
     if listing.user == request.user:
         true_user = True
-    return render (request, "market/detail.html",{
-        "server_datetime":server_datetime,
-        'true_user':true_user,
-        'auctionlisting':listing,
-        'bids':bids,
-        'comments':comments,
-        'bid':bid_item
-        })
+    return render(request, "market/detail.html", {
+        "server_datetime": server_datetime,
+        'true_user': true_user,
+        'auctionlisting': listing,
+        'bids': bids,
+        'comments': comments,
+        'bid': bid_item,
+        'min_bid': round(float(bid_item.value) + 0.01, 2) if bid_item else round(float(listing.startBid) + 0.01, 2)
+    })
+
 
 @login_required
 def makebid(request, listing_id):
-    listing = get_object_or_404(AuctionListing, pk = listing_id)
+    listing = get_object_or_404(AuctionListing, pk=listing_id)
 
     if request.user == listing.user:
         messages.warning(request, "Creator of listing can't do bids.")
-        return HttpResponseRedirect(reverse("market:details", kwargs={"listing_id":listing.id}))
+        return HttpResponseRedirect(reverse("market:details", kwargs={"listing_id": listing.id}))
 
     else:
         bids = Bid.objects.filter(listing=listing)
@@ -108,29 +114,30 @@ def makebid(request, listing_id):
         date = timezone.now()
         max_value = bids.aggregate(Max('value'))['value__max']
         if max_value is None:
-           max_value = 0
+            max_value = 0
 
         try:
             new_bid = request.POST['newbid']
         except KeyError:
             messages.warning(request, "You didn't give any value.")
-            return HttpResponseRedirect(reverse("market:details", kwargs = {'listing_id':listing.id}))
+            return HttpResponseRedirect(reverse("market:details", kwargs={'listing_id': listing.id}))
 
         else:
             try:
                 new_bid = float(new_bid)
             except ValueError:
                 messages.warning(request, "You didn't give any value.")
-                return HttpResponseRedirect(reverse("market:details", kwargs = {'listing_id':listing.id}))
+                return HttpResponseRedirect(reverse("market:details", kwargs={'listing_id': listing.id}))
             else:
                 new_bid = float(new_bid)
                 if new_bid > max_value and new_bid > float(listing.startBid):
-                    new_bid_object = Bid.objects.create(value=float(new_bid), user = user, listing=listing, date = date)
+                    new_bid_object = Bid.objects.create(value=float(new_bid), user=user, listing=listing, date=date)
                     new_bid_object.save()
-                    return HttpResponseRedirect(reverse('market:details', kwargs = {'listing_id':listing.id}))
+                    return HttpResponseRedirect(reverse('market:details', kwargs={'listing_id': listing.id}))
                 else:
                     messages.warning(request, "Bid Value must be bigger than Start Price and Last Bid.")
-                    return HttpResponseRedirect(reverse("market:details", kwargs = {'listing_id':listing.id}))
+                    return HttpResponseRedirect(reverse("market:details", kwargs={'listing_id': listing.id}))
+
 
 @login_required
 def createListing(request):
@@ -138,14 +145,14 @@ def createListing(request):
         user = request.user
         active = True
         current_date = timezone.now()
-        try: 
+        try:
             hours = int(request.POST['expiretime'])
             name = f"{request.POST['listingname']}"
             category = request.POST['category']
             startBid = float(request.POST['startBid'])
             description = f"{request.POST['listingdesc']}"
         except (KeyError, ValueError):
-            messages.warning(request, "Some of fields is empty, check this out and try again")
+            messages.warning(request, "All fields must be filled in, check this out and try again")
             return HttpResponseRedirect(reverse("market:createListing"))
 
         try:
@@ -175,15 +182,19 @@ def createListing(request):
             else:
                 if not image:
                     image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
-                end_date = current_date + datetime.timedelta(hours = hours)
-                
-                new_listing = AuctionListing.objects.create(name = name, description = description,loaded_image=image_file,image = image, category = category, user = user, startBid = startBid, creationDate = current_date, endDate = end_date, active = active)
+                end_date = current_date + datetime.timedelta(hours=hours)
+
+                new_listing = AuctionListing.objects.create(name=name, description=description, loaded_image=image_file,
+                                                            image=image, category=category, user=user,
+                                                            startBid=startBid, creationDate=current_date,
+                                                            endDate=end_date, active=active)
 
                 new_listing.save()
                 seconds_to_end = int(datetime.timedelta.total_seconds(new_listing.endDate - new_listing.creationDate))
-                task = create_task.apply_async(kwargs = {"listing_id": new_listing.id}, countdown = seconds_to_end)
-                return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":new_listing.id}))
-    return render(request, "market/createListing.html", {"categories":Category.objects.all()})
+                task = create_task.apply_async(kwargs={"listing_id": new_listing.id}, countdown=seconds_to_end)
+                return HttpResponseRedirect(reverse("market:details", kwargs={"listing_id": new_listing.id}))
+    return render(request, "market/createListing.html", {"categories": Category.objects.all()})
+
 
 @login_required
 def editListing(request, listing_id):
@@ -192,14 +203,14 @@ def editListing(request, listing_id):
         user = request.user
         if user != listing.user:
             messages.warning(request, "You don't have permission to do this!")
-            return HttpResponseRedirect(reverse("market:editListingPage", kwargs = {'listing_id':listing.id}))
+            return HttpResponseRedirect(reverse("market:editListingPage", kwargs={'listing_id': listing.id}))
         else:
             try:
                 description = request.POST['listingdesc']
                 name = request.POST['listingname']
             except KeyError:
                 messages.warning(request, "You didn't give any values")
-                return HttpResponseRedirect(reverse("market:editListingPage", kwargs = {'listing_id':listing.id}))
+                return HttpResponseRedirect(reverse("market:editListingPage", kwargs={'listing_id': listing.id}))
             try:
                 image_file = request.FILES.get("loaded-image")
             except(KeyError, ValueError):
@@ -212,14 +223,15 @@ def editListing(request, listing_id):
                 pass
             if not image:
                 image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
-            
+
             listing.image = image
             listing.loaded_image = image_file
             listing.name = name
             listing.description = description
             listing.save()
-            return HttpResponseRedirect(reverse("market:details", kwargs = {'listing_id':listing.id}))
-    return render(request, "market/editListing.html", {'listing':listing})
+            return HttpResponseRedirect(reverse("market:details", kwargs={'listing_id': listing.id}))
+    return render(request, "market/editListing.html", {'listing': listing})
+
 
 def signup(request):
     if request.method == "POST":
@@ -235,7 +247,8 @@ def signup(request):
             if (len(username) == 0 or len(email) == 0):
                 messages.warning(request, "All fields must be filled.")
                 return HttpResponseRedirect(reverse('market:signup'))
-            if (uses_other_chars(username) or uses_other_chars(email, given = frozenset(string.ascii_letters + string.digits + '-._' + '@')) or uses_other_chars(password)):
+            if (uses_other_chars(username) or uses_other_chars(email, given=frozenset(
+                    string.ascii_letters + string.digits + '-._' + '@')) or uses_other_chars(password)):
                 messages.warning(request, "Unsupported characters was given in fields. \
                                             Supported symbols: '-_.', letters, digits, \
                                             '@' for email field")
@@ -247,7 +260,7 @@ def signup(request):
                 messages.warning(request, "Password must have 8 or more symbols.")
                 return HttpResponseRedirect(reverse('market:signup'))
             try:
-                user = User.objects.create_user(username = username, email=email, password = password)
+                user = User.objects.create_user(username=username, email=email, password=password)
                 user.save()
                 return HttpResponseRedirect(reverse("market:login"))
             except IntegrityError:
@@ -255,6 +268,7 @@ def signup(request):
                 return HttpResponseRedirect(reverse("market:signup"))
     else:
         return render(request, "market/signup.html")
+
 
 def login_view(request):
     if request.method == "POST":
@@ -276,17 +290,19 @@ def login_view(request):
 
     return render(request, "market/login.html")
 
+
 @login_required
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("market:index"))
+
 
 @login_required
 def watchlist(request):
     user = request.user
     if request.method == "POST":
         try:
-            listing = get_object_or_404(AuctionListing, pk = request.POST['listing_id'])
+            listing = get_object_or_404(AuctionListing, pk=request.POST['listing_id'])
         except KeyError:
             return HttpResponseRedirect(reverse("market:index"))
         if listing not in user.watchlist.all():
@@ -294,27 +310,30 @@ def watchlist(request):
         else:
             user.watchlist.remove(listing)
         user.save()
-        return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":listing.id}))
+        return HttpResponseRedirect(reverse("market:details", kwargs={"listing_id": listing.id}))
     else:
         return render(request, "market/index.html", {
             "active_listing_list": user.watchlist.all(),
-            "watchlist":"Watchlist",})
+            "watchlist": "Watchlist", })
+
 
 @login_required
 def removeListing(request):
     user = request.user
     if request.method == "POST":
-        listing = get_object_or_404(AuctionListing, pk = request.POST["listing_id"])
+        listing = get_object_or_404(AuctionListing, pk=request.POST["listing_id"])
         if listing.user == request.user and listing.active == False:
             listing.delete()
             return HttpResponseRedirect(reverse("market:index"))
+
 
 @login_required
 def mylistings(request):
     user = request.user
     return render(request, "market/index.html", {
-        "active_listing_list":AuctionListing.objects.filter(user = user),
-        "mylistings":"My Listings",})
+        "active_listing_list": AuctionListing.objects.filter(user=user),
+        "mylistings": "My Listings", })
+
 
 # Don't need this for now cause few functions for listing was replaced on websocket
 """
@@ -341,9 +360,12 @@ def endlisting(request):
                 messages.warning(request, f"{last_bid.user.username}")
                 return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":listing.id}))
 """
+
+
 def active_listing(request):
     return render(request, "market/index.html", {
-        "active_listing_list":AuctionListing.objects.filter(active=True)})
+        "active_listing_list": AuctionListing.objects.filter(active=True)})
+
 
 class CategoriesView(generic.ListView):
     template_name = 'market/categories.html'
@@ -353,10 +375,12 @@ class CategoriesView(generic.ListView):
         """Return all listing that exist."""
         return Category.objects.all()
 
+
 def category_listings(request, category_id):
     category = get_object_or_404(Category, pk=category_id)
     return render(request, "market/index.html", {
-        "active_listing_list":AuctionListing.objects.filter(category=category)})
+        "active_listing_list": AuctionListing.objects.filter(category=category)})
+
 
 @login_required
 def comment(request, listing_id):
@@ -365,67 +389,71 @@ def comment(request, listing_id):
         user = request.user
         commentValue = request.POST['comment'].strip()
         if commentValue and listing.active:
-            comment = Comment.objects.create(date=timezone.now(), user = user, listing=listing, text = commentValue)
+            comment = Comment.objects.create(date=timezone.now(), user=user, listing=listing, text=commentValue)
             comment.save()
-        return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":listing.id}))
+        return HttpResponseRedirect(reverse("market:details", kwargs={"listing_id": listing.id}))
     return HttpResponseRedirect(reverse("market:index"))
+
 
 @login_required
 def sendcontact(request):
     if request.method == "POST":
         user = request.user
-        listing = get_object_or_404(AuctionListing, pk = request.POST["listing_id"])
-        try: 
+        listing = get_object_or_404(AuctionListing, pk=request.POST["listing_id"])
+        try:
             email = request.POST['email']
         except KeyError:
             messages.warning(request, "Email Field is empty")
-            return HttpResponseRedirect(reverse("market:details", kwargs = {'listing_id':listing.id}))
+            return HttpResponseRedirect(reverse("market:details", kwargs={'listing_id': listing.id}))
         else:
-            send_message = ChatMessage.objects.create(sender = user, text = email, user_id = listing.user.id)
+            send_message = ChatMessage.objects.create(sender=user, text=email, user_id=listing.user.id)
             send_message.save()
             user.winlist.remove(listing)
             messages.success(request, "Your email was send to listing owner, wait for he contact with you.")
-            return HttpResponseRedirect(reverse("market:details", kwargs = {"listing_id":listing.id}))
+            return HttpResponseRedirect(reverse("market:details", kwargs={"listing_id": listing.id}))
+
 
 @login_required
 def winlistings(request):
     user = request.user
     if user.winlist.all():
         return render(request, "market/index.html", {
-        "active_listing_list":user.winlist.all(),
-        "winlist":"Winlist",
+            "active_listing_list": user.winlist.all(),
+            "winlist": "Winlist",
         })
+
 
 @login_required
 def inbox(request):
     user = request.user
     if request.method == "POST":
         try:
-            choosen_user = User.objects.get(pk = int(request.POST['user_id']))
+            choosen_user = User.objects.get(pk=int(request.POST['user_id']))
         except (KeyError, User.DoesNotExist, ValueError):
             messages.warning(request, "User not found :(")
             return HttpResponseRedirect(reverse("market:inbox"))
         else:
-            check_chat = Chat.objects.filter(members = user.id).filter(members=choosen_user.id)
+            check_chat = Chat.objects.filter(members=user.id).filter(members=choosen_user.id)
             if not check_chat:
                 new_chat = Chat.objects.create()
                 new_chat.members.add(user, choosen_user)
                 new_chat.save()
-                return HttpResponseRedirect(reverse("market:chat", kwargs = {'chat_id':new_chat.id}))
+                return HttpResponseRedirect(reverse("market:chat", kwargs={'chat_id': new_chat.id}))
             else:
                 messages.warning(request, "Chat exist :(")
                 return HttpResponseRedirect(reverse("market:inbox"))
-    all_users = User.objects.all().exclude(pk = user.id)
-    current_user_chats = Chat.objects.filter(members = user.id)
+    all_users = User.objects.all().exclude(pk=user.id)
+    current_user_chats = Chat.objects.filter(members=user.id)
     for chat in current_user_chats:
         if chat.members.count() == 2:
-            to_delete_member = chat.members.all().exclude(id = user.id)
-            all_users = all_users.exclude(pk = to_delete_member.first().id)
+            to_delete_member = chat.members.all().exclude(id=user.id)
+            all_users = all_users.exclude(pk=to_delete_member.first().id)
 
     return render(request, "market/inbox.html", {
-    "chats":current_user_chats,
-    "site_users":all_users,
-        })
+        "chats": current_user_chats,
+        "site_users": all_users,
+    })
+
 
 @login_required
 def chat(request, chat_id):
@@ -436,22 +464,22 @@ def chat(request, chat_id):
         return HttpResponseRedirect(reverse("market:inbox"))
     else:
         if user in chat.members.all():
-            messages = Message.objects.filter(chat = chat).order_by('date')
+            messages = Message.objects.filter(chat=chat).order_by('date')
             unread_messages_all = 0
             for chat_item in Chat.objects.filter(members=user):
-                for message_item in chat_item.message_set.exclude(sender_id = user.id):
+                for message_item in chat_item.message_set.exclude(sender_id=user.id):
                     if chat_item == chat:
                         message_item.unread = False
                         message_item.save()
-                    if message_item.unread: #BooleanField 'unread' in Message
+                    if message_item.unread:  # BooleanField 'unread' in Message
                         unread_messages_all += 1
 
             user.inbox = unread_messages_all
             user.save()
             return render(request, "market/chat.html", {
-            "messages":messages,
-            "chat":chat,
-                })
+                "messages": messages,
+                "chat": chat,
+            })
         else:
             return HttpResponseRedirect(reverse("market:inbox"))
 
@@ -465,26 +493,28 @@ def mybids(request):
             if i.listing not in listings:
                 listings.append(i.listing)
         return render(request, "market/index.html", {
-        "active_listing_list":listings,
-            })
+            "active_listing_list": listings,
+        })
     return HttpResponseRedirect(reverse("market:index"))
+
 
 @login_required
 def add_user_avatar(request, user_id):
     user_instance = get_object_or_404(User, id=user_id)
     if request.user == user_instance:
         if request.method == "POST":
-            form = UserAvatarForm(request.POST ,request.FILES, instance = user_instance)
+            form = UserAvatarForm(request.POST, request.FILES, instance=user_instance)
             if form.is_valid():
                 form.save()
                 user_obj = form.instance
-                return render(request, 'market/usercabinet.html', {"form":form, "user_obj":user_obj})
+                return render(request, 'market/usercabinet.html', {"form": form, "user_obj": user_obj})
 
         else:
-            form = UserAvatarForm(instance=user_instance)    
-        return render(request, 'market/usercabinet.html', {'form':form, "user_obj":user_instance})
+            form = UserAvatarForm(instance=user_instance)
+        return render(request, 'market/usercabinet.html', {'form': form, "user_obj": user_instance})
     else:
         return render(request, "market/index.html")
+
 
 @csrf_exempt
 def get_status(request, task_id):

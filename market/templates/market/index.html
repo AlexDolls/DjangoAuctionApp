@@ -12,6 +12,8 @@
         src="{%if listing.loaded_image %}{{ listing.loaded_image.url }}{% else %}{{ listing.image }}{% endif %}"
         class="card-img-top"
         alt=""
+        width="300"
+        height="300"
       />
       <div class="card-body">
         <h5 class="card-title">
@@ -22,16 +24,16 @@
           >
         </h5>
         <p class="card-text">
-          <span class="text-success">Price: </span
+          <span class="text-dark">Price: </span
           ><strong>${{ listing.startBid }}</strong>
         </p>
         <p class="card-text">
-          <span class="text-success">Created: </span
+          <span class="text-dark">Created: </span
           ><strong>{{ listing.creationDate|date:"d-m-Y H:i" }}</strong>
         </p>
 
         <p class="card-text">
-          <span class="text-success">Estimation date: </span
+          <span class="text-dark">Estimation date: </span
           ><strong>{{ listing.endDate|date:"d-m-Y H:i" }}</strong>
         </p>
 
