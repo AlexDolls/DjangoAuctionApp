@@ -1,28 +1,24 @@
+import datetime
 import json
-from django.shortcuts import render, get_object_or_404, redirect
+import string
+
+from celery.result import AsyncResult
+from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
+from django.db.models import Max
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views import generic
 from django.views.decorators.csrf import csrf_exempt
-from django.db import IntegrityError
-from django.db.models import Max, Sum
-from django.utils import timezone
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.db.models import F
-
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from celery.result import AsyncResult
-
-import datetime
-import string
-
-from .models import AuctionListing, Comment, User, Bid, Category, Chat, Message
-from .serializers import BidSerializer
 from .forms import UserAvatarForm
+from .models import *
+from .serializers import BidSerializer
 from .tasks import create_task
 
 
@@ -34,7 +30,8 @@ def uses_other_chars(s, given=frozenset(string.ascii_letters + string.digits + '
 
 
 class GetListingBidsTotalInfoView(APIView):
-    def get(self, request, listing_id):
+    @staticmethod
+    def get(request, listing_id):
         listing = get_object_or_404(AuctionListing, pk=listing_id)
         bids = Bid.objects.filter(listing=listing)
         if not bids:
@@ -51,7 +48,8 @@ class GetListingBidsTotalInfoView(APIView):
 
 
 class GetListingBidInfoView(APIView):
-    def get(self, request, listing_id):
+    @staticmethod
+    def get(request, listing_id):
         listing = get_object_or_404(AuctionListing, pk=listing_id)
         bids = Bid.objects.filter(listing=listing)
         if not bids:
@@ -85,10 +83,19 @@ def details(request, listing_id):
     max_value = bids.aggregate(Max('value'))['value__max']
     bid_item = None
     true_user = False
+
     if max_value is not None:
         bid_item = Bid.objects.filter(value=max_value)[0]
     if listing.user == request.user:
         true_user = True
+
+    min_value = listing.startBid
+
+    if bid_item:
+        min_value = float(bid_item.value)
+        min_value = round(min_value, 2)
+        min_value = min_value + 0.01
+
     return render(request, "market/detail.html", {
         "server_datetime": server_datetime,
         'true_user': true_user,
@@ -96,7 +103,8 @@ def details(request, listing_id):
         'bids': bids,
         'comments': comments,
         'bid': bid_item,
-        'min_bid': round(float(bid_item.value) + 0.01, 2) if bid_item else round(float(listing.startBid) + 0.01, 2)
+        'min_value': min_value,
+        'user': request.user
     })
 
 
@@ -181,13 +189,21 @@ def createListing(request):
                 return HttpResponseRedirect(reverse("market:createListing"))
             else:
                 if not image:
-                    image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
+                    image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px" \
+                            "-No_image_available.svg.png"
                 end_date = current_date + datetime.timedelta(hours=hours)
 
-                new_listing = AuctionListing.objects.create(name=name, description=description, loaded_image=image_file,
-                                                            image=image, category=category, user=user,
-                                                            startBid=startBid, creationDate=current_date,
-                                                            endDate=end_date, active=active)
+                new_listing = AuctionListing.objects.create(
+                    name=name,
+                    description=description,
+                    loaded_image=image_file,
+                    image=image,
+                    category=category,
+                    user=user,
+                    startBid=startBid,
+                    creationDate=current_date,
+                    endDate=end_date, active=active
+                )
 
                 new_listing.save()
                 seconds_to_end = int(datetime.timedelta.total_seconds(new_listing.endDate - new_listing.creationDate))
@@ -222,7 +238,8 @@ def editListing(request, listing_id):
                 image = ""
                 pass
             if not image:
-                image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
+                image = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px" \
+                        "-No_image_available.svg.png"
 
             listing.image = image
             listing.loaded_image = image_file
@@ -244,7 +261,7 @@ def signup(request):
             messages.warning(request, "You did't fill all fields.")
             return HttpResponseRedirect(reverse('market:signup'))
         else:
-            if (len(username) == 0 or len(email) == 0):
+            if len(username) == 0 or len(email) == 0:
                 messages.warning(request, "All fields must be filled.")
                 return HttpResponseRedirect(reverse('market:signup'))
             if (uses_other_chars(username) or uses_other_chars(email, given=frozenset(
@@ -322,7 +339,7 @@ def removeListing(request):
     user = request.user
     if request.method == "POST":
         listing = get_object_or_404(AuctionListing, pk=request.POST["listing_id"])
-        if listing.user == request.user and listing.active == False:
+        if listing.user == request.user and not listing.active:
             listing.delete()
             return HttpResponseRedirect(reverse("market:index"))
 
@@ -389,8 +406,8 @@ def comment(request, listing_id):
         user = request.user
         commentValue = request.POST['comment'].strip()
         if commentValue and listing.active:
-            comment = Comment.objects.create(date=timezone.now(), user=user, listing=listing, text=commentValue)
-            comment.save()
+            new_comment = Comment.objects.create(date=timezone.now(), user=user, listing=listing, text=commentValue)
+            new_comment.save()
         return HttpResponseRedirect(reverse("market:details", kwargs={"listing_id": listing.id}))
     return HttpResponseRedirect(reverse("market:index"))
 
@@ -459,16 +476,16 @@ def inbox(request):
 def chat(request, chat_id):
     user = request.user
     try:
-        chat = Chat.objects.get(pk=chat_id)
+        get_chat = Chat.objects.get(pk=chat_id)
     except Chat.DoesNotExist:
         return HttpResponseRedirect(reverse("market:inbox"))
     else:
-        if user in chat.members.all():
-            messages = Message.objects.filter(chat=chat).order_by('date')
+        if user in get_chat.members.all():
+            get_messages = Message.objects.filter(chat=get_chat).order_by('date')
             unread_messages_all = 0
             for chat_item in Chat.objects.filter(members=user):
                 for message_item in chat_item.message_set.exclude(sender_id=user.id):
-                    if chat_item == chat:
+                    if chat_item == get_chat:
                         message_item.unread = False
                         message_item.save()
                     if message_item.unread:  # BooleanField 'unread' in Message
@@ -477,8 +494,8 @@ def chat(request, chat_id):
             user.inbox = unread_messages_all
             user.save()
             return render(request, "market/chat.html", {
-                "messages": messages,
-                "chat": chat,
+                "messages": get_messages,
+                "chat": get_chat,
             })
         else:
             return HttpResponseRedirect(reverse("market:inbox"))

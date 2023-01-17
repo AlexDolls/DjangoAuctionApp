@@ -123,14 +123,11 @@ $("#submit-button-block").click(function(){
 // The Listing and server dates will be stored in a hidden input,
 // so the value can be used as countdown variable.
 
-let listingEndDate = document.getElementById("listing-end-date").value
-let countDownDate = new Date(listingEndDate).getTime();
+const listingEndDate = document.getElementById("listing-end-date").value
+let countDownDate = new Date(listingEndDate).getTime()
 
 let serverDate = document.getElementById("server-date-now").value
 let now = new Date(serverDate).getTime()
-
-const listing_is_active = Boolean(document.getElementById("is_active").value);
-
 let diff = countDownDate - now
 
 const countDownInterval = setInterval(() => {
@@ -153,8 +150,6 @@ const countDownInterval = setInterval(() => {
 if (diff <= 0) {
 	clearInterval(countDownInterval);
 	document.getElementById("countdown-box").innerHTML = "EXPIRED";
-} else {
-
 }
 
 function bidhistory() {
@@ -164,6 +159,7 @@ function bidhistory() {
 	 */
 
 	const is_open = document.getElementById("is_open").getAttribute("value");
+	const listing_id = document.getElementById("auction-listing-id").value;
 
 	if (is_open === "1"){
 		const historyList = []
@@ -245,23 +241,14 @@ function turn_is_open(){
 	bidhistory();
 }
 
-
-
 const listing_id = document.getElementById("auction-listing-id").value;
-const lastBid = document.getElementById("last-bid");
-const newBid = document.querySelector('#newbid');
 const listingSocket = new WebSocket(`ws://${window.location.host}/ws/market/${listing_id}/`);
-/*listingSocket = new WebSocket(
-	'ws://'
-	+ window.location.host
-	+ '/ws/market/'
-	+ listing_id
-	+ '/'
-);*/
 
 $(function() {
+	const lastBid = document.getElementById("listing-last-bid");
+
 	listingSocket.onopen = (e) => {
-		$.ajax({type:"GET", url:"/market/api/"+listing_id+"/last_bid", success:(result) => {
+		$.ajax({type:"GET", url:`/market/api/${listing_id}/last_bid`, success:(result) => {
 			if (result.value) {
 				lastBid.value = result.value
 			} else {
@@ -274,42 +261,30 @@ $(function() {
 
 listingSocket.onmessage = (e) => {
 	const data = JSON.parse(e.data);
+	const lastBid = document.getElementById("listing-last-bid");
 
-	if (data.new_bid_set){
-		lastBid.value = data.new_bid_set;
-		//newBid.setAttribute('min', String(Number(data.new_bid_set + 0.01)));
-		document.querySelector('#newbid').value = Number(data.new_bid_set)+0.01;
-
-		// TODO: send a success message like, "Success!" and change class from danger to success
+	if (data["new_bid_set"]) {
+		lastBid.value = data["new_bid_set"];
+		//document.querySelector('#newbid').value = Number(data["new_bid_set"])+0.01;
 	}
 
-	if (data.comment) {
+	if (data["comment"]) {
 		const newComment = document.getElementById("comment-box");
-		newComment.innerHTML += `
-			<div className="media">
-				{% if comment.user.avatar %}
-				<img
-					src="{{ comment.user.avatar.url }}"
-					alt=""
-					className="mr-2 rounded"
-					height="32"
-				/>
-				{% else %}
-				<img
-					src="https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg"
-					alt=""
-					className="mr-2 rounded"
-					height="32"
-				/>
-				{% endif %}
-				<div className="media-body">
-					<h5 className="m-0">${data.username}</h5>
-					<p className="text-muted mb-0"><small>${data.comment_date}</small></p>
-					<p className="my-1">${data.comment}</p>
+
+		newComment.innerHTML +=`
+			<li className="clearfix">
+				<div className="chat-avatar">
+					<i>${data["comment_date"]}</i>
 				</div>
-			</div>
-			<hr>
+				<div className="conversation-text">
+					<div className="ctext-wrap">
+						<i>${data["username"]}</i>
+						<p className="my-1">${data["comment"]}</p>
+					</div>
+				</div>
+			</li>
 		`
+
 		document.getElementById('comment-input').value = "";
 
 		const comments = document.getElementsByClassName("card comment")
@@ -323,7 +298,7 @@ listingSocket.onmessage = (e) => {
 
 	}
 
-	if (data.win_user_id) {
+	/*if (data["win_user_id"]) {
 		const auctionListingId = document.getElementById("auction-listing-id").value;
 		document.querySelector('#comment-input-form').innerHTML = "";
 
@@ -337,7 +312,7 @@ listingSocket.onmessage = (e) => {
 		const current_user_id = "{{ user.id }}"
 
 
-		if (current_user_id == data.win_user_id) {
+		if (current_user_id === data["win_user_id"]) {
 			const winner_text = `<h2><strong>You're the winner of that listing!</strong></h2>`;
 		} else {
 			winner_text = "";
@@ -371,7 +346,7 @@ listingSocket.onmessage = (e) => {
 
 			}
 		}});
-	}
+	}*/
 };
 
 listingSocket.onclose = (e) => {
@@ -388,37 +363,65 @@ $(function(){
 	});
 });
 
-$(function(){
+$(function() {
+	/**
+	 * Try to make a bid on click.
+	 * Verify requirements for bid.
+	 * Send a success message and update last bid value on table.
+	 * Otherwise, send a error message to alert user.
+	 */
+	const lastBid = document.getElementById("listing-last-bid");
+	const newBid = document.getElementById("newbid");
+	const bidAlert = document.getElementById("bid-warning");
+
 	$('#new-bid-submit').click((e) => {
-	const newbidInputDom = document.querySelector('#newbid');
-				const newbid = newbidInputDom.value;
-	const lastbidInputDom = document.querySelector('#last-bid');
-	const lastbid = lastbidInputDom.value;
-	if (isNaN(lastbid)) {
-		compare_decision = 1;
-	} else {
-		if ((Number(newbid) > Number(lastbid)) && (Number(newbid)<=99999.99)){
-			compare_decision = 1;
-		}
-		else {
-			compare_decision = 0;
-			if (Number(newbid) < Number(lastbid)){
-				document.querySelector("#bid-warning").innerHTML = "Value must be bigger than last bid";
-				document.querySelector('#newbid').value = Number(lastbid)+1;
-			} else {
-				document.querySelector("#bid-warning").innerHTML = "Value must be less or equal 99999.99";
-				document.querySelector('#newbid').value = Number(lastbid)+1;
+		const minValue = lastBid.value
+		const maxValue = 99999
+
+		if (newBid.value > minValue && newBid.value < maxValue) {
+			listingSocket.send(JSON.stringify({
+				"newbid": newBid.value,
+				"listing_id": listing_id
+			}));
+			bidAlert.innerHTML = `
+				<div class="alert alert-success alert-dismissible bg-success text-white border-0 fade show" role="success">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<strong>Success! </strong>You made a bid
+				</div>
+			`
+			document.getElementById("listing-last-bid").innerHTML = newBid.value
+			turn_is_open()
+		} else {
+			if (newBid.value <= minValue) {
+				bidAlert.innerHTML = `
+					<div class="alert alert-danger alert-dismissible bg-danger text-white border-0 fade show" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<strong>Error! </strong>Value must be bigger than last bid
+					</div>
+				`
+			} else if (newBid.value > maxValue) {
+				bidAlert.innerHTML = `
+					<div class="alert alert-danger alert-dismissible bg-danger text-white border-0 fade show" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<strong>Error! </strong>Value must be less or equal to 99999
+					</div>
+				`
 			}
 		}
-	}
-
-	if (compare_decision == 1) {
-		document.querySelector("#bid-warning").innerHTML = "";
-		listingSocket.send(JSON.stringify({ 'newbid': newbid, 'listing_id':listing_id }));
-	}});
+	});
 });
 
 $(function(){
+	/**
+	 * Enter will be accepted as "click"
+	 */
+
 	$('#comment-input').keyup(function(e){
 		if (e.keyCode === 13){
 			$('#comment-submit').click()
@@ -429,9 +432,9 @@ $(function(){
 
 $(function(){
 	$('#comment-submit').click(function(e){
-		const newCommentDom = document.querySelector('#comment-input');
-		const newComment = newCommentDom.value;
-		listingSocket.send(JSON.stringify({ 'post_comment': newComment, 'listing_id':listing_id }));
+		const newCommentInput = document.getElementById('comment-input');
+		const newCommentValue = newCommentInput.value;
+		listingSocket.send(JSON.stringify({ 'post_comment': newCommentValue, 'listing_id':listing_id }));
 	});
 });
 
