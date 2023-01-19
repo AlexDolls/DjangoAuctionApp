@@ -1,97 +1,108 @@
 {% extends 'market/layout.html' %}
+{% load static %}
+
 {% block body %}
-    </br>
-    <h2 class="page-title">Create Listing</h2>
-    <form action = "{% url 'market:createListing' %}" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+    <div class="col-md-15 col-lg-15">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <h2 class="mt-0">Create Listing</h2>
+                    <form action = "{% url 'market:createListing' %}" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
 
-        <!-- Alert -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-danger alert-dismissible bg-danger text-white border-0 fade show" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <strong>Error! </strong> {{ message }}
+                        <!-- Alert -->
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-danger alert-dismissible bg-danger text-white border-0 fade show" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <strong>Error! </strong> {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- Listing Name, Category, Price -->
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="listingname" class="col-form-label">Listing Name</label>
+                                <input type="text" class="form-control" id="listingname" name="listingname" maxlength="32" placeholder="Enter listing name" required>
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label for="listingcategory-input" class="col-form-label">Category</label>
+                                <select class="form-control" id="listingcategory-input" name="category" required>
+                                    <option disabled selected>Choose..</option>
+                                    {% for category in categories %}
+                                        <option value={{ category }}>
+                                        {{ category.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label for="inputZip" class="col-form-label">Start Price</label>
+                                <input type="number" class="form-control" id="floatingInput" name="startBid" placeholder="1.01" step="0.01" min="1" max="99999" required>
+                            </div>
+                        </div>
+
+                        <!-- Listing Image -->
+                        <div class="form-group">
+                            <div class="input-group mb-6">
+                                <div class="input-group-prepend">
+                                    <button class="btn btn-primary" type="button" onclick="seturl()" id="set-image-url">Image from URL</button>
+
+                                    <button class="btn btn-secondary btn-light" type="button" onclick="loadfrompc()" id="load-image-from-pc">Load from PC</button>
+                                </div>
+                                <div id="form-load-image" class="input-group"
+                                     style="padding-top: 5px">
+                                    <input type="text" class="form-control" id="imageurl" name="imageurl" placeholder="Enter image url">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Listing Description -->
+                        <div class="form-group">
+                            <label for="floatingTextarea2" class="col-form-label">Description</label>
+                            <textarea class="form-control" rows="5" name="listingdesc" id="floatingTextarea2" placeholder="Enter a description for your item..."></textarea>
+                        </div>
+
+                        <!-- Listing Expire Time -->
+                        <div class=" form-group mt-2">
+                            <div>
+                                <label>Select Expire Time for Listing</label>
+                            </div>
+
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="12-hours" value="12" name="expiretime" class="custom-control-input" checked>
+                                <label class="custom-control-label" for="12-hours">12 Hours</label>
+                            </div>
+
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="24-hours" value="24" name="expiretime" class="custom-control-input">
+                                <label class="custom-control-label" for="24-hours">24 Hours</label>
+                            </div>
+
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="48-hours" value="48" name="expiretime" class="custom-control-input">
+                                <label class="custom-control-label" for="48-hours">48 Hours</label>
+                            </div>
+
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="72-hours" value="72" name="expiretime" class="custom-control-input">
+                                <label class="custom-control-label" for="72-hours">72 Hours</label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Btn -->
+                        <div class="form-group" id="submit-button-block">
+                            <input type="submit" class="btn btn-block btn-primary" id="submit-listing" value="Create Listing">
+                        </div>
+                    </form>
                 </div>
-            {% endfor %}
-        {% endif %}
-
-        <!-- Listing Name, Category, Price -->
-        <div class="form-row">
-            <div class="form-group col-md-4">
-                <label for="listingname" class="col-form-label">Listing Name</label>
-                <input type="text" class="form-control" id="listingname" name="listingname" maxlength="32" placeholder="Enter listing name">
-            </div>
-
-            <div class="form-group col-md-4">
-                <label for="listingcategory-input" class="col-form-label">Category</label>
-                <select class="form-control" id="listingcategory-input" name="category">
-                    <option disabled selected>Choose..</option>
-                    {% for category in categories %}
-                        <option value={{ category }}>
-                        {{ category.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="form-group col-md-4">
-                <label for="inputZip" class="col-form-label">Start Price</label>
-                <input type="number" class="form-control" id="floatingInput" name="startBid" placeholder="1.01" step="0.01" min="1" max="99999">
             </div>
         </div>
-
-        <!-- Listing Image -->
-        <div class="form-group">
-            <div class="input-group mb-6">
-                <div class="input-group-prepend">
-                    <button class="btn btn-primary" type="button" onclick="seturl()" id="set-image-url">Image from URL</button>
-
-                    <button class="btn btn-secondary btn-light" type="button" onclick="loadfrompc()" id="load-image-from-pc">Load from PC</button>
-                </div>
-                <div id="form-load-image" class="input-group mb-6">
-                    <input type="text" class="form-control" id="imageurl" name="imageurl" placeholder="Enter image url">
-                </div>
-            </div>
-        </div>
-
-        <!-- Listing Description -->
-        <div class="form-group">
-            <label for="floatingTextarea2" class="col-form-label">Description</label>
-            <textarea class="form-control" rows="5" name="listingdesc" id="floatingTextarea2" placeholder="Enter a description for your item..."></textarea>
-        </div>
-
-        <!-- Listing Expire Time -->
-        <div class=" form-group mt-2">
-            <div>
-                <label>Select Expire Time for Listing</label>
-            </div>
-
-            <div class="custom-control custom-radio custom-control-inline">
-                <input type="radio" id="12-hours" name="expiretime" class="custom-control-input" checked>
-                <label class="custom-control-label" for="12-hours">12 Hours</label>
-            </div>
-
-            <div class="custom-control custom-radio custom-control-inline">
-                <input type="radio" id="24-hours" name="expiretime" class="custom-control-input">
-                <label class="custom-control-label" for="24-hours">24 Hours</label>
-            </div>
-
-            <div class="custom-control custom-radio custom-control-inline">
-                <input type="radio" id="48-hours" name="expiretime" class="custom-control-input">
-                <label class="custom-control-label" for="48-hours">48 Hours</label>
-            </div>
-
-            <div class="custom-control custom-radio custom-control-inline">
-                <input type="radio" id="72-hours" name="expiretime" class="custom-control-input">
-                <label class="custom-control-label" for="72-hours">72 Hours</label>
-            </div>
-        </div>
-
-        <!-- Submit Btn -->
-        <div class="form-group" id="submit-button-block">
-            <input type="submit" class="btn btn-block btn-primary" id="submit-listing" value="Create Listing">
-        </div>
-    </form>
+    </div>
+    <script src="{% static 'market/js/createListing.js' %}"></script>
 {% endblock %}

@@ -92,9 +92,8 @@ def details(request, listing_id):
     min_value = listing.startBid
 
     if bid_item:
-        min_value = float(bid_item.value)
+        min_value = float(bid_item.value) + 0.01
         min_value = round(min_value, 2)
-        min_value = min_value + 0.01
 
     return render(request, "market/detail.html", {
         "server_datetime": server_datetime,
@@ -129,7 +128,6 @@ def makebid(request, listing_id):
         except KeyError:
             messages.warning(request, "You didn't give any value.")
             return HttpResponseRedirect(reverse("market:details", kwargs={'listing_id': listing.id}))
-
         else:
             try:
                 new_bid = float(new_bid)
@@ -137,9 +135,9 @@ def makebid(request, listing_id):
                 messages.warning(request, "You didn't give any value.")
                 return HttpResponseRedirect(reverse("market:details", kwargs={'listing_id': listing.id}))
             else:
-                new_bid = float(new_bid)
-                if new_bid > max_value and new_bid > float(listing.startBid):
-                    new_bid_object = Bid.objects.create(value=float(new_bid), user=user, listing=listing, date=date)
+                new_bid = round(float(new_bid), 2)
+                if new_bid > max_value and new_bid > round(float(listing.startBid), 2):
+                    new_bid_object = Bid.objects.create(value=new_bid, user=user, listing=listing, date=date)
                     new_bid_object.save()
                     return HttpResponseRedirect(reverse('market:details', kwargs={'listing_id': listing.id}))
                 else:
@@ -406,7 +404,11 @@ def comment(request, listing_id):
         user = request.user
         commentValue = request.POST['comment'].strip()
         if commentValue and listing.active:
-            new_comment = Comment.objects.create(date=timezone.now(), user=user, listing=listing, text=commentValue)
+            new_comment = Comment.objects.create(
+                date=timezone.now(),
+                user=user,
+                listing=listing,
+                text=commentValue)
             new_comment.save()
         return HttpResponseRedirect(reverse("market:details", kwargs={"listing_id": listing.id}))
     return HttpResponseRedirect(reverse("market:index"))

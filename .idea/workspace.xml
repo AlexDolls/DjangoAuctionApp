@@ -5,18 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="20b0f775-650a-4f46-b0fa-04371c37896f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.dockerignore" beforeDir="false" afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auctsite/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/auctsite/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/forms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/serializers.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/static/market/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/main.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/tasks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/createListing.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/createListing.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/inbox.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/inbox.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/layout.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/table.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/table.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/test_socket.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/test_socket.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/views.py" afterDir="false" />
     </list>
@@ -28,31 +24,42 @@
   <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
     <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/market/static/market/js/detail.js" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/market/templates/market/detail.html" root0="FORCE_HIGHLIGHTING" root1="SKIP_HIGHLIGHTING" />
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectId" id="2KPrggxsXcCQ7bgJ1ZNFxqpJG5m" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/samps/Documents/JOB/AuctionApp&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.stylelint&quot;: &quot;&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.django.DjangoModulesConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "javascript.nodejs.core.library.configured.version": "19.2.0",
+    "javascript.nodejs.core.library.typings.version": "18.11.18",
+    "last_opened_file_path": "/home/samps/Documents/JOB/AuctionApp",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.stylelint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.stylelint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_interpreter_path": "/home/samps/.nvm/versions/node/v19.2.0/bin/node",
+    "nodejs_package_manager_path": "/home/samps/.nvm/versions/node/v19.2.0/bin/npm",
+    "settings.editor.selected.configurable": "settings.nodejs",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Python tests.pytest in test_socket.py">
     <configuration name="AuctionApp" type="Python.DjangoServer" factoryName="Django server">
       <module name="AuctionApp" />
@@ -110,7 +117,9 @@
       <updated>1673887171446</updated>
       <workItem from="1673887172531" duration="161000" />
       <workItem from="1673887362729" duration="31025000" />
-      <workItem from="1673972473320" duration="25143000" />
+      <workItem from="1673972473320" duration="25523000" />
+      <workItem from="1673998026359" duration="15000" />
+      <workItem from="1674058011430" duration="25467000" />
     </task>
     <servers />
   </component>
