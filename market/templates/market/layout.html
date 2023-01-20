@@ -201,16 +201,7 @@
     <div class="container container-body">
       {% block body %} {% endblock %} {% block chat_script %}
       <script type="text/javascript">
-        chatSocket = new WebSocket(
-          "ws://" + window.location.host + "/ws/market/" + "inbox" + "/"
-        );
-        chatSocket.onmessage = function (e) {
-          const data = JSON.parse(e.data);
-          if (data.message) {
-            document.querySelector("#inbox-message").innerHTML =
-              data.user_inbox;
-          }
-        };
+
       </script>
       {% endblock %}
       <!-- bundle -->

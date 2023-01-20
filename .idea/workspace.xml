@@ -5,15 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="20b0f775-650a-4f46-b0fa-04371c37896f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/static/market/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/main.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/templates/market/createListing.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/createListing.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/templates/market/detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/static/market/js/inbox.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/js/inbox.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/inbox.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/inbox.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/layout.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/table.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/table.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -56,7 +52,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_interpreter_path": "/home/samps/.nvm/versions/node/v19.2.0/bin/node",
     "nodejs_package_manager_path": "/home/samps/.nvm/versions/node/v19.2.0/bin/npm",
-    "settings.editor.selected.configurable": "settings.nodejs",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -120,11 +116,26 @@
       <workItem from="1673972473320" duration="25523000" />
       <workItem from="1673998026359" duration="15000" />
       <workItem from="1674058011430" duration="25467000" />
+      <workItem from="1674147370635" duration="2476000" />
+      <workItem from="1674149860031" duration="604000" />
+      <workItem from="1674150478690" duration="175000" />
+      <workItem from="1674150670828" duration="18119000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="jinja2-line">
+          <url>file://$PROJECT_DIR$/market/templates/market/inbox.html</url>
+          <line>182</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/AuctionApp$pytest_in_test_socket_py.coverage" NAME="pytest in test_socket.py Coverage Results" MODIFIED="1673990793945" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

@@ -463,9 +463,9 @@ def inbox(request):
                 return HttpResponseRedirect(reverse("market:inbox"))
     all_users = User.objects.all().exclude(pk=user.id)
     current_user_chats = Chat.objects.filter(members=user.id)
-    for chat in current_user_chats:
-        if chat.members.count() == 2:
-            to_delete_member = chat.members.all().exclude(id=user.id)
+    for c in current_user_chats:
+        if c.members.count() == 2:
+            to_delete_member = c.members.all().exclude(id=user.id)
             all_users = all_users.exclude(pk=to_delete_member.first().id)
 
     return render(request, "market/inbox.html", {
