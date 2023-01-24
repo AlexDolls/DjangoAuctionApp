@@ -260,8 +260,6 @@ function makeComment() {
 			</div>
 		`
 	}
-
-
 }
 
 listingSocket.onmessage = (e) => {

@@ -1,140 +1,87 @@
-{% extends "market/layout.html" %}
+{% extends "market/inbox.html" %}
+{% load static %}
 
-{% block body %}
+{% block extend_body %}
+  <div class="col-xl-8 col-lg-12 order-lg-2 order-xl-1">
+    <div class="card">
+      <div class="card-body">
+        <ul class="conversation-list" data-simplebar="init" style="max-height: 370px">
+          <div class="simplebar-wrapper" style="margin: 0px -15px">
+            <div class="simplebar-height-auto-observer-wrapper">
+              <div class="simplebar-height-auto-observer"></div>
+            </div>
+            <div class="simplebar-mask">
+              <div class="simplebar-offset" style="right: 0px; bottom: 0px">
+                <div class="simplebar-content-wrapper" style="height: auto; overflow: hidden scroll">
+                  <div class="simplebar-content" style="padding: 0px 15px">
+                      <li class="clearfix">
+                        <div class="chat-avatar">
+                          <img src="{% static 'market/alexdollslogo.svg' %}" class="rounded" alt="Shreyu N"/>
+                          <i>10:00</i>
+                        </div>
+                        <div class="conversation-text">
+                          <div class="ctext-wrap">
+                            <i>Shreyu N</i>
+                            <p>Hello!</p>
+                          </div>
+                        </div>
+                      </li>
 
-<div class = "modal-body">
-	<div class="container">
-  <div class="row">
-        <div class="col">
-	{% for member in chat.members.all %}
-                {% if member.id != user.id %}
-			{% if member.avatar %}
-                       <div class = "user-avatar" style = "background-image: url({{ member.avatar.url }});"></div>
-		       {% else %}
-		       <div class = "user-avatar" style = "background-image: url(https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg);"></div>
-		       {% endif %}
-		{% endif %}
-        {% endfor %}
-  </div>
-
-    <div class="col">
-      <h3 class = "p-2" style = "color:white; text-align:right;"><strong>
-		      {% for member in chat.members.all %}
-		      	{% if member.id != user.id %}
-				{{member.username}}
-		      	{% endif %}
-		      {% endfor %}
-	      </strong></h3>
+                      <li class="clearfix odd">
+                        <div class="chat-avatar">
+                          <img
+                            src="{% static 'market/default-user.png' %}"
+                            class="rounded"
+                            alt="dominic"
+                          />
+                          <i>10:01</i>
+                        </div>
+                        <div class="conversation-text">
+                          <div class="ctext-wrap">
+                            <i>Dominic</i>
+                            <p>Hi, How are you? What about our next meeting?</p>
+                          </div>
+                        </div>
+                      </li>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="simplebar-placeholder" style="width: 876px; height: 885px"></div>
+          </div>
+          <div class="simplebar-track simplebar-horizontal" style="visibility: hidden">
+            <div class="simplebar-scrollbar" style="width: 0px; display: none"></div>
+          </div>
+          <div class="simplebar-track simplebar-vertical" style="visibility: visible">
+            <div class="simplebar-scrollbar"
+                 style="height: 325px; transform: translate3d(0px, 0px, 0px); display: block;">
+            </div>
+          </div>
+        </ul>
+        <!-- Submit Message -->
+        <div class="row">
+          <div class="col">
+            <div class="mt-2 bg-light p-3 rounded">
+              <form class="needs-validation" novalidate="" name="chat-form" id="chat-form">
+                <div class="row">
+                  <div class="col mb-2 mb-sm-0">
+                    <input type="text" class="form-control border-0"
+                           placeholder="Enter your text" required/>
+                    <div class="invalid-feedback"> Please enter your messsage</div>
+                  </div>
+                  <div class="col-sm-auto">
+                    <div class="btn-group">
+                      <button type="submit" class="btn btn-success chat-send btn-block">
+                        <i class="uil uil-message"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
-</div>
-	<div class = "modal-content">
-	<div id = 'messages-field'>
-	{% for message in messages %}
-	{% if user.id == message.sender_id %}
-	<div class="container-for-chat darker" style = "word-wrap: break-word; word-break: break-all;"> 
-	<p>{{message.text}}</p>
-	<span class="time-left">{{ message.date|date:"M d, h:i a" }}</span>
-        </div>
-	{% else %}
-	<div class="container-for-chat" style = "word-wrap: break-word; word-break: break-all;">
-        <p>{{message.text}}</p>
-	<span class="time-right">{{ message.date|date:"M d, h:i a" }}</span>
-        </div>
-	{% endif %}
-	{% endfor %}
-	</div>
-	</div>
-
-	<div class="form-check">
-        <input id = "autoscroll-check" class="form-check-input" type="checkbox" value="" id="flexCheckDefault" checked = True>
-        <label class="form-check-label" for="flexCheckDefault" style = "color:white;">
-        Autoscroll
-        </label>
-	</div>
-
-	<div class="form-floating" style:'text-aling:right;'>
-	<textarea class = "form-control" id = "message-input" placeholder = "Message text" style = "height: 50px; width:100%; margin-bottom:1rem; max-height:200px; resize:vertical;" maxlength=300></textarea>
-	<label for="floatingTextarea2">Message Text</label>
-	</div>
-	<input type = "button" id = "message-submit" value = "Send message" class = "btn-primary btn-lg">
-
-</div>
-{% endblock %}
-{% block chat_script %}
-<script type = 'text/javascript'>      
-                chatSocket = new WebSocket(
-                        'ws://'
-                        + window.location.host
-                        + '/ws/market/'
-                        +'inbox'
-                        +'/'
-                                );
-
-	const messages = document.getElementsByClassName("container-for-chat darker")
-	if (messages.length > 0){
-			messages[(messages.length-1)].scrollIntoView();}
-
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-	    if (data.message){
-		if (data.send_self){
-		document.querySelector('#messages-field').innerHTML +='<div class="container-for-chat darker" style = "word-wrap: break-word; word-break: break-all;">'
-        							+'<p>'
-								+data.message
-								+'</p>'
-								+'<span class="time-left">'
-								+data.message_date
-								+'</span>'
-								+'</div>';
-
-		const messages = document.getElementsByClassName("container-for-chat darker")
-		if (messages.length > 0){
-                        messages[(messages.length-1)].scrollIntoView();}
-		
-		}
-		else{
-            	document.querySelector('#messages-field').innerHTML += '<div class="container-for-chat" style = "word-wrap: break-word; word-break: break-all;">'
-                                                                +'<p>'
-                                                                +data.message
-                                                                +'</p>'
-								+'<span class="time-right">'
-								+ data.message_date
-								+'</span>'
-                                                                +'</div>';
-		
-		const scroll_check = document.querySelector('#autoscroll-check').checked
-                if (scroll_check){
-		if (messages.length > 0){
-                const messages = document.getElementsByClassName("container-for-chat")
-		messages[(messages.length-1)].scrollIntoView();}
-                        }
-
-		}
-
-		}
-        };
-
-        chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
-        };
-
-        document.querySelector('#message-input').focus();
-        document.querySelector('#message-input').onkeyup = function(e) {
-            if (e.keyCode === 13) {  // enter, return
-                document.querySelector('#message-submit').click();
-            }   
-        };
-
-        document.querySelector('#message-submit').onclick = function(e) {
-            const messageInputDom = document.querySelector('#message-input');
-            const message = messageInputDom.value;
-            const chat_id = '{{ chat.id }}';
-            chatSocket.send(JSON.stringify({
-                'new_message_text': message,
-                'chat_id':chat_id,
-            }));
-            messageInputDom.value = '';
-        };
-        </script>
+  </div>
 {% endblock %}

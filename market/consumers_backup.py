@@ -1,11 +1,18 @@
 from django.urls import reverse
-from django.db.models import Max
-from django.utils import dateformat
+from django.db.models import Max, Sum
+from django.utils import timezone, dateformat
+from django.shortcuts import redirect
+
 from asgiref.sync import async_to_sync
+
+from channels.db import database_sync_to_async
 from channels.generic.websocket import WebsocketConsumer
-import json
+from channels.auth import login, get_user
 
 from .models import *
+
+import datetime
+import json
 
 
 def toFixed(numObj, digits=0):
@@ -197,14 +204,12 @@ class ListingConsumer(WebsocketConsumer):
         comment = event['comment']
         username = event['username']
         comment_date = event['comment_date']
-        avatar = self.user.avatar.url
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({
             'comment': comment,
             'username': username,
             'comment_date': comment_date,
-            'avatar': avatar
         }))
 
     def listing_winner(self, event):

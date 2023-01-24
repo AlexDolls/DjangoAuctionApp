@@ -15,11 +15,14 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.views import View
 
 from .forms import UserAvatarForm
 from .models import *
 from .serializers import BidSerializer
 from .tasks import create_task
+
+from datetime import datetime
 
 
 # Create your views here.
@@ -443,7 +446,7 @@ def winlistings(request):
 
 
 @login_required
-def inbox(request):
+def inbox_old(request):
     user = request.user
     if request.method == "POST":
         try:
@@ -469,13 +472,15 @@ def inbox(request):
             all_users = all_users.exclude(pk=to_delete_member.first().id)
 
     return render(request, "market/inbox.html", {
+        # TODO: "chats": [chat for chat in current_user_chats]
+        # TODO: "messages": [chat for chat in current_user_chats]
         "chats": current_user_chats,
         "site_users": all_users,
     })
 
 
 @login_required
-def chat(request, chat_id):
+def inbox_chat(request, chat_id):
     user = request.user
     try:
         get_chat = Chat.objects.get(pk=chat_id)
@@ -501,6 +506,103 @@ def chat(request, chat_id):
             })
         else:
             return HttpResponseRedirect(reverse("market:inbox"))
+
+
+class Inbox(View):
+    @staticmethod
+    @login_required()
+    def get(request, chat_id=None):
+        """
+        Get all the chats and the last message of each chat to be displayed in the inbox page.
+        """
+        user = request.user
+
+        # Get all the chats for that self.user
+        chats = Chat.objects.filter(members=user.id)
+
+        current_chats = []
+
+        # Create a blacklist for all the users that have a chat room
+        to_exclude = [user.username]
+
+        for chat in chats:
+            # Get only the last message in each chat
+            all_messages = Message.objects.filter(chat=chat.id).order_by('-date')[:1]
+
+            # Get all unread messages for each chat
+            get_unread = Message.objects.filter(chat=chat.id, unread=True)
+            unread = 0
+
+            # Add 1 to the counter if sender_id and current_user_id are different
+            for u in get_unread:
+                if user.id != u.sender_id:
+                    unread += 1
+
+            for c in chat.members.exclude(pk=user.id):
+                # Add to the blacklist all the users that have a chat room
+                to_exclude.append(c.username)
+
+                # Get member to access avatar
+                get_receiver = User.objects.get(pk=c.id)
+
+                # Append a dict with information to be used in the inbox page
+                current_chats.append({
+                    "id": chat.id,
+                    "receiver_id": c.id,
+                    "receiver": c.username,
+                    "avatar": get_receiver.avatar.url if get_receiver.avatar else "",
+                    "preview": [msg.preview() for msg in all_messages],
+                    "unread": unread
+                })
+
+        # Filter users based on opened chats
+        all_users = User.objects.exclude(username__in=to_exclude)
+
+        # TODO: if chat_id return to inbox.html else return to chat.html
+
+        return render(request, "market/inbox.html", {
+            "chats": current_chats if current_chats else "",
+            "available_users": all_users if all_users else "",
+        })
+
+    @staticmethod
+    @login_required()
+    def post(request):
+        """
+        Create a new chat.
+        """
+        sender = request.user
+
+        try:
+            receiver = User.objects.get(pk=request.POST["receiver_id"])
+        except (ValueError, KeyError, User.DoesNotExist):
+            messages.warning(request, "User not found!")
+            return HttpResponseRedirect(reverse("market:inbox"))
+        else:
+            new_chat = Chat.objects.create()
+            new_chat.members.add(sender, receiver)
+            new_chat.save()
+            return HttpResponseRedirect(reverse("market:chat", kwargs={'chat_id': new_chat.id}))
+
+
+class InboxChat(View):
+    @staticmethod
+    @login_required()
+    def get(request, chat_id):
+        user = request.user
+        try:
+            get_chat = Chat.objects.get(pk=chat_id)
+        except Chat.DoesNotExist:
+            return HttpResponseRedirect(reverse("market:inbox"))
+        else:
+            if user in get_chat.members.all():
+                get_messages = Message.objects.filter(chat=get_chat).order_by('date')
+
+                return render(request, "market/chat.html", {
+                    "show_chat": get_messages,
+                })
+            else:
+                return HttpResponseRedirect(reverse("market:inbox"))
 
 
 @login_required

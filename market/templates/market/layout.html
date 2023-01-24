@@ -199,11 +199,12 @@
 
     {% endblock %}
     <div class="container container-body">
-      {% block body %} {% endblock %} {% block chat_script %}
-      <script type="text/javascript">
-
-      </script>
+      {% block body %}
+        {% block extend_body %}{% endblock %}
       {% endblock %}
+
+      {% block chat_script %}{% endblock %}
+
       <!-- bundle -->
       <script src="{% static 'theme/js/vendor.min.js' %}"></script>
       <script src="{% static 'theme/js/app.min.js' %}"></script>

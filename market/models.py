@@ -12,10 +12,16 @@ class User(AbstractUser):
     winlist = models.ManyToManyField('AuctionListing', blank=True, related_name="userWinListings")
     inbox = models.IntegerField(default=0)
     avatar = models.ImageField(upload_to="images", blank=True)
+    # TODO: ADD A DEFAULT AVATAR
 
 
 class Chat(models.Model):
     members = models.ManyToManyField("User", blank=True, related_name="userChat")
+
+    def serialize(self):
+        return {
+            "user": self.members.name
+        }
 
 
 class Message(models.Model):
@@ -24,6 +30,16 @@ class Message(models.Model):
     chat = models.ForeignKey("Chat", on_delete=models.CASCADE)
     unread = models.BooleanField(default=True)
     date = models.DateTimeField(default=timezone.now())
+
+    def serialize(self):
+        return {
+            "body": self.text,
+            "sender": self.sender_id,
+            "chat": self.chat.id
+        }
+
+    def preview(self):
+        return f"{self.text[:10]}..."
 
 
 class Category(models.Model):

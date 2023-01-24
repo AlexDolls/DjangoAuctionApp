@@ -6,10 +6,20 @@
   <component name="ChangeListManager">
     <list default="true" id="20b0f775-650a-4f46-b0fa-04371c37896f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auctsite/asgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/auctsite/asgi.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/consumers.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/consumers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/static/market/js/detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/js/detail.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/static/market/js/inbox.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/js/inbox.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/\" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/chat.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/chat.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/detail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/inbox.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/inbox.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/layout.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/templates/market/table.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/table.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/table.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/tests.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -35,28 +45,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "javascript.nodejs.core.library.configured.version": "19.2.0",
-    "javascript.nodejs.core.library.typings.version": "18.11.18",
-    "last_opened_file_path": "/home/samps/Documents/JOB/AuctionApp",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.stylelint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.stylelint": "",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_interpreter_path": "/home/samps/.nvm/versions/node/v19.2.0/bin/node",
-    "nodejs_package_manager_path": "/home/samps/.nvm/versions/node/v19.2.0/bin/npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;19.2.0&quot;,
+    &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;18.11.18&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/samps/Documents/JOB/AuctionApp&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.stylelint&quot;: &quot;&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_interpreter_path&quot;: &quot;/home/samps/.nvm/versions/node/v19.2.0/bin/node&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;/home/samps/.nvm/versions/node/v19.2.0/bin/npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.IDE.editor.colors.Language Defaults&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
-  <component name="RunManager" selected="Python tests.pytest in test_socket.py">
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/market" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Django Server.AuctionApp">
     <configuration name="AuctionApp" type="Python.DjangoServer" factoryName="Django server">
       <module name="AuctionApp" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -119,25 +134,20 @@
       <workItem from="1674147370635" duration="2476000" />
       <workItem from="1674149860031" duration="604000" />
       <workItem from="1674150478690" duration="175000" />
-      <workItem from="1674150670828" duration="18119000" />
+      <workItem from="1674150670828" duration="18430000" />
+      <workItem from="1674234909277" duration="16639000" />
+      <workItem from="1674412812053" duration="170000" />
+      <workItem from="1674413403859" duration="7000" />
+      <workItem from="1674414080034" duration="18142000" />
+      <workItem from="1674488680838" duration="27923000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="jinja2-line">
-          <url>file://$PROJECT_DIR$/market/templates/market/inbox.html</url>
-          <line>182</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
-  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/AuctionApp$pytest_in_test_socket_py.coverage" NAME="pytest in test_socket.py Coverage Results" MODIFIED="1673990793945" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/AuctionApp$testing.coverage" NAME="testing Coverage Results" MODIFIED="1674273028171" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/market" />
   </component>
 </project>

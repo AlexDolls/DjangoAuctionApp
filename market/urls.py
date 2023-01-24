@@ -20,8 +20,18 @@ urlpatterns = [
     path('sendcontact/', sendcontact, name='sendcontact'),
     path('winlist/', winlistings, name='winlist'),
     path('mybids/', mybids, name='mybids'),
-    path('inbox/', inbox, name='inbox'),
-    path('chat/<int:chat_id>', chat, name='chat'),
+    # path('inbox/', inbox, name='inbox'),
+
+    # TODO: New view to show inbox and chat room in the same page.
+    # TODO: Inbox/Chat should extend layout.html and have a proper {% tag %}
+    # To be loaded in the same page.
+    path('inbox/', Inbox.as_view(), name='inbox'),
+    # path('inbox/chat/<int:chat_id>', inbox_messages, name='inbox_messages'),
+
+
+    # path('chat/<int:chat_id>', inbox_chat, name='chat'),
+    path('chat/<int:chat_id>', InboxChat.as_view(), name='chat'),
+
     path('logout/', logout_view, name='logout'),
     path('login/', login_view, name='login'),
     path('user/<int:user_id>', add_user_avatar, name="add_user_avatar"),
