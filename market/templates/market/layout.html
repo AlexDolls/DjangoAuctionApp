@@ -2,219 +2,219 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>{% block title %}Auctions{% endblock %}</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
-      crossorigin="anonymous"
-    />
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-      crossorigin="anonymous"
-    ></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+          crossorigin="anonymous"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap" rel="stylesheet"/>
+    <link href="{% static 'theme/css/vendor/jquery-jvectormap-1.2.2.css' %}"
+          rel="stylesheet" type="text/css"/>
+    <link href="{% static 'theme/css/icons.min.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'theme/css/app-creative.min.css' %}" rel="stylesheet"
+          type="text/css" id="light-style"/>
+    <link href="{% static 'theme/css/app-creative-dark.min.css' %}"
+          rel="stylesheet" type="text/css" id="dark-style"/>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap"
-      rel="stylesheet"
-    />
-    <link href="{% static 'market/style.css' %}" rel="stylesheet" />
-
-    <!-- third party css -->
-    <link
-      href="{% static 'theme/css/vendor/jquery-jvectormap-1.2.2.css' %}"
-      rel="stylesheet"
-      type="text/css"
-    />
-    <!-- third party css end -->
-    <!-- App css -->
-    <link
-      href="{% static 'theme/css/icons.min.css' %}"
-      rel="stylesheet"
-      type="text/css"
-    />
-    <link
-      href="{% static 'theme/css/app-creative.min.css' %}"
-      rel="stylesheet"
-      type="text/css"
-      id="light-style"
-    />
-    <link
-      href="{% static 'theme/css/app-creative-dark.min.css' %}"
-      rel="stylesheet"
-      type="text/css"
-      id="dark-style"
-    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+            crossorigin="anonymous"></script>
   </head>
-  <body>
-    {% block nav %}
-    <nav class="navbar sticky-top navbar-expand-lg topnav-navbar-dark">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'market:index' %}">
-          <img
-            src="{% static 'market/alexdollslogo-dark.png'%}"
-            alt=""
-            width="40"
-            height="40"
-          />
-        </a>
 
-        <div class="dropdown">
-          <button
-            class="btn btn-dark dropdown-toggle btn-dropdown"
-            type="button"
-            id="dropdownMenuButton"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
-            Listings
-          </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <a class="dropdown-item" href="{% url 'market:index' %}">All</a>
-            <a class="dropdown-item" href="{% url 'market:active' %}"
-              >Active Listings</a
-            >
-            <a class="dropdown-item" href="{% url 'market:categories' %}"
-              >By Category</a
-            >
-            {% if user.bid_set.all %}
-            <a class="dropdown-item" href="{% url 'market:mybids' %}"
-              >My Bids</a
-            >
-            {% endif %} {% if user.is_authenticated and user.winlist.all %}
-            <a class="dropdown-item" href="{% url 'market:winlist' %}"
-              >Won<span class="badge rounded-pill bg-danger"
-                >{{ user.winlist.all.count }}</span
-              ></a
-            >
-            {% endif %} {% if user.auctionlisting_set.all %}
-            <a class="dropdown-item" href="{% url 'market:mylistings' %}"
-              >My Listings</a
-            >
-            {% endif %}
+  <body class data-layout="topnav"
+        data-layout-config="{'layoutBoxed':false,'darkMode':false,'showRightSidebarOnStart': true}">
+    <div class="wrapper">
+      <div class="content-page">
+        <div class="content">
+          <!-- Topbar Start -->
+          <div class="navbar-custom topnav-navbar topnav-navbar-dark">
+            <div class="container-fluid">
+
+              <!-- Logo -->
+              <a href="{% url 'market:index' %}" class="topnav-logo">
+                <span class="topnav-logo-lg">
+                  <img src="{% static 'market/alexdollslogo-dark.png' %}" alt="" height="48">
+                </span>
+                <span class="topnav-logo-sm">
+                  <img src="{% static 'market/alexdollslogo-dark.png' %}" alt="" height="48">
+                </span>
+              </a>
+
+              <!-- User Options -->
+              <ul class="list-unstyled topbar-right-menu float-right mb-0">
+                {% if user.is_authenticated %}
+                  <li class="dropdown notification-list">
+                    <a class="nav-link dropdown-toggle nav-user arrow-none mr-0"
+                       data-toggle="dropdown" id="topbar-userdrop"
+                       href="#" role="button" aria-haspopup="true"
+                       aria-expanded="false">
+                      <span class="account-user-avatar">
+                        <img src="{{ user.avatar.url }}" alt="user-image" class="rounded-circle">
+                      </span>
+                      <span>
+                        <span class="account-user-name">{{ user.username }}</span>
+                        <span class="account-position">
+                          {{ user.email|slice:":10" }}...
+                        </span>
+                      </span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-animated topbar-dropdown-menu profile-dropdown" aria-labelledby="topbar-userdrop">
+                      <!-- item-->
+                      <div class=" dropdown-header noti-title">
+                        <h6 class="text-overflow m-0">Welcome !</h6>
+                      </div>
+
+                      <!-- item-->
+                      <a href="{% url 'market:add_user_avatar' user.id %}" class="dropdown-item notify-item">
+                        <i class="mdi mdi-account-circle mr-1"></i>
+                        <span>My Account</span>
+                      </a>
+
+                      <!-- item-->
+                      <a href="{% url 'market:logout' %}" class="dropdown-item notify-item">
+                        <i class="mdi mdi-logout mr-1"></i>
+                        <span>Logout</span>
+                      </a>
+                    </div>
+                  </li>
+                {% endif %}
+              </ul>
+
+              <!-- Flex Menu -->
+              <a class="navbar-toggle float-right" data-toggle="collapse" data-target="#topnav-menu-content">
+                <div class="lines">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Menu Bar -->
+          <div class="topnav shadow-sm">
+            <div class="container-fluid active">
+              <nav class="navbar navbar-light navbar-expand-lg topnav-menu">
+                <div class="collapse navbar-collapse active" id="topnav-menu-content">
+                  <ul class="navbar-nav">
+                    <li class="nav-item">
+                      <a class="nav-link" href="{% url 'market:index' %}" id="topnav-dashboards" role="button"
+                         aria-haspopup="true" aria-expanded="false">
+                        <i class="dripicons-view-thumb mr-1"></i>All
+                      </a>
+                    </li>
+
+                    <li class="nav-item">
+                      <a class="nav-link" href="{% url 'market:active' %}" id="topnav-dashboards" role="button"
+                         aria-haspopup="true" aria-expanded="false">
+                        <i class="dripicons-clock mr-1"></i>Active Listing
+                      </a>
+                    </li>
+
+                    <li class="nav-item">
+                      <a class="nav-link" href="{% url 'market:categories' %}"
+                         id="topnav-dashboards" role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="dripicons-tags mr-1"></i>By Category
+                      </a>
+                    </li>
+
+                    {% if not user.is_authenticated %}
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'market:login' %}"
+                           id="topnav-dashboards" role="button" aria-haspopup="true" aria-expanded="false">
+                          <i class="dripicons-lock mr-1"></i>Login
+                        </a>
+                      </li>
+
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'market:signup' %}"
+                           id="topnav-dashboards" role="button" aria-haspopup="true" aria-expanded="false">
+                          <i class="dripicons-document-edit mr-1"></i>Sign Up
+                        </a>
+                      </li>
+                    {% endif %}
+
+                    {% if user.bid_set.all %}
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'market:mybids' %}"
+                           id="topnav-dashboards" role="button" aria-haspopup="true" aria-expanded="false">
+                          <i class="dripicons-basket mr-1"></i>My Bids
+                        </a>
+                      </li>
+                    {% endif %}
+
+                    {% if user.is_authenticated and user.winlist.all %}
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'market:winlist' %}"
+                           id="topnav-dashboards" role="button" aria-haspopup="true" aria-expanded="false">
+                          <i class="dripicons-trophy mr-1"></i>Won
+                          <span class="badge rounded-pill bg-danger">{{ user.winlist.all.count }}</span>
+                        </a>
+                      </li>
+                    {% endif %}
+
+                    {% if user.auctionlisting_set.all %}
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'market:mylistings' %}"
+                           id="topnav-dashboards" role="button" aria-haspopup="true" aria-expanded="false">
+                          <i class="dripicons-archive mr-1"></i>My Listings
+                        </a>
+                      </li>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'market:inbox' %}" id="topnav-dashboards" role="button"
+                           aria-haspopup="true" aria-expanded="false">
+                          <i class="dripicons-inbox mr-1"></i>Inbox
+                          <span class="badge badge-light">{{ user.inbox }}</span>
+                        </a>
+                      </li>
+
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'market:watchlist' %}" id="topnav-dashboards"
+                           role="button" aria-haspopup="true" aria-expanded="false">
+                          <i class="dripicons-preview mr-1"></i>Watchlist
+                          <span class="badge badge-light">
+                            {{ user.watchlist.all.count }}
+                          </span>
+                        </a>
+                      </li>
+
+                      <li class="nav-item">
+                        <a class="nav-link" href="{% url 'market:createListing' %}" id="topnav-dashboards"
+                           role="button" aria-haspopup="true" aria-expanded="false">
+                          <i class="dripicons-pencil mr-1"></i>Create Listing
+                        </a>
+                      </li>
+                    {% endif %}
+                  </ul>
+                </div>
+              </nav>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="container-fluid">
+            {% block body %}
+              {% block extend_body %}{% endblock %}
+            {% endblock %}
           </div>
         </div>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            {% if user.is_authenticated %}
-            <li class="nav-item" style="margin-top: 15px">
-              <a class="nav-link" href="{% url 'market:inbox' %}">
-                <strong>Inbox</strong>
-                <span class="badge badge-light">{{user.inbox}}</span>
-              </a>
-            </li>
-
-            <li class="nav-item" style="margin-top: 15px">
-              <a class="nav-link" href="{% url 'market:watchlist' %}">
-                <strong>Watchlist</strong>
-                <span class="badge badge-light"
-                  >{{ user.watchlist.all.count }}</span
-                >
-              </a>
-            </li>
-            <li class="nav-item" style="margin-top: 15px">
-              <a class="nav-link" href="{% url 'market:createListing' %}"
-                ><strong>Create Listing</strong></a
-              >
-            </li>
-            {% if user.is_authenticated %}
-            <li class="dropdown notification-list">
-              <a
-                class="nav-link dropdown-toggle nav-user arrow-none mr-0"
-                data-toggle="dropdown"
-                id="topbar-userdrop"
-                href="#"
-                role="button"
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                <span class="account-user-avatar">
-                  {% if user.avatar %}
-                  <img
-                    src="{{ user.avatar.url }}"
-                    alt=""
-                    class="rounded-circle"
-                  />
-                  {% else %}
-                  <img
-                    src="https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg"
-                    alt=""
-                    class="rounded-circle"
-                  />
-                  {% endif %}
-                </span>
-                <span>
-                  <span class="account-user-name">{{ user.username }}</span>
-                  <span class="account-position">{{ user.email }}</span>
-                </span>
-              </a>
-              <div
-                class="dropdown-menu dropdown-menu-right dropdown-menu-animated topbar-dropdown-menu profile-dropdown"
-                aria-labelledby="topbar-userdrop"
-              >
-                <!-- item-->
-                <div class="dropdown-header noti-title">
-                  <h6 class="text-overflow m-0">Welcome !</h6>
-                </div>
-
-                <!-- item-->
-                <a
-                  href="{% url 'market:add_user_avatar' user.id %}"
-                  class="dropdown-item notify-item"
-                >
-                  My Account
-                </a>
-
-                <!-- item-->
-                <a
-                  href="{% url 'market:logout' %}"
-                  class="dropdown-item notify-item"
-                >
-                  Logout
-                </a>
-              </div>
-            </li>
-            {% endif %} {% else %}
-            <li class="nav-item" style="margin-top: 3px">
-              <a class="nav-link" href="{% url 'market:login' %}">
-                <strong>Log in</strong>
-              </a>
-            </li>
-            <li class="nav-item" style="margin-top: 3px">
-              <a class="nav-link" href="{% url 'market:signup' %}">
-                <strong>Sign Up</strong>
-              </a>
-            </li>
-            {% endif %}
-          </ul>
-        </div>
       </div>
-    </nav>
-
-    {% endblock %}
-    <div class="container container-body">
-      {% block body %}
-        {% block extend_body %}{% endblock %}
-      {% endblock %}
-
-      {% block chat_script %}{% endblock %}
-
-      <!-- bundle -->
-      <script src="{% static 'theme/js/vendor.min.js' %}"></script>
-      <script src="{% static 'theme/js/app.min.js' %}"></script>
-
-      <!-- third party js -->
-      <script src="{% static 'theme/js/vendor/apexcharts.min.js' %}"></script>
-      <script src="{% static 'theme/js/vendor/jquery-jvectormap-1.2.2.min.js' %}"></script>
-      <script src="{% static 'theme/js/vendor/jquery-jvectormap-world-mill-en.js' %}"></script>
-      <!-- third party js ends -->
-      <script src="{% static 'market/main.js' %}"></script>
     </div>
+
+    <!-- bundle -->
+    <script src="{% static 'theme/js/vendor.min.js' %}"></script>
+    <script src="{% static 'theme/js/app.min.js' %}"></script>
+
+    <!-- third party js -->
+    <script src="{% static 'theme/js/vendor/apexcharts.min.js' %}"></script>
+    <script src="{% static 'theme/js/vendor/jquery-jvectormap-1.2.2.min.js' %}"></script>
+    <script src="{% static 'theme/js/vendor/jquery-jvectormap-world-mill-en.js' %}"></script>
   </body>
 </html>

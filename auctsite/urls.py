@@ -26,7 +26,7 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += path(
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("img/favicon.ico")),

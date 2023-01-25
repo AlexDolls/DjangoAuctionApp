@@ -7,18 +7,33 @@
     <list default="true" id="20b0f775-650a-4f46-b0fa-04371c37896f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auctsite/asgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/auctsite/asgi.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auctsite/celery.py" beforeDir="false" afterPath="$PROJECT_DIR$/auctsite/celery.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auctsite/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/auctsite/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auctsite/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/auctsite/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/admin.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/consumers.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/consumers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/consumers_backup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/forms.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/routing.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/static/market/js/createListing.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/js/createListing.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/static/market/js/detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/js/detail.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/static/market/js/inbox.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/js/inbox.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/templates/market/\" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/templates/market/chat.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/chat.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/static/market/main.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/static/market/style.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/categories.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/categories.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/chat.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/comment.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/createListing.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/createListing.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/editListing.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/editListing.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/inbox.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/inbox.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/templates/market/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/layout.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/templates/market/table.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/market/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/tests.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/signup.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/signup.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/usercabinet.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/usercabinet.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/market/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/views.py" afterDir="false" />
     </list>
@@ -53,7 +68,7 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;19.2.0&quot;,
     &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;18.11.18&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/samps/Documents/JOB/AuctionApp&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/samps/Documents/JOB/AuctionApp/media&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -62,11 +77,14 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_interpreter_path&quot;: &quot;/home/samps/.nvm/versions/node/v19.2.0/bin/node&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;/home/samps/.nvm/versions/node/v19.2.0/bin/npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.IDE.editor.colors.Language Defaults&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;inlay.hints&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/media" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/market" />
     </key>
@@ -140,6 +158,8 @@
       <workItem from="1674413403859" duration="7000" />
       <workItem from="1674414080034" duration="18142000" />
       <workItem from="1674488680838" duration="27923000" />
+      <workItem from="1674572291012" duration="39983000" />
+      <workItem from="1674629394391" duration="1510000" />
     </task>
     <servers />
   </component>

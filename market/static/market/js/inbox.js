@@ -1,4 +1,4 @@
-const chatSocket = new WebSocket(`ws://${window.location.host}/ws/market/inbox/`)
+// const chatSocket = new WebSocket(`ws://${window.location.host}/ws/market/inbox/`)
 /*chatSocket = new WebSocket(
     'ws://'
     + window.location.host
@@ -14,7 +14,7 @@ function getChat(chat_id) {
   }});
 }
 */
-
+/*
 chatSocket.onmessage = (e) => {
   const data = JSON.parse(e.data);
   console.log("DATA", data)
@@ -22,7 +22,7 @@ chatSocket.onmessage = (e) => {
   if (data.message) {
     document.querySelector('#inbox-message').innerHTML = data["user_inbox"];
   }
-};
+};*/
 /*
 chatSocket.onopen = (e) => {
   $.ajax({type:"GET", url:`/market/api/${listing_id}/last_bid`, success:(result) => {
@@ -67,78 +67,3 @@ $(".inbox-list-user").onclick(function () {
   console.log("YOU CLICKED!")
 })
 */
-
-/* CHAT */
-
-const messages = document.getElementsByClassName("container-for-chat darker");
-if (messages.length > 0) {
-  messages[messages.length - 1].scrollIntoView();
-}
-
-chatSocket.onmessage = function (e) {
-  const data = JSON.parse(e.data);
-  if (data.message) {
-    if (data.send_self) {
-      document.querySelector("#messages-field").innerHTML +=
-        '<div class="container-for-chat darker" style = "word-wrap: break-word; word-break: break-all;">' +
-        "<p>" +
-        data.message +
-        "</p>" +
-        '<span class="time-left">' +
-        data.message_date +
-        "</span>" +
-        "</div>";
-
-      const messages = document.getElementsByClassName(
-        "container-for-chat darker"
-      );
-      if (messages.length > 0) {
-        messages[messages.length - 1].scrollIntoView();
-      }
-    } else {
-      document.querySelector("#messages-field").innerHTML +=
-        '<div class="container-for-chat" style = "word-wrap: break-word; word-break: break-all;">' +
-        "<p>" +
-        data.message +
-        "</p>" +
-        '<span class="time-right">' +
-        data.message_date +
-        "</span>" +
-        "</div>";
-
-      const scroll_check = document.querySelector("#autoscroll-check").checked;
-      if (scroll_check) {
-        if (messages.length > 0) {
-          const messages =
-            document.getElementsByClassName("container-for-chat");
-          messages[messages.length - 1].scrollIntoView();
-        }
-      }
-    }
-  }
-};
-
-chatSocket.onclose = function (e) {
-  console.error("Chat socket closed unexpectedly");
-};
-
-document.querySelector("#message-input").focus();
-document.querySelector("#message-input").onkeyup = function (e) {
-  if (e.keyCode === 13) {
-    // enter, return
-    document.querySelector("#message-submit").click();
-  }
-};
-
-document.querySelector("#message-submit").onclick = function (e) {
-  const messageInputDom = document.querySelector("#message-input");
-  const message = messageInputDom.value;
-  const chat_id = "{{ chat.id }}";
-  chatSocket.send(
-    JSON.stringify({
-      new_message_text: message,
-      chat_id: chat_id,
-    })
-  );
-  messageInputDom.value = "";
-};

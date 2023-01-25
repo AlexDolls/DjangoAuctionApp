@@ -1,112 +1,78 @@
 {% extends 'market/layout.html' %}
+{% load static %}
+
 {% block body %}
+  <div class="row">
+    <div class="page-title-box">
+      <h2 class="mt-4">Listing Editing</h2>
+    </div>
+  </div>
+  <div class="col-md-15 col-lg-15">
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <form action="{% url 'market:editListing' listing.id %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-<script type = "text/javascript">
-		function seturl(){
-		document.getElementById("set-image-url").setAttribute("disabled", "true")
-		document.getElementById("set-image-url").setAttribute("class", "btn btn-secondary")
-		document.getElementById("load-image-from-pc").removeAttribute("disabled")
-		document.getElementById("load-image-from-pc").setAttribute("class", "btn btn-primary")
-		document.getElementById("form-load-image").innerHTML = "<div class = 'form-floating mb-3 col-6' style = 'width:100%;'><input class = 'form-control' type = 'text' name = 'imageurl' id = 'imageurl' placeholder = 'Image URL'><label for = 'Imageurl'>Image URL</label></div>"
-			}
-		function loadfrompc(){
-		document.getElementById("load-image-from-pc").setAttribute("disabled", "true")
-		document.getElementById("load-image-from-pc").setAttribute("class", "btn btn-secondary")
-		document.getElementById("set-image-url").removeAttribute("disabled")
-		document.getElementById("set-image-url").setAttribute("class", "btn btn-primary")
-		document.getElementById("form-load-image").innerHTML = "<p><div class='mb-3'><label for='loaded-image' class='form-label'>Choose image file for listing from your PC</label><input class='form-control' type='file' id='loaded-imaged' name = 'loaded-image'></div>"
-			}
-</script>
-
-        <form action = "{% url 'market:editListing' listing.id %}" method = 'post' enctype="multipart/form-data">
-        {% csrf_token %}
-        <fieldset class = "detail-parasha">
-                {% if messages %}
-                <ul class = "messages">
-                        {% for message in messages %}
-                        <li style = "color:red;"{% if message.tags %} class = "{{ message.tags }}"{% endif %}>{{ message }}</li>
-                        {% endfor %}
-                </ul>
-                {% endif %}
-                <legend><h1>Listing Editing</h1></legend>
-		<div class = "form-floating mb-3 col-6" style = "width:100%;">
-			<input class = "form-control" type = "text" id = "listingname" name = "listingname" maxlength = "32" value = {% if listing.name %}{{ listing.name }} {% endif %} placeholder = "listingname">
-                	<label for = "listingname">Name for listing</label>
-			<div id = 'name-alarm' style = 'color:red; display:none;'><h6>Please, enter the name of listing</h6></div>
-		</div>
-		<div class = "form-floating mb-3 col-6" style = "width:100%;">
-			<textarea class = "form-control" id = "listingdesc" name = "listingdesc" maxlength = "150" placeholder = "Listing Description">{{listing.description}}</textarea>
-			<label for = "listingdesc">Listing Description</label>
-		</div>
-		                <button type = "button" class = "btn btn-secondary" OnClick = "seturl();" id = "set-image-url" disabled>Image from URL</button>
-                <button type = "button" class = "btn btn-primary"  OnClick = "loadfrompc();" id = "load-image-from-pc">Load from PC</button>
-                <div id = "form-load-image">
-                <div class = "form-floating mb-3 col-6" style = "width:100%;">
-                        <input class = "form-control" type = "text" name = "imageurl" id = "imageurl" placeholder = "Image URL">
-                        <label for = "imageurl">Image URL</label>
+            <!-- Alert -->
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-danger alert-dismissible bg-danger text-white border-0 fade show" role="alert">
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                  <strong>Error! </strong> {{ message }}
                 </div>
+              {% endfor %}
+            {% endif %}
+
+            <!-- Listing Name, Category, Price -->
+            <div class="form-row">
+              <div class="form-group col-md-4">
+                <label for="listingname" class="col-form-label">Listing Name</label>
+                <input type="text" class="form-control" id="listingname"
+                       name="listingname" maxlength="32"
+                       placeholder="Enter listing name"
+                       value="{{ listing.name }}" required>
+              </div>
+            </div>
+
+            <!-- Listing Image -->
+            <div class="form-group">
+              <div class="input-group mb-6">
+                <div class="input-group-prepend">
+                  <button class="btn btn-primary" type="button" onclick="seturl()" id="set-image-url">Image from URL
+                  </button>
+
+                  <button class="btn btn-secondary btn-light" type="button" onclick="loadfrompc()"
+                          id="load-image-from-pc">Load from PC
+                  </button>
                 </div>
+                <div id="form-load-image" class="input-group"
+                     style="padding-top: 5px">
+                  <input type="text" class="form-control" id="imageurl" name="imageurl" placeholder="Enter image url">
+                </div>
+              </div>
+            </div>
 
-		<input type = "hidden" value = {{ listing.id }} name = "listing_id">
-		<div id = "submit-button-block">
-                <input type = "submit" class = "btn btn-success btn-lg" value = "Confirm" id = "submit-edit">
-		</div>
-        </fieldset>
-        </form>
-	
-	<script type = "text/javascript">
+            <!-- Listing Description -->
+            <div class="form-group">
+              <label for="floatingTextarea2" class="col-form-label">Description</label>
+              <textarea class="form-control" rows="5" name="listingdesc"
+                        id="floatingTextarea2"
+                        placeholder="Enter a description for your item...">
+                              {{ listing.description }}
+                            </textarea>
+            </div>
 
-                const name_alarm = document.getElementById("name-alarm");
-
-                function removealarm(){
-                        name_alarm.setAttribute("style","color:red; display:none;");
-                }
-
-                function checkallinputs(tellmewhy){
-                const name_dom = document.getElementById("listingname");
-
-                const name = (name_dom.value).replace(/\s+/g, ' ').trim();
-		console.log(name);
-
-                const submit_button = document.getElementById("submit-edit");
-
-                const name_alarm = document.getElementById("name-alarm");
-
-                if (tellmewhy === "0") {
-
-                        removealarm();
-
-                        if (name != ""){
-                                        submit_button.removeAttribute("disabled");
-                                        submit_button.setAttribute("class", "btn btn-success btn-lg");
-                                        }
-                        else{
-                                        submit_button.setAttribute("disabled", "true");
-                                        submit_button.setAttribute("class", "btn btn-secondary btn-lg");
-                                        }
-                                }
-                else {
-
-                        removealarm();
-
-                if(name === ""){
-                        name_alarm.setAttribute("style","color:red;")
-                }
-               	}
-		}
-
-		$("#listingname").click(function(){
-                checkallinputs("0");    
-                                });
-                $("#listingname").keyup(function(){
-                checkallinputs("0");
-                               });
-		$("#submit-button-block").click(function(){
-                checkallinputs("1");
-                                });
-
-	</script>
-
-
+            <!-- Submit Btn -->
+            <div class="form-group" id="submit-button-block">
+              <input type="submit" class="btn btn-block btn-primary" id="submit-edit" value="Edit Listing">
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="{% static 'market/js/createListing.js' %}"></script>
 {% endblock %}
-

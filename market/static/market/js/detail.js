@@ -126,8 +126,6 @@ function turn_is_open(){
 }
 
 
-
-
 $(function(){
 	/**
 	 * Roles inside this function:
@@ -247,7 +245,7 @@ function makeComment() {
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
-				<strong>Success! </strong>You can't make an empty comment.
+				<strong>Success! </strong>You made a comment.
 			</div>
 		`
 	} else {
@@ -275,15 +273,14 @@ listingSocket.onmessage = (e) => {
 		const newComment = document.createElement("div")
 		newComment.innerHTML +=`
 			<div class="media mt-2">
-				<img class="mr-3 avatar-sm rounded-circle"
-					 alt=""
-					 src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.pngall.com%2Fwp-content%2Fuploads%2F5%2FProfile-PNG-Image-180x180.png"/>
+				<img class="mr-3 avatar-sm rounded-circle" alt=""
+					 src="${data['avatar']}"/>
 				<div class="media-body">
 					<h5 class="mt-0">
-						&#64;${data["username"]}
-						<i>${data["comment_date"]}</i>
+						&#64;${data['username']}
+						<i>${data['comment_date']}</i>
 					</h5>
-					<p class>${data["comment"]}</p>
+					<p class>${data['comment']}</p>
 				</div>
 			</div>
 		`

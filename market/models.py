@@ -4,15 +4,12 @@ from django.utils import timezone
 from django.core import validators
 
 
-# Create your models here.
-
 class User(AbstractUser):
     watchlist = models.ManyToManyField('AuctionListing', blank=True, related_name='userWatchList')
     category = models.ManyToManyField('Category', blank=True, related_name="userCategories")
     winlist = models.ManyToManyField('AuctionListing', blank=True, related_name="userWinListings")
     inbox = models.IntegerField(default=0)
-    avatar = models.ImageField(upload_to="images", blank=True)
-    # TODO: ADD A DEFAULT AVATAR
+    avatar = models.ImageField(upload_to="images", default="default-user.png")
 
 
 class Chat(models.Model):
@@ -26,7 +23,8 @@ class Chat(models.Model):
 
 class Message(models.Model):
     text = models.CharField(max_length=300)
-    sender_id = models.IntegerField()
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_receiver", null=True)
     chat = models.ForeignKey("Chat", on_delete=models.CASCADE)
     unread = models.BooleanField(default=True)
     date = models.DateTimeField(default=timezone.now())
@@ -34,8 +32,10 @@ class Message(models.Model):
     def serialize(self):
         return {
             "body": self.text,
-            "sender": self.sender_id,
-            "chat": self.chat.id
+            "sender": self.sender,
+            "receiver": self.receiver,
+            "chat": self.chat.id,
+            "date": self.date
         }
 
     def preview(self):

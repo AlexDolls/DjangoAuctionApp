@@ -4,7 +4,6 @@ from django.utils import dateformat
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
-
 from .models import *
 
 
@@ -50,6 +49,7 @@ class ListingConsumer(WebsocketConsumer):
                         'type': 'post_new_comment',
                         'comment': f"{comment.text}",
                         'username': f"{comment.user.username}",
+                        'avatar': self.user.avatar.url,
                         'comment_date': f'{dateformat.format(comment.date, "M d, h:i a")}'
                     }
                 )
@@ -116,7 +116,7 @@ class ListingConsumer(WebsocketConsumer):
                 max_value = bids.aggregate(Max('value'))['value__max']
                 if max_value is None:
                     max_value = 0
-                if new_bid > max_value and new_bid > float(listing.startBid) and new_bid <= 99999.99:
+                if max_value < new_bid <= 99999.99 and new_bid > float(listing.startBid):
                     new_bid_object = Bid.objects.create(value=float(new_bid), user=self.user, listing=listing,
                                                         date=date)
                     new_bid_object.save()
@@ -153,17 +153,6 @@ class ListingConsumer(WebsocketConsumer):
                     task_checker = True
                     self.new_comment(comment_text, listing)
 
-                # endlisting func was transported to /market/tasks.py as celery task
-                """
-                try:
-                    endlisting  = text_data_json['endlisting']
-                except KeyError:
-                    pass
-                else:
-                    task_checker = True
-                    self.end_listing(listing)
-                """
-
                 try:
                     new_bid = text_data_json['newbid']
                 except KeyError:
@@ -197,14 +186,13 @@ class ListingConsumer(WebsocketConsumer):
         comment = event['comment']
         username = event['username']
         comment_date = event['comment_date']
-        avatar = self.user.avatar.url
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({
             'comment': comment,
             'username': username,
             'comment_date': comment_date,
-            'avatar': avatar
+            'avatar': self.user.avatar.url
         }))
 
     def listing_winner(self, event):
@@ -219,15 +207,15 @@ class ListingConsumer(WebsocketConsumer):
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
         self.user = self.scope['user']
-        if self.user.is_active == True and self.user.is_anonymous == False:
-            self.room_group_name = f'chat_{self.user.id}'
+
+        if self.user.is_authenticated:
+            self.room_group_name = f"chat_{self.user.id}"
 
             # Join room group
             async_to_sync(self.channel_layer.group_add)(
                 self.room_group_name,
                 self.channel_name
             )
-
             self.accept()
         else:
             self.close()
@@ -255,18 +243,21 @@ class ChatConsumer(WebsocketConsumer):
         else:
             if message_text and len(message_text) <= 300:
                 sender = User.objects.get(username=f"{self.user}")
-                chat_members = chat.members.all()
+                # chat_members = chat.members.all()
                 if sender in chat.members.all():
-                    receiver = chat.members.exclude(id=sender.id).first()
+                    receiver = chat.members.exclude(pk=sender.id).first()
                     if receiver:
-                        message = Message.objects.create(text=message_text, sender_id=sender.id, chat=chat, date=date)
+                        message = Message.objects.create(
+                            text=message_text,
+                            sender=sender,
+                            receiver=receiver,
+                            chat=chat,
+                            date=date
+                        )
                         message.save()
+
                         unread_messages_all = 0
-                        # This is exhaustive recount i think
-                        #            for chat_item in Chat.objects.filter(members=receiver):
-                        #                for message_item in chat_item.message_set.filter(sender_id = sender.id):
-                        #                    if message_item.unread: #BooleanField 'unread' in Message
-                        #                        unread_messages_all += 1
+
                         for message_item in chat.message_set.filter(sender_id=sender.id):
                             if message_item.unread:  # BooleanField 'unread' in Message
                                 unread_messages_all += 1
@@ -286,6 +277,8 @@ class ChatConsumer(WebsocketConsumer):
                         self.send(text_data=json.dumps(
                             {
                                 'message': message.text,
+                                'sender': sender,
+                                'user': self.user,
                                 'message_date': f'{dateformat.format(message.date, "M d, h:i a")}',
                                 'send_self': 'yes',
                             }))

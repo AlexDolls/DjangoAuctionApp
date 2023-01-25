@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import User, AuctionListing
+from .models import User
 
 
 class UserAvatarForm(forms.ModelForm):

@@ -3,6 +3,11 @@
 
 {% block body %}
   <div class="row">
+    <div class="page-title-box">
+      <h2 class="mt-4">Details</h2>
+    </div>
+  </div>
+  <div class="row">
     <!-- Alert -->
     {% if messages %}
       {% for message in messages %}
@@ -256,7 +261,7 @@
 
     <!-- Listing Section 3: Comments -->
     {% if user.is_authenticated and auctionlisting.active %}
-      <div class="col-xl-6 col-lg-12 order-lg-2 order-xl-1">
+      <div class="col-xl-12 col-lg-12 order-lg-2 order-xl-1">
         <div class="card">
           <div class="card-body">
             <!-- Hidden input to store data -->
@@ -266,7 +271,7 @@
             <div id="comment-alert"></div>
             <!-- Make Comments -->
             <textarea class="form-control form-control-light mb-2" id="comment-input"
-              rows="3" maxlength="99" placeholder="Write your comment here..."></textarea>
+                      rows="3" maxlength="99" placeholder="Write your comment here..."></textarea>
             <div class="text-right">
               <div class="custom-control custom-checkbox custom-control-inline">
                 <input type="checkbox" class="custom-control-input" id="autoscroll-check" checked>
@@ -274,7 +279,8 @@
               </div>
               <div class="btn-group mb-2 ml-2">
                 <button type="button" class="btn btn-primary btn-sm" id="comment-submit"
-                        onclick="makeComment()">Make Comment</button>
+                        onclick="makeComment()">Make Comment
+                </button>
               </div>
             </div>
 
