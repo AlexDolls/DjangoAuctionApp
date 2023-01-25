@@ -29,7 +29,8 @@ const countDownInterval = setInterval(() => {
 
 }, 1000)
 
-// When countdown is over, display "EXPIRED", otherwise, display the countdown timer.
+// When countdown is over, display "EXPIRED",
+// otherwise, display the countdown timer.
 if (diff <= 0) {
 	clearInterval(countDownInterval);
 	document.getElementById("countdown-box").innerHTML = "EXPIRED";
@@ -296,56 +297,6 @@ listingSocket.onmessage = (e) => {
 			}
 		}
 	}
-
-	/*if (data["win_user_id"]) {
-		const auctionListingId = document.getElementById("auction-listing-id").value;
-		document.querySelector('#comment-input-form').innerHTML = "";
-
-		if (data.user.id !== auctionListingId) {
-			document.querySelector('#new-bid-block').innerHTML = "";
-		}
-
-		if (data.user.id === auctionListingId) {
-			document.querySelector('#end-listing-block').innerHTML = "<h1>ENDED</h1>";
-		}
-		const current_user_id = "{{ user.id }}"
-
-
-		if (current_user_id === data["win_user_id"]) {
-			const winner_text = `<h2><strong>You're the winner of that listing!</strong></h2>`;
-		} else {
-			winner_text = "";
-		}
-
-		$.ajax({type:"GET", url:"/market/api/"+listing_id+"/last_bid", success:(result) => {
-			if (result.value) {
-				document.querySelector('#result').innerHTML =
-				winner_text
-				+"<center><h3><strong>"
-				+ "Last Price: "
-				+ "</strong>"
-				+ result.value
-				+ "</h3></center>"
-				+ "<center><h2><span class = 'badge bg-warning'>"
-				+ "Listing is Ended"
-				+ "</span></h2></center>";
-				document.querySelector('#end-listing-block').innerHTML = "";
-			} else	{
-				const last_bid_startbid = document.getElementById("listing-start-bid").value;
-				document.querySelector('#result').innerHTML =
-									"<h3><strong>"
-									+ "Last Price: "
-									+ "</strong>"
-									+ last_bid_startbid
-									+ " $</h3>"
-									+ "<h2><span class = 'badge bg-warning'>"
-									+ "Listing is Ended"
-									+ "</span></h2>";
-				document.querySelector('#end-listing-block').innerHTML = "";
-
-			}
-		}});
-	}*/
 };
 
 listingSocket.onclose = (e) => {

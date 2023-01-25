@@ -572,6 +572,11 @@ class Inbox(APIView):
         # Filter users based on opened chats
         all_users = User.objects.exclude(username__in=to_exclude)
 
+        # Update Inbox Count
+        unread_msgs = Message.objects.filter(receiver=user.id, unread=True)
+        user.inbox = unread_msgs.count()
+        user.save()
+
         return render(
             request,
             "market/inbox.html",

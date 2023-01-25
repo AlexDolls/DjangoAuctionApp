@@ -23,6 +23,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('market/', include('market.urls')),
     path('admin/', admin.site.urls),
+    path('', RedirectView.as_view(url='market/', permanent=True))
 ]
 
 if settings.DEBUG:

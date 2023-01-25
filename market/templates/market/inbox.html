@@ -41,7 +41,7 @@
               <!-- Inbox Chats -->
               <div class="row">
                 <div class="col">
-                  <div data-simplebar="init" style="max-height: 430px">
+                  <div data-simplebar="init" style="max-height: 380px">
                     <div class="simplebar-wrapper" style="margin: 0">
                       <div class="simplebar-height-auto-observer-wrapper">
                         <div class="simplebar-height-auto-observer"></div>
@@ -93,7 +93,7 @@
                                 <!-- Users Contacts -->
                                 <h5 class="text-primary mt-4">Your Contacts</h5>
                                 {% if available_users %}
-                                  <div data-simplebar style="max-height: 250px; overflow-x: hidden">
+                                  <div data-simplebar style="max-height: 150px; overflow-x: hidden">
                                     <div class="list-group">
                                       {% for member in available_users %}
                                         <form id="new-chat-form" action="{% url 'market:inbox' %}"
@@ -260,5 +260,4 @@
       </div>
     {% endif %}
   </div>
-  <script src="{% static 'market/js/inbox.js' %}"></script>
 {% endblock %}
