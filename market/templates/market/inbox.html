@@ -1,119 +1,263 @@
-{% extends "market/layout.html" %}
-
-{% block body%}
-
-<div class = "detail-parasha">
-<div class="container">
-  <div class = "row">
-	  <div class = "col">
-	  <h1><strong> Chats </strong></h1>
-	  </div>
-	  <div class = "col">
-	  <h1><strong> Start chat with: </strong></h1>
-	  </div>
-	  <hr>
-  </div>
+{% extends "market/layout.html" %} {% load static %} {% block body %}
   <div class="row">
-    <div class="col">
-	<div class = "modal-body-chat-users">
-	<div class = "modal-content-chat-users">
-	{% for chat in chats %}
-	<h5>	
-		{% if chat.members.count == 2%}
-		<a href = "{% url "market:chat" chat.id %}">
-		{% for member in chat.members.all %}
-			{% if member.id != user.id %}
-			<div class = "chat-username-line">
-			<div class = "container">
-				<div class = "row">
-					<div class = "col-md-auto">
-						<div class = "user-avatar" style="background-image: url({% if member.avatar %}{{ member.avatar.url}}{% else %}https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg{% endif %});" alt="connect"></div>
-
-					</div>
-					<div class = "col-md-auto" style = "display:flex;">
-						<div class = "username-flex-center">
-						{{member.username}}
-						</div>
-						<span id="numbers_chat_unread_{{chat.id}}" class="badge rounded-pill bg-danger" id = "numbers_chat_unread_{{chat.id}}" style = "margin:auto; margin-left:10px;"></span>
-
-					</div>
-				</div>
-			</div>
-			</div>
-			{% endif %}
-		{% endfor %}
-		</a>
-		{% endif %}
-        </h3>
-	{% empty %}
-	<div class="alert alert-info text-center p-4 my-4 mx-2">You have no chat's yet</div>
-	{% endfor %}
-		</div>
-	</div>
+    <!-- Page Title -->
+    <div class="row">
+      <div class="col-12">
+        <div class="page-title-box">
+          <h2 class="mt-4">Inbox</h2>
+        </div>
+      </div>
     </div>
-    <div class="col">
-	    <div class = "modal-body-chat-users">
-		<div class = "modal-content-chat-users">
-	    {% if site_users %}
-	    <form action = "{% url 'market:inbox' %}" method = "post">
-	    {% csrf_token %}
-	    <div id = "user-list">
-		<select class = "form-select" size = "13" name = "user_id">
-		{% for item in site_users %}
-		<option value = '{{item.id}}' >{{item.username}}</option>
-		{% endfor %}
-		</select>
-	    </div>
 
-	    {% else %}
-	    <div class="alert alert-info text-center p-4 my-4 mx-2">There's no users to start chat with for now :(</div>
-	    {% endif %}
-	    </div>
-	</div>
-	{% if site_users %}<input type = 'submit' class = "btn btn-primary" value = "Create chat!" style = "margin-top:1rem; width:90%;"> {% endif %}
-	</form>
+    <!-- Alert -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-danger alert-dismissible bg-danger text-white border-0 fade show"
+             role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <strong>Error!</strong> {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Inbox Messages -->
+    <div class="col-xl-4 col-lg-6 order-lg-1 order-xl-1">
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="tab-content">
+            <div class="tab-pane show active p-3" id="newpost">
+              <!-- Search Box -->
+              <div class="app-search">
+                <form>
+                  <div class="form-group position-relative">
+                    <input type="text" class="form-control" placeholder="Search users..."/>
+                    <span class="mdi mdi-magnify search-icon"></span>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Inbox Chats -->
+              <div class="row">
+                <div class="col">
+                  <div data-simplebar="init" style="max-height: 380px">
+                    <div class="simplebar-wrapper" style="margin: 0">
+                      <div class="simplebar-height-auto-observer-wrapper">
+                        <div class="simplebar-height-auto-observer"></div>
+                      </div>
+                      <div class="simplebar-mask">
+                        <div class="simplebar-mask">
+                          <div class="simplebar-offset" style="right: 0; bottom: 0">
+                            <div class="simplebar-content-wrapper" style="height: auto; overflow: auto">
+                              <div class="simplebar-content" style="padding: 0">
+                                <!-- Users Inbox -->
+                                {% if chats %} {% for chat in chats %}
+                                  <!--{# url 'market:chat' chat.id #} -->
+                                  <a href="{% url 'market:chat' chat.id %}"
+                                     class="list-group-item list-group-item-action list-group-item-light text-body">
+                                    <div class="media mt-1 p-2">
+                                      <img class="mr-2 rounded-circle" height="48" alt="" src="
+                                          {% if chat.avatar %}{{ chat.avatar }}{% else %}{% static 'market/default-user.png' %}{% endif %}"/>
+                                      <div class="media-body">
+                                        <h5 class="mt-0 mb-0 font-14">
+                                          <span class="float-right text-muted font-12"></span>
+                                          {{ chat.receiver }}
+                                        </h5>
+                                        <p class="mt-1 mb-0 text-muted font-14">
+                                          <span class="w-25 float-right text-right">
+                                            {% if chat.unread > 0 %}
+                                              <span class="badge badge-primary-lighten">
+                                                {{ chat.unread }}
+                                              </span>
+                                            {% endif %}
+                                          </span>
+                                          <span class="w-75">
+                                            {% if chat.preview %}
+                                              {{ chat.preview.0 }}
+                                            {% else %}
+                                              <i class="dripicons-dots-3"></i>
+                                            {% endif %}
+                                          </span>
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </a>
+                                {% endfor %}
+                                {% else %}
+                                  <div class="alert alert-primary text-center p-4 my-4 mx-2">
+                                    No Chats to display
+                                  </div>
+                                {% endif %}
+
+                                <!-- Users Contacts -->
+                                <h5 class="text-primary mt-4">Your Contacts</h5>
+                                {% if available_users %}
+                                  <div data-simplebar style="max-height: 150px; overflow-x: hidden">
+                                    <div class="list-group">
+                                      {% for member in available_users %}
+                                        <form id="new-chat-form" action="{% url 'market:inbox' %}"
+                                              method="POST">
+                                          {% csrf_token %}
+                                          <button type="submit" id="chat-link"
+                                                  class="list-group-item list-group-item-action list-group-item-light">
+                                            <img class="mr-2 rounded-circle" height="48" alt=""
+                                                 src="{% if member.avatar %}{{ member.avatar.url }}{% else %}{% static 'market/default-user.png' %}{% endif %}"/>
+                                            <input type="hidden" name="receiver_id"
+                                                   value="{{ member.id }}"/>
+                                            {{ member.username }}
+                                          </button>
+                                        </form>
+                                      {% endfor %}
+                                    </div>
+                                  </div>
+                                {% else %}
+                                  <div class="alert alert-primary text-center p-4 my-4 mx-2">
+                                    No users Available
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="simplebar-placeholder" style="width: 587px; height: 618px"></div>
+                    </div>
+                    <div class="simplebar-track simplebar-horizontal" style="visibility: hidden">
+                      <div class="simplebar-scrollbar" style="width: 0px; display: none"></div>
+                    </div>
+                    <div class="simplebar-track simplebar-vertical" style="visibility: visible">
+                      <div class="simplebar-scrollbar" style="
+                        height: 489px;
+                        transform: translate3d(0px, 0px, 0px);
+                        display: block;
+                      "></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Chat Area -->
+    {% if show_chat %}
+      <div class="col-xl-8 col-lg-12 order-lg-2 order-xl-1">
+        <div class="card">
+          <div class="card-body">
+            <!-- Chat Messages -->
+            <ul class="conversation-list" data-simplebar="init" style="max-height: 350px">
+              <div class="simplebar-wrapper" style="margin: 0px -15px">
+                <div class="simplebar-height-auto-observer-wrapper">
+                  <div class="simplebar-height-auto-observer"></div>
+                </div>
+                <div class="simplebar-mask">
+                  <div class="simplebar-offset" style="right: 0px; bottom: 0px">
+                    <div class="simplebar-content-wrapper" style="height: auto; overflow: hidden scroll">
+                      <div class="simplebar-content chat-message-list" id="messages-field"
+                           style="padding: 0px 15px">
+                        {% for msg in get_messages %}
+                          {% if msg.sender.id != user.id %}
+                            <li class="clearfix">
+                              <div class="text-left">
+                                <i>{{ msg.date|date:"M d, h:i a" }}</i>
+                              </div>
+                              <div class="chat-avatar">
+                                <img src="{% if msg.sender.avatar %}{{ msg.sender.avatar.url }}{% else %}{% static 'market/default-user.png' %}{% endif %}"
+                                     class="rounded" alt=""/>
+                              </div>
+                              <div class="conversation-text">
+                                <div class="ctext-wrap">
+                                  <i>{{ msg.sender }}</i>
+                                  <p>{{ msg.body }}</p>
+                                </div>
+                              </div>
+                            </li>
+                          {% else %}
+                            <li class="clearfix odd">
+                              <div class="text-right">
+                                <i>{{ msg.date|date:"M d, h:i a" }}</i>
+                              </div>
+                              <div class="chat-avatar">
+                                <img
+                                  src="{% if msg.sender.avatar %}{{ msg.sender.avatar.url }}{% else %}{% static 'market/default-user.png' %}{% endif %}"
+                                  class="rounded" alt=""/>
+                              </div>
+                              <div class="conversation-text">
+                                <div class="ctext-wrap">
+                                  <i>{{ msg.sender }}</i>
+                                  <p>{{ msg.body }}</p>
+                                </div>
+                              </div>
+                            </li>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="simplebar-placeholder" style="width: 876px; height: 885px"></div>
+              </div>
+              <div class="simplebar-track simplebar-horizontal" style="visibility: hidden">
+                <div class="simplebar-scrollbar" style="width: 0px; display: none"></div>
+              </div>
+              <div class="simplebar-track simplebar-vertical" style="visibility: visible">
+                <div class="simplebar-scrollbar" style="height: 325px; display: block; transform: translate3d(0px, 0px, 0px);"></div>
+              </div>
+            </ul>
+            <!-- Submit Message -->
+            <div class="row">
+              <div class="col">
+                <div class="mt-2 bg-light p-3 rounded">
+                  <form class="needs-validation" novalidate="" name="chat-form" id="chat-form">
+                    <div class="row">
+                      <div class="col mb-2 mb-sm-0">
+                        <!-- Hidden Input to store values -->
+                        <input type="hidden" id="chat-id" value="{{ chat_id }}"/>
+                        <textarea type="text" id="message-input" class="form-control border-0"
+                                  maxlength="300" placeholder="Enter your message..." required autofocus>
+                        </textarea>
+                      </div>
+                      <div class="col-sm-auto">
+                        <div class="btn-group">
+                          <button type="submit" id="message-submit"
+                                  class="btn btn-success chat-send btn-block">
+                            <i class="uil uil-message"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                  <div class="mt-2">
+                    <div class="custom-control custom-checkbox custom-control-inline">
+                      <input type="checkbox" class="custom-control-input" id="autoscroll-check" checked>
+                      <label class="custom-control-label" for="autoscroll-check">
+                        Autoscroll
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script src="{% static 'market/js/chat.js' %}"></script>
+    {% else %}
+      <div class="col-xl-8 col-lg-12 order-lg-1 order-xl-1">
+        <div class="text-dark border-0 text-center p-4 my-4 mx-2" role="alert">
+          <div class="alert alert-light" role="alert">
+            <h4 class="alert-heading text-primary">Welcome to your inbox!</h4>
+            <p class="text-dark">Select a chat to start messaging...</p>
+            <hr/>
+            <p class="mb-0">
+              You can start a new chat by clicking in a contact on your list.
+            </p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </div>
-</div>
-</div>
 {% endblock %}
-
-{% block chat_script %}
-     	<script type = 'text/javascript'>      
-                chatSocket = new WebSocket(
-                        'ws://'
-                        + window.location.host
-                        + '/ws/market/'
-                        +'inbox'
-                        +'/'
-                                );
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-                if (data.message){
-                document.querySelector('#inbox-message').innerHTML = data.user_inbox;
-                }
-        };
-	
-	var sum_chat_unread = 0;
-        {% for chat_item in chats %}
-                {% for message_item in chat_item.message_set.all %}
-                        {% if message_item.sender_id != user.id and message_item.unread%}
-                                sum_chat_unread += 1;
-                        {% endif%}
-                {% endfor %}
-		document.querySelector('#numbers_chat_unread_{{chat_item.id}}').innerHTML = sum_chat_unread;
-		sum_chat_unread = 0;
-        {% endfor %}
-
-	var n = 0;
-	
-	$(".chat-username-line").mouseenter(function() {
-	    $(this).attr("style", "background-color:rgba(255, 255, 255, 0.4); border-radius:7px; padding: 5px;");
-	}).mouseleave(function() {
-	    $(this).attr("style", "");
-	});
-
-        </script>
-
-{% endblock %}
-

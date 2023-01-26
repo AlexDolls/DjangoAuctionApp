@@ -1,584 +1,315 @@
 {% extends "market/layout.html" %}
+{% load static %}
+
 {% block body %}
-<input type = "hidden" id = "is_open" value ="0">
-<script type = "text/javascript">
-	// Func that loads listing's bids info by REST API using AJAX
-	function bidhistory()
-	{	
-		const is_open = document.getElementById("is_open").getAttribute("value");
-			
-			if (is_open === "1"){
-		var historyList = []
-		$.ajax({
-                                type:"GET",
-                                url:"/market/api/"+listing_id+"/all_bids",
-                                success:function(result){
-				for (var bid_item in result){
-				var username = result[bid_item].user.username;
-                        	var bid_date = new Date(result[bid_item].date);
-				var value = result[bid_item].value;
-				historyList.push("<tr><li class = 'p-1' style='margin: 0.5rem 0;'>" +"<strong> "+ username +" </strong> :"+ value +"$ — "+ bid_date + "</li></tr>");
-				}
-				// Previous result is what placed on client's page
-				previous_result = document.getElementsByClassName("p-1");
-				
-				const previous_result_length = previous_result.length;
-				const historyList_length = historyList.length;
-				
-				// Add main HTML element for bids history list if no elements exists
-				if (previous_result.length === 0){
-                                document.getElementById("history-list-row").innerHTML = "<div class = 'modal-body-history'><div class = 'modal-content-history'><table class = 'table'><tbody id = 'history-row'></tbody></div></div></div>"}
-				// If length of New result and previous same - just wait for next AJAX
-				if (historyList_length === previous_result_length){
-					if ((document.getElementById("autoupdate").checked))
-                                	setTimeout(function() {
-                                  	bidhistory();
-                                        }, 5000);
-				}
-				else{
-				// Add element differences to the page
-				for (var i = previous_result_length; i < historyList_length; i++){
-					document.getElementById("history-row").innerHTML += historyList[i];
-					}
-
-				document.getElementById("history-button").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Hide history' OnClick = 'clearhistory();'>";
-
-				if ((document.getElementById("autoupdate").checked))
-                                setTimeout(function() {
-                                  bidhistory();
-                                        }, 5000);
-
-				}
-				}
-                                });
-		}
-	}
-
-	function clearhistory()
-	{
-		document.getElementById("history-button").innerHTML = "<input type = 'button' class = 'btn-primary btn-lg' value = 'Show history' OnClick = 'turn_is_open();'>";
-		document.getElementById("is_open").setAttribute("value", "0");
-		document.getElementById("history-list-row").innerHTML = "";
-	}
-
-	function turn_is_open(){
-                        document.getElementById("is_open").setAttribute("value", "1");
-                        bidhistory();
-                }
-
-</script>
-<div class="row">
+  <div class="row">
+    <div class="page-title-box">
+      <h2 class="mt-4">Details</h2>
+    </div>
+  </div>
+  <div class="row">
+    <!-- Alert -->
     {% if messages %}
-        <ul class = "messages">
-            {% for message in messages%}
-            <li {% if message.tags %} class = "{{message.tags}}" {% endif %}> {{ message }}</li>
-            {% endfor %}
-        </ul>
+      {% for message in messages %}
+        <div class="alert alert-danger alert-dismissible bg-danger text-white border-0 fade show" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <strong>Error! </strong> {{ message }}
+        </div>
+      {% endfor %}
     {% endif %}
 
-    <!-- Listing -->
+    <!-- Listing Section 1: User, Pic, Description, Date -->
     <div class="col-md-15 col-lg-15">
-        <div class="card">
-            <div class="row no-gutters align-items-center">
-                <div class="col-md-5">
-                    <img class="card-img" src="{%if auctionlisting.loaded_image %}{{ auctionlisting.loaded_image.url }}{% else %}{{ auctionlisting.image }}{% endif %}" alt="{{ auctionlisting.id }}">
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card-body">
-                        <h2 class="card-title text-success">{{ auctionlisting.name }}</h2>
-                        {% if user.is_authenticated %}
-                            {% if true_user %}
-                            <!-- Edit -->
-                            <a class="btn btn-primary btn-rounded float-right" href="{% url 'market:editListing' auctionlisting.id %}" id="edit-listing">Edit</a>
-                            {% else %}
-                            <!-- Add To Watchlist -->
-                            <form 
-                                action="{% url "market:watchlist" %}" 
-                                method="post"
-                                >
-                                {% csrf_token %}
-                                    <input type="hidden" name="listing_id" value={{ auctionlisting.id }}>
-                                    <input 
-                                        type="submit" 
-                                        class="btn btn-primary btn-rounded float-right" 
-                                        id="add-listing-to-watchlist" 
-                                        value={% if auctionlisting in user.watchlist.all %}"Remove from watchlist"{% else %}"Add to Watchlist"{% endif %}
-                                    >
-                            </form>
-                            {% endif %}
-                        {% endif %}
-                        <!-- Description -->
-                        <h4 class="card-title text-info">Description</h4>
-                        <p class="card-text">{% if auctionlisting.description %}{{ auctionlisting.description }} {% else %} No description {% endif %}</p>
-                        <!-- Details -->
-                        <h4 class="card-text text-info">Details</h4>
-                        <!-- Listing Table Details-->
-                        <table class="table table-striped table-centered mb-0">
-                            <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Start Price</th>
-                                    <th>Creation Date</th>
-                                    <th>Expire Date</th>
-                                    <th>Description</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>{{ auctionlisting.user }}</td>
-                                    <td>${{ auctionlisting.startBid }}</td>
-                                    <td>{{ auctionlisting.creationDate|date:'Y-m-d H:i' }}</td>
-                                    <td>{{ auctionlisting.endDate|date:'Y-m-d H:i' }}</td>
-                                    <td>{% if auctionlisting.description %}{{ auctionlisting.description }} {% else %} No description {% endif %}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <!-- Image -->
+            <div class="col-lg-5 text-center d-block mb-4">
+              <img class="img-fluid"
+                   src="{% if auctionlisting.loaded_image %}
+                      {{ auctionlisting.loaded_image.url }}
+                      {% else %}{{ auctionlisting.image }}{% endif %}"
+                   alt="{{ auctionlisting.id }}" style="max-width: 280px;">
             </div>
+
+            <!-- Details -->
+            <div class="col-lg-7">
+              <div class="pl-lg-4">
+                <h2 class="mt-0">{{ auctionlisting.name }}</h2>
+
+                <!-- Edit, Add to Watchlist -->
+                <div class="mt-4">
+                  {% if user.is_authenticated %}
+                    {% if true_user %}
+                      {% if not auctionlisting.active %}
+                        <!-- Delete -->
+                        <form action="{% url "market:removeListing" %}" method="post">
+                          {% csrf_token %}
+                          <!-- Hidden input to store values -->
+                          <input type="hidden" name="listing_id"
+                                 value= {{ auctionlisting.id }}>
+
+                          <button type="submit" id="delete-listing" title="Delete Listing"
+                                  class="btn btn-danger btn-rounded float-right">
+                            <i class="dripicons-trash"></i>
+                          </button>
+                        </form>
+                      {% endif %}
+                      <!-- Edit -->
+                      <a class="btn btn-primary btn-rounded float-right" id="edit-listing"
+                         title="Edit Listing" href="{% url 'market:editListing' auctionlisting.id %}">
+                        <i class="dripicons-pencil"></i>
+                      </a>
+                    {% else %}
+                      <!-- Add To Watchlist -->
+                      <form action="{% url "market:watchlist" %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="listing_id"
+                               value={{ auctionlisting.id }}>
+                        {% if auctionlisting in user.watchlist.all %}
+                          <input type="submit" id="add-listing-to-watchlist"
+                                 class="btn btn-primary btn-rounded float-right"
+                                 value="Remove from watchlist">
+                        {% else %}
+                          <input type="submit" id="add-listing-to-watchlist"
+                                 class="btn btn-primary btn-rounded float-right"
+                                 value="Add to Watchlist">
+                        {% endif %}
+                      </form>
+                    {% endif %}
+                  {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="mt-4">
+                  <h4 class="mt-0 text-primary">Description</h4>
+                  <p>
+                    {% if auctionlisting.description %}
+                      {{ auctionlisting.description }}
+                    {% else %}
+                      No description
+                    {% endif %}
+                  </p>
+                </div>
+
+                <!-- Table: User, Start Price, Creation Date, Expire Date -->
+                <div class="table-responsive mt-4">
+                  <h4 class="mt-0 text-primary">Details</h4>
+                  <table class="table table-bordered table-centered mb-0">
+                    <thead class="thead-light">
+                    <tr>
+                      <th>User</th>
+                      <th>Start Price</th>
+                      <th>Creation Date</th>
+                      <th>Expire Date</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                      <td>&#64;{{ auctionlisting.user }}</td>
+                      <td>&#36;{{ auctionlisting.startBid }}</td>
+                      <td>{{ auctionlisting.creationDate|date:'Y-m-d H:i' }}</td>
+                      <td>{{ auctionlisting.endDate|date:'Y-m-d H:i' }}</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Time to close, bid, auto-update -->
+    <!-- Listing Section 2: Counter, Bids, History -->
     <div class="col-md-15 col-lg-15">
-        <div class="card">
-            <div class="row no-gutters align-items-center">              
-                <div class="col-md-15">
-                    <div class="card-body">                        
-                        <!-- Bid Info -->
-                        <table class="table table-striped table-centered mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Time to close</th>
-                                    <th>Last Bid</th>
-                                    <th>Auto-update</th>
-                                    <th>History</th>
-                                    {% if not auctionlisting.active and user.is_authenticated %}
-                                    <th>Winner</th>
-                                    {% else %}
-                                    {% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
-                                    <th>Make Bid</th>
-                                    {% else %}
-                                    {% endif %}
-                                    {% endif %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td id="demo"></td>
-                                    <!-- Last Bid -->
-                                    <td>
-                                        {% if bid is None%} 
-                                        No bids yet
-                                        {% else %} 
-                                        ${{bid.value}}
-                                        {% endif %}
-                                    </td>
-                                    <!-- Auto-Update -->
-                                    <td>
-                                        <!-- Switch-->
-                                        <div>
-                                            <input type="checkbox" id="switch1" data-switch="success" checked/>
-                                            <label for="switch1" data-on-label="Yes" data-off-label="No" class="mb-0 d-block"></label>
-                                        </div>
-                                    </td>
-                                    <!-- History -->
-                                    <td>
-                                        <button class="btn btn-primary btn-rounded" 
-                                        onclick="turn_is_open()">Show</button>
-                                    </td>
-                                    {% if auctionlisting.active and user != auctionlisting.user and user.is_authenticated %}
-                                    <!-- Make Bid -->
-                                    <td>
-                                        <div class="input-group">
-                                            <input 
-                                            type="number" 
-                                            class="form-control col-sm-4"
-                                            id="newbid"
-                                            name="newbid"
-                                            placeholder="Make bid" 
-                                            aria-label="Make bid"
-                                            {% if bid is None %}
-                                            min={{auctionlisting.startBid}}
-                                            max=99999
-                                            value={{auctionlisting.startBid}}
-                                            {% else %} 
-                                            min={{bid.value}} 
-                                            max=99999 
-                                            value={{bid.value}}
-                                            {% endif %}
-                                            >
-                                            <div class="input-group-append">
-                                                <input 
-                                                class="btn btn-dark"
-                                                type="button"
-                                                id="new-bid-submit"
-                                                type="button"
-                                                value="Make Bid"/>
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <!-- Table: Time to close, Last Bid, Auto-Update, History -->
+            <div class="table-responsive mt-4">
+              <table class="table table-bordered table-centered mb-0">
+                <thead class="thead-light">
+                <tr>
+                  <th>Time to Close</th>
+                  <th>Last Bid</th>
+                  <th>Auto Update</th>
+                  <th>History</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <!-- Hidden inputs to store dates -->
+                  <input type="hidden" id="listing-end-date"
+                         value="{{ auctionlisting.endDate|date:'Y-m-d H:i:s'}}">
+                  <input type="hidden" id="server-date-now"
+                         value="{{ server_datetime|date:'Y-m-d H:i:s'}}">
+                  <input type="hidden" id="listing-start-bid"
+                         value="{{ auctionlisting.startBid }}">
+                  <input type="hidden" id="listing-last-bid"
+                         value="{% if bid %}{{ bid.value }}
+                                {% else %}{{ auctionlisting.startBid }}{% endif %}">
+                  <input type="hidden" id="is_active"
+                         value="{{ auctionlisting.active }}">
+                  <input type="hidden" id="is_open" value="0">
 
-                                            </div>
-                                        </div>
-                                        <div id="bid-warning" style="color:red;"></div>
-                                    </td>
-                                    {% endif %}
+                  <td id="countdown-box"></td>
 
-                                    {% if not auctionlisting.active %}
-                                        {% if auctionlisting in user.winlist.all %} 
-                                        <td>
-                                            <span class="badge badge-primary-lighten">
-                                                Congratulations! You're the winner!
-                                            </span>
-                                        </td>
-                                        {% else %}
-                                        <td>
-                                            <span id='result'>{{ bid.user }}</span>
-                                        </td>
-                                        {% endif %}
-                                    {% else %}
-                                    {% endif %}
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="row p-3" id="history-list-row"></div>
-                    </div> <!-- end card-body-->
-                </div> <!-- end col -->
-            </div> <!-- end row-->
-        </div> <!-- end card-->
-    </div> <!-- end col-->
+                  <td id="listing-last-bid-input">
+                    {% if bid is None %}
+                      No bids yet
+                    {% else %}
+                      ${{ bid.value }}
+                    {% endif %}
+                  </td>
+                  <td>
+                    <!-- Switch-->
+                    <div>
+                      <input type="checkbox" id="autoupdate" checked data-switch="success"/>
+                      <label for="autoupdate" data-on-label="Yes" data-off-label="No"
+                             class="mb-0 d-block"></label>
+                    </div>
+                  </td>
+                  <td>
+                    <div id="history-button">
+                      <button type="button" id="history-btn" class="btn btn-primary btn-rounded"
+                              onclick="turn_is_open()">Show
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
 
-    <!-- Comments -->
-    <div class="col-md-15 col-lg-15">
-        <div class="card">
-            <div class="row no-gutters align-items-center">              
-                <div class="col-md-15">
-                    <div class="card-body">
-                        <div class="tab-content">
-                            <div class="tab-pane show active p-3" id="newpost">
-                                <table class="table table-centered  mb-0">
-                                    <thead>
-                                        <h3>Comments</h3>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <!-- Show all comments -->
-                                            <td>
-                                                <div data-simplebar style="max-height: 250px; width: 400px;">
-                                                    {% for comment in comments %}
-                                                        <div class="media">
-                                                            {% if comment.user.avatar %}
-                                                                <img
-                                                                    src="{{ comment.user.avatar.url }}"
-                                                                    alt=""
-                                                                    class="mr-2 rounded"
-                                                                    height="32"
-                                                                />
-                                                                {% else %}
-                                                                <img
-                                                                    src="https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg"
-                                                                    alt=""
-                                                                    class="mr-2 rounded"
-                                                                    height="32"
-                                                                />
-                                                            {% endif %}
-                                                            <div class="media-body">
-                                                                <h5 class="m-0">{{ comment.user.username }}</h5>
-                                                                <p class="text-muted mb-0"><small>{{comment.date|date:"M d, h:i a"}}</small></p>
-                                                                <p class="my-1">{{comment.text}}</p>
-                                                            </div>
-                                                        </div>
-                                                        <hr>
-                                                    {% endfor %}
-                                                </div>
-                                            </td>
-                                            <!-- Make a comment -->
-                                            {% if auctionlisting.active and user.is_authenticated %}
-                                                <td>
-                                                    <div class="border rounded" style="width: 400px;">
-                                                        <form action="#" class="comment-area-box">
-                                                            <textarea id="comment-input" rows="4" class="form-control border-0 resize-none" placeholder="Write something...."></textarea>
-                                                            <div class="p-2 bg-light d-flex justify-content-between align-items-center">
-                                                                <div>
-                                                                    <a href="#" class="btn btn-sm px-2 font-16 btn-light"><i class="uil uil-scenery"></i></a>
-                                                                    <a href="#" class="btn btn-sm px-2 font-16 btn-light"><i class="uil uil-location"></i></a>
-                                                                    <a href="#" class="btn btn-sm px-2 font-16 btn-light"><i class="uil uil-paperclip"></i></a>
-                                                                </div>
-                                                                <button id="comment-submit" type="submit" class="btn btn-sm btn-success"><i class="uil uil-message mr-1"></i>Comment</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                    </br>
-                                                    <div class="custom-control custom-checkbox mb-2">
-                                                        <input type="checkbox" class="custom-control-input" id="autoscroll-check" checked>
-                                                        <label class="custom-control-label" for="autoscroll-check">Autoscroll</label>
-                                                    </div>               
-                                                </td>
-                                            {% else %}
-                                                <td><h4>Login to make a comment...</h4></td>    
-                                            {% endif %}
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div> <!-- end preview-->
+            <!-- Winner, Make a bid -->
+            <div class="table-responsive mt-4">
+              <!-- Hidden inputs to store data -->
+              <input type="hidden" id="auction-listing-id" value="{{ auctionlisting.id }}">
+              <input type="hidden" id="last-bid" value="">
+
+              <!-- Bid Alert -->
+              <div id="bid-warning"></div>
+
+              <!-- Winner or Make Bid -->
+              <table class="table table-bordered table-centered mb-0">
+                <thead class="thead-light">
+                <tr>
+                  {% if user.is_authenticated %}
+                    {% if not auctionlisting.active %}
+                      <th>Winner</th>
+                    {% endif %}
+
+                    {% if auctionlisting.active and user != auctionlisting.user %}
+                      <th>Make Bid</th>
+                    {% endif %}
+                  {% endif %}
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  {% if user.is_authenticated %}
+                    {% if auctionlisting.active and user != auctionlisting.user %}
+                      <!-- Make Bid -->
+                      <td>
+                        <div class="input-group">
+                          <input type="number" class="form-control"
+                                 value="{{ min_value }}" step="0.01"
+                                 id="newbid" name="newbid" placeholder="Enter a bid">
+                          <div class="input-group-append">
+                            <input class="btn btn-dark" id="new-bid-submit"
+                                   type="button" value="Make a bid"
+                                   onclick="makeBid()">
+                          </div>
                         </div>
-                    </div> <!-- end card-body-->
-                </div> <!-- end col -->
-            </div> <!-- end row-->
-        </div> <!-- end card-->
-    </div> <!-- end col-->
-</div>
+                      </td>
+                    {% endif %}
+                    {% if not auctionlisting.active %}
+                      <!-- Display the winner -->
+                      {% if bid.user == user %}
+                        <td>
+                          <span class="alert alert-success" id='result'>
+                            <strong>
+                              Congratulations! You're the winner!
+                            </strong>
+                          </span>
+                        </td>
+                      {% else %}
+                        <td>
+                          <span class="alert alert-primary" id='result'>
+                            <strong>&#64;{{ bid.user }}</strong>
+                          </span>
+                        </td>
+                      {% endif %}
+                    {% endif %}
+                  {% endif %}
+                </tr>
+                </tbody>
+              </table>
+            </div>
 
-    {% if messages %}
-		<ul class="messages">
-			{% for message in messages%}
-			<li {% if message.tags %} class="{{message.tags}}" {% endif %}> {{ message }}</li>
-			{% endfor %}
-		</ul>
-	{% endif %}
-	<p>
+            <!-- Display Bid History -->
+            <div data-simplebar style="max-height: 250px; overflow-x: hidden">
+              <div class="table-responsive mt-4" id="history-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-	<script>
-        // Set the date we're counting down to
-            var countDownDate = new Date("{{auctionlisting.endDate|date:'Y-m-d H:i:s'}}").getTime();
-            var now = new Date("{{server_datetime|date:'Y-m-d H:i:s'}}").getTime();
-            var distance = countDownDate - now;
+    <!-- Listing Section 3: Comments -->
+    {% if user.is_authenticated and auctionlisting.active %}
+      <div class="col-xl-12 col-lg-12 order-lg-2 order-xl-1">
+        <div class="card">
+          <div class="card-body">
+            <!-- Hidden input to store data -->
+            <input type="hidden" id="comments-length" value="{{ comments|length }}">
+            <h4 class="mt-0 mb-3" id="comment-title">Comments ({{ comments|length }})</h4>
+            <!-- Alert -->
+            <div id="comment-alert"></div>
+            <!-- Make Comments -->
+            <textarea class="form-control form-control-light mb-2" id="comment-input"
+                      rows="3" maxlength="99" placeholder="Write your comment here..."></textarea>
+            <div class="text-right">
+              <div class="custom-control custom-checkbox custom-control-inline">
+                <input type="checkbox" class="custom-control-input" id="autoscroll-check" checked>
+                <label class="custom-control-label" for="autoscroll-check">AutoScroll</label>
+              </div>
+              <div class="btn-group mb-2 ml-2">
+                <button type="button" class="btn btn-primary btn-sm" id="comment-submit"
+                        onclick="makeComment()">Make Comment
+                </button>
+              </div>
+            </div>
 
-        
-        var x = setInterval(function() {
-
-            distance = distance - 1000
-            
-            // Time calculations for days, hours, minutes and seconds
-            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            // Output the result in an element with id="demo"
-            document.getElementById("demo").innerHTML = days + "d " + hours + "h "
-            + minutes + "m " + seconds + "s ";
-            
-            // If the count down is over, write some text 
-            if (distance < 0) {
-            clearInterval(x);
-            document.getElementById("demo").innerHTML = "EXPIRED";
-            }
-        }, 1000);
-	</script>
-
-	<script type = 'text/javascript'>
-		const listing_id = "{{auctionlisting.id}}"	
-		listingSocket = new WebSocket(
-			'ws://'
-			+ window.location.host
-			+ '/ws/market/'
-			+ listing_id
-			+ '/'
-				);
-
-
-		$(function(){
-                       listingSocket.onopen = function(e){				
-                $.ajax({
-                        type:"GET",
-			url:"/market/api/"+listing_id+"/last_bid",
-                        success:function(result){
-			if (result.value){
-				document.querySelector('#last-bid').value = result.value
-			}
-			else{
-				const lastBidInfo = JSON.parse(result.data)
-                                document.querySelector('#last-bid').value = lastBidInfo.value
-			}
-                                        }
-                                });
-                         };
-		});
-
-		listingSocket.onmessage = function(e) {
-                        const data = JSON.parse(e.data);
-			if (data.new_bid_set){
-                        	document.querySelector('#last-bid').value = data.new_bid_set;
-				document.querySelector('#newbid').setAttribute('min',Number(data.new_bid_set)+1);
-				document.querySelector('#newbid').value = Number(data.new_bid_set)+1;
-					}
-			if (data.comment){
-			document.querySelector('#modal-body-comments').setAttribute("style","")
-                        document.querySelector('#all-comments').innerHTML += '<div class = "card comment">'
-                        +'<div class = "card-body">'
-                        +'<div class = "card-title">'
-                        +'<span class="badge bg-dark mb-2" style = "font-size:13px;">'
-                        + data.username
-                        +'</span>'
-                        +'<h5>'
-                        + data.comment
-                        +'</h5>'
-                        +'</div>'
-                        +'<div class = "card-text">'
-                        +'<small>Commented on: <strong>'
-                        + data.comment_date
-                        +'</strong></small>'
-                        +'</div>'
-			+'</div>'
-			+'</div>';
-			document.querySelector('#comment-input').value = "";
-			
-			const comments = document.getElementsByClassName("card comment")
-
-			const scroll_check = document.querySelector('#autoscroll-check').checked
-                	if (scroll_check){
-                	if (comments.length > 0){
-                	comments[(comments.length-1)].scrollIntoView();}
-                        }
-
-                                                        }
-			if (data.win_user_id){
-			
-			document.querySelector('#comment-input-form').innerHTML = "";
-
-                        if ("{{user.id}}" != "{{auctionlisting.user.id}}"){
-                                document.querySelector('#new-bid-block').innerHTML = "";
-                  }
-
-                        if ("{{user.id}}" === "{{auctionlisting.user.id}}"){
-                                document.querySelector('#end-listing-block').innerHTML = "<center><h1>ENDED</h1></center>";
-                        }
-                        const current_user_id = {{ user.id }}
-
-
-			if (current_user_id == data.win_user_id){
-			var winner_text = "<center><h2><strong>You're the winner of that listing!</strong></h2></center>";}
-			else{winner_text ="";}
-			$.ajax({
-				type:"GET",
-				url:"/market/api/"+listing_id+"/last_bid",
-				success:function(result){
-				if (result.value){
-					document.querySelector('#result').innerHTML = 
-					winner_text
-					+"<center><h3><strong>"
-					+ "Last Price: "
-					+ "</strong>"
-					+ result.value
-					+ "</h3></center>"
-					+ "<center><h2><span class = 'badge bg-warning'>"
-					+ "Listing is Ended"
-					+ "</span></h2></center>";
-					document.querySelector('#end-listing-block').innerHTML = "";	
-						}
-				else	{	
-					var last_bid_startbid = {{ auctionlisting.startBid }}
-					document.querySelector('#result').innerHTML = 
-                                        "<center><h3><strong>"
-                                        + "Last Price: "
-                                        + "</strong>"
-                                        + last_bid_startbid
-                                        + " $</h3></center>"
-                                        + "<center><h2><span class = 'badge bg-warning'>"
-                                        + "Listing is Ended"
-                                        + "</span></h2></center>";
-					document.querySelector('#end-listing-block').innerHTML = "";
-					
-						}
-					}
-				});
-			}
-
-                                };
-
-		listingSocket.onclose = function(e) {
-			console.error('Listing details page connection was interrupted');
-				};
-
-
-		
-		$(function(){
-                        $('#newbid').keyup(function(e){
-                                if (e.keyCode === 13){
-                                $('#new-bid-submit').click()
-                                                }
-                        });
-                });
-
-                $(function(){
-                        $('#new-bid-submit').click(function(e){
-				const newbidInputDom = document.querySelector('#newbid');
-                        	const newbid = newbidInputDom.value;
-				const lastbidInputDom = document.querySelector('#last-bid');
-				const lastbid = lastbidInputDom.value;
-				if (isNaN(lastbid)){
-					compare_decision = 1;
-					}
-				else {
-					if ((Number(newbid) > Number(lastbid)) && (Number(newbid)<=99999.99)){
-						compare_decision = 1;
-					}
-					else{
-						compare_decision = 0;
-						if (Number(newbid) < Number(lastbid)){
-						document.querySelector("#bid-warning").innerHTML = "Value must be bigger than last bid";
-						document.querySelector('#newbid').value = Number(lastbid)+1;
-
-								}
-						else{
-							document.querySelector("#bid-warning").innerHTML = "Value must be less or equal 99999.99";
-							document.querySelector('#newbid').value = Number(lastbid)+1;
-							}
-							}
-						}
-				if (compare_decision == 1){
-					document.querySelector("#bid-warning").innerHTML = "";
-					listingSocket.send(JSON.stringify({
-					'newbid': newbid,
-					'listing_id':listing_id
-						}));
-					}
-
-                        });
-                });
-
-		$(function(){
-                        $('#comment-input').keyup(function(e){
-                                if (e.keyCode === 13){
-                                $('#comment-submit').click()
-                                                }
-                        });
-                });
-
-
-		$(function(){
-                        $('#comment-submit').click(function(e){
-                        const newCommentDom = document.querySelector('#comment-input');
-                        const newComment = newCommentDom.value;
-                        listingSocket.send(JSON.stringify({
-                                'post_comment': newComment,
-                                'listing_id':listing_id
-                                        }));
-
-                        });
-                });
-
-		$(function(){
-			$('#end-listing-submit').click(function(e){
-			const endlisting = 'end';
-			listingSocket.send(JSON.stringify({
-				'endlisting':endlisting,
-				'listing_id':listing_id,
-					}));
-			});
-		});
-
-
-	</script>
-
-
-    </fieldset>
-        {% if user == auctionlisting.user and not auctionlisting.active %}
-        <form action = "{% url "market:removeListing" %}" method = "post" class = "add-category-left" style="z-index:1;">
-        {% csrf_token %}
-                <input type = "hidden" name = "listing_id" value = {{ auctionlisting.id }}>
-                <input type = "submit" class = "btn-danger btn-lg" id = "delete-listing" value = "Delete Listing">
-        </form>
-        {% endif %}
-        </center>
+            <!-- Show Comments -->
+            <div data-simplebar style="max-height: 250px;">
+              {% for comment in comments %}
+                <div class="media mt-2">
+                  {% if comment.user.avatar %}
+                    <img class="mr-3 avatar-sm rounded-circle"
+                         alt="" src="{{ comment.user.avatar.url }}"/>
+                  {% else %}
+                    <img class="mr-3 avatar-sm rounded-circle" alt=""
+                         src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.pngall.com%2Fwp-content%2Fuploads%2F5%2FProfile-PNG-Image-180x180.png"/>
+                  {% endif %}
+                  <div class="media-body">
+                    <h5 class="mt-0">
+                      &#64;{{ comment.user.username }}
+                      <i>{{ comment.date|date:"M d, h:i a" }}</i>
+                    </h5>
+                    <p class>{{ comment.text }}</p>
+                  </div>
+                </div>
+              {% endfor %}
+              <div id="comment-box"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  <script src="{% static 'market/js/detail.js' %}"></script>
 {% endblock %}

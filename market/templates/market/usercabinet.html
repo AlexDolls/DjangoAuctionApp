@@ -1,41 +1,96 @@
-{% extends 'market/layout.html' %} {% block body %}
-<div class="detail-page">
-  <table class="table">
-    <tbody>
-      <tr>
-        <th scope="row">Username</th>
-        <td>{{ user_obj.username }}</td>
-      </tr>
-      <tr>
-        <th scope="row">Email</th>
-        <td>{{ user_obj.email }}</td>
-      </tr>
-    </tbody>
-  </table>
+{% extends 'market/layout.html' %}
+{% load static %}
 
-  <form class="form-avatar-upload" method="post" enctype="multipart/form-data">
-    {% csrf_token %} {{ form.as_p }}
-    <button type="submit">Upload</button>
-  </form>
-  <p>{% if user_obj.avatar %}</p>
+{% block body %}
 
-  <h5>Succesfully uploaded avatar for {{ user_obj.username }}</h5>
-  <div
-    class="user-avatar"
-    style="background-image: url({{ user_obj.avatar.url}});"
-    alt="connect"
-  >
-    {% else %}
-    <h5>Avatar wasn't set for {{ user_obj.username }}</h5>
-    <div
-      class="user-avatar"
-      style="
-        background-image: url(https://www.meme-arsenal.com/memes/d0aea72a4f42092ccd20a17781d7df11.jpg);
-      "
-      alt="connect"
-    >
-      {% endif %}
+  <div class="row">
+    <div class="page-title-box">
+      <h2 class="mt-4">Profile</h2>
     </div>
-    {% endblock %}
   </div>
-</div>
+
+  <div class="row">
+    <div class="col-sm-12">
+      <!-- Profile -->
+      <div class="card">
+        <div class="card-body profile-user-box">
+          <div class="row">
+            <div class="col-sm-8">
+              <div class="media">
+                    <span class="float-left m-2 mr-4">
+                      <img style="height: 100px" alt="" class="rounded-circle img-thumbnail"
+                           src="{{ user_obj.avatar.url }}"/>
+                    </span>
+                <div class="media-body">
+                  <h4 class="my-1">{{ user_obj.username }}</h4>
+                  <p class="font-13 text-muted">{{ user_obj.email }}</p>
+
+                  <ul class="mb-0 list-inline">
+                    <li class="list-inline-item mr-3">
+                      <h5 class="mb-1">{{ user_obj.date_joined.year }}</h5>
+                      <p class="mb-0 font-13">Member Since</p>
+                    </li>
+                    <li class="list-inline-item">
+                      <h5 class="mb-1">{{ totalListing }}</h5>
+                      <p class="mb-0 font-13">Active Listings</p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-15 col-lg-15">
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <h3 class="mt-0">Change Profile Picture</h3>
+          <form action="{% url 'market:add_user_avatar' user_obj.id %}"
+                method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Alert -->
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-danger alert-dismissible bg-danger text-white border-0 fade show" role="alert">
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                  <strong>Error! </strong> {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+
+            <!-- Currently Avatar -->
+            <div class="form-row">
+              <div class="form-group col-md-4">
+                Currently: <a href="{{ user_obj.avatar.url }}">{{ user_obj.avatar }}</a>
+              </div>
+            </div>
+
+            <!-- Listing Image -->
+            <div class="form-group">
+              <div class="input-group mb-6">
+                <div id="form-load-image" class="input-group"
+                     style="padding-top: 5px">
+                  <input type="file" class="form-control"
+                         id="id_avatar" name="avatar"
+                         aria-describedby="inputGroupFileAddon04" aria-label="Upload">
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Btn -->
+            <div class="form-group" id="submit-button-block">
+              <input type="submit" class="btn btn-block btn-primary" id="submit-listing" value="Save Profile">
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

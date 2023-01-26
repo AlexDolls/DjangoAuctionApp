@@ -1,63 +1,63 @@
 version: "3.9"
 
 services:
-  web:
-    restart: always
-    build: .
-    command: python3 manage.py runserver 0.0.0.0:8000
-    volumes:
-      - dev_app:/dev-app/
-      - .:/dev-app
-    ports:
-      - 8000:8000
-    env_file:
-      - ./.env.dev
-    depends_on:
-      - db_psql
-      - db_redis
+    web:
+      restart: always
+      build: .
+      command: python3 manage.py runserver 0.0.0.0:8000
+      volumes:
+        - dev_app:/dev-app/
+        - .:/dev-app/
+      ports:
+        - 8000:8000
+      env_file:
+        - ./.env.dev
+      depends_on:
+        - db_psql
+        - db_redis
+  
+    celery:
+      restart: always
+      build: .
+      command: python3 start_server.py
+      volumes:
+        - dev_app:/dev-app/
+      env_file:
+        - ./.env.dev
+      depends_on:
+        - db_redis
+        - db_psql
+        - web
 
-  celery:
-    restart: always
-    build: .
-    command: python3 start_server.py
-    volumes:
-      - dev_app:/dev-app/
-    env_file:
-      - ./.env.dev
-    depends_on:
-      - db_redis
-      - db_psql
-      - web
+    dashboard:
+      restart: always
+      build: .
+      command: celery flower -A auctsite --port=5555 --broker=redis://redis:6379/0
+      ports:
+        - 5555:5555
+      env_file:
+        - ./.env.dev
+      depends_on:
+        - web
+        - db_redis
+        - celery
+        - db_psql
 
-  dashboard:
-    restart: always
-    build: .
-    command: celery flower -A auctsite --port=5555 --broker=redis://redis:6379/0
-    ports:
-      - 5555:5555
-    env_file:
-      - ./.env.dev
-    depends_on:
-      - web
-      - db_redis
-      - celery
-      - db_psql
-
-  db_psql:
-    restart: always
-    image: postgres:14.1-alpine
-    volumes:
-      - postgres_data:/postgresql/data
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=strongpass
-      - POSTGRES_DB=django_db
-
-  db_redis:
-    restart: always
-    image: redis:6.2.6
-    volumes:
-      - redis_data:/redis/data
+    db_psql:
+      restart: always
+      image: postgres:14.1-alpine
+      volumes:
+        - postgres_data:/postgresql/data
+      environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=strongpass
+        - POSTGRES_DB=django_db
+    
+    db_redis:
+      restart: always
+      image: redis:6.2.6
+      volumes:
+        - redis_data:/redis/data
 
 volumes:
   redis_data:

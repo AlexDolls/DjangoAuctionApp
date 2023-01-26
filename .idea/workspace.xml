@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="20b0f775-650a-4f46-b0fa-04371c37896f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auctsite/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/auctsite/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/static/market/js/detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/market/static/market/js/detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/static/market/js/inbox.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/inbox.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/inbox.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/templates/market/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/market/templates/market/layout.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/market/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/market/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/chat.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/chat.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/createlisting.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/createlisting.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/createlisting2.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/createlisting2.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/inbox.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/inbox.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/indexpage.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/indexpage.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/listing1.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/listing1.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/listing1_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/listing1_1.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/listing2.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/listing2.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/listing2_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/listing2_1.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/login.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/login.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/signup.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/signup.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/usercabinet.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/usercabinet.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots_readme/watchlist.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots_readme/watchlist.png" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/market/static/market/js/detail.js" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/market/templates/market/detail.html" root0="FORCE_HIGHLIGHTING" root1="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2KPrggxsXcCQ7bgJ1ZNFxqpJG5m" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;19.2.0&quot;,
+    &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;18.11.18&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/samps/Documents/JOB/AuctionApp/media&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.stylelint&quot;: &quot;&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_interpreter_path&quot;: &quot;/home/samps/.nvm/versions/node/v19.2.0/bin/node&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;/home/samps/.nvm/versions/node/v19.2.0/bin/npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;inlay.hints&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/media" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/market" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Django Server.AuctionApp">
+    <configuration name="AuctionApp" type="Python.DjangoServer" factoryName="Django server">
+      <module name="AuctionApp" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <option name="port" value="8000" />
+      <option name="host" value="" />
+      <option name="additionalOptions" value="" />
+      <option name="browserUrl" value="" />
+      <option name="runTestServer" value="false" />
+      <option name="runNoReload" value="false" />
+      <option name="useCustomRunCommand" value="false" />
+      <option name="customRunCommand" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest in test_socket.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="AuctionApp" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_parameters" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/market/test_socket.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.pytest in test_socket.py" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="20b0f775-650a-4f46-b0fa-04371c37896f" name="Changes" comment="" />
+      <created>1673887171446</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1673887171446</updated>
+      <workItem from="1673887172531" duration="161000" />
+      <workItem from="1673887362729" duration="31025000" />
+      <workItem from="1673972473320" duration="25523000" />
+      <workItem from="1673998026359" duration="15000" />
+      <workItem from="1674058011430" duration="25467000" />
+      <workItem from="1674147370635" duration="2476000" />
+      <workItem from="1674149860031" duration="604000" />
+      <workItem from="1674150478690" duration="175000" />
+      <workItem from="1674150670828" duration="18430000" />
+      <workItem from="1674234909277" duration="16639000" />
+      <workItem from="1674412812053" duration="170000" />
+      <workItem from="1674413403859" duration="7000" />
+      <workItem from="1674414080034" duration="18142000" />
+      <workItem from="1674488680838" duration="27923000" />
+      <workItem from="1674572291012" duration="39983000" />
+      <workItem from="1674629394391" duration="1510000" />
+      <workItem from="1674678143058" duration="3229000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/AuctionApp$pytest_in_test_socket_py.coverage" NAME="pytest in test_socket.py Coverage Results" MODIFIED="1673990793945" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/AuctionApp$testing.coverage" NAME="testing Coverage Results" MODIFIED="1674273028171" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/market" />
+  </component>
+</project>

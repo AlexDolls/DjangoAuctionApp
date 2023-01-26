@@ -1,61 +1,63 @@
 {% extends 'market/layout.html' %} {% block body %}
-<h2 class="page-title">
-  {% if winlist %}Winlist{% elif watchlist %}Watchlist{% elif mylistings %}My
-  Listings{% else %}Auction Listings{% endif %}
-</h2>
+  <h2 class="mt-4">
+    {% if winlist %}
+      Winlist
+    {% elif watchlist %}
+      Watchlist
+    {% elif mylistings %}
+      My Listings
+    {% elif active %}
+      Active Listings
+    {% else %}
+      Auction Listings
+    {% endif %}
+  </h2>
 
-<div class="row">
-  {% for listing in active_listing_list %}
-  <div class="col-md-6 col-lg-4">
-    <div class="card">
-      <img
-        src="{%if listing.loaded_image %}{{ listing.loaded_image.url }}{% else %}{{ listing.image }}{% endif %}"
-        class="card-img-top"
-        alt=""
-      />
-      <div class="card-body">
-        <h5 class="card-title">
-          <a
-            href="{% url 'market:details' listing.id %}"
-            class="text-success stretched-link"
-            >{{ listing.name }}</a
-          >
-        </h5>
-        <p class="card-text">
-          <span class="text-success">Price: </span
-          ><strong>${{ listing.startBid }}</strong>
-        </p>
-        <p class="card-text">
-          <span class="text-success">Created: </span
-          ><strong>{{ listing.creationDate|date:"d-m-Y H:i" }}</strong>
-        </p>
+  <div class="row">
+    {% for listing in active_listing_list %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card">
+          <div class="col-lg-5 text-center d-block mb-4">
+            <img class="img-fluid"
+                 src="{% if listing.loaded_image %}{{ listing.loaded_image.url }}{% else %}{{ listing.image }}{% endif %}"
+                 alt="2" style="max-width: 300px; max-height: 300px;">
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="{% url 'market:details' listing.id %}" class="text-success stretched-link">
+                {{ listing.name }}
+              </a>
+            </h5>
+            <p class="card-text">
+              <span class="text-dark">Price: </span>
+              <strong>${{ listing.startBid }}</strong>
+            </p>
+            <p class="card-text">
+              <span class="text-dark">Created: </span>
+              <strong>{{ listing.creationDate|date:"d-m-Y H:i" }}</strong>
+            </p>
+            <p class="card-text">
+              <span class="text-dark">Estimation date: </span>
+              <strong>{{ listing.endDate|date:"d-m-Y H:i" }}</strong>
+            </p>
 
-        <p class="card-text">
-          <span class="text-success">Estimation date: </span
-          ><strong>{{ listing.endDate|date:"d-m-Y H:i" }}</strong>
-        </p>
-
-        <p>
-          {% if listing.active %}
-
-          <span class="badge badge-success-lighten">Active</span>
-          {% else %}
-          <span class="badge badge-danger-lighten">Ended</span>
-          {% endif %} {% if listing in user.watchlist.all %}
-          <span class="badge badge-primary-lighten">Watching</span>
-          {% else %}
-          <span class="badge badge-primary-lighten">Not Watching</span>
-          {% endif %}
-        </p>
+            <p>
+              {% if listing.active %}
+                <span class="badge badge-success-lighten">Active</span>
+              {% else %}
+                <span class="badge badge-danger-lighten">Ended</span>
+              {% endif %}
+              {% if listing in user.watchlist.all %}
+                <span class="badge badge-primary-lighten">Watching</span>
+              {% else %}
+                <span class="badge badge-primary-lighten">Not Watching</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
       </div>
-      <!-- end card-body -->
-    </div>
-    <!-- end card -->
+      {% empty %}
+      <div class="alert alert-primary text-center p-4 my-4">No items Available</div>
+    {% endfor %}
   </div>
-  {% empty %}
-  <div class="alert alert-info text-center p-4 my-4 mx-2" role="alert">
-    <h4 class="alert-heading">No items Available</h4>
-  </div>
-  {% endfor %}
-</div>
 {% endblock %}

@@ -17,7 +17,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -25,10 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = int(os.environ.get("DEBUG", default = 0))
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-
 
 # Application definition
 
@@ -73,7 +71,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'auctsite.wsgi.application'
-#Channels
+# Channels
 
 
 # Database
@@ -89,7 +87,6 @@ DATABASES = {
         'PORT': os.environ.get("SQL_PORT", "5432"),
     }
 }
-
 
 AUTH_USER_MODEL = 'market.User'
 
@@ -111,7 +108,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -125,13 +121,12 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static_auctsite")]
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -142,21 +137,21 @@ ASGI_APPLICATION = 'auctsite.asgi.application'
 
 # Changing channel_layers configs depends on environment variable
 is_no_sql_engine = os.environ.get("NOSQL_ENGINE", False)
-if is_no_sql_engine != False:
+if is_no_sql_engine:
     ch_layer_temp = {
-    'default':{
-        'BACKEND': os.environ.get("NOSQL_ENGINE"),
-        'CONFIG':{
-            'hosts': [(os.environ.get("NOSQL_HOST", "localhost"), int(os.environ.get("NOSQL_PORT", "6379")))],
+        'default': {
+            'BACKEND': os.environ.get("NOSQL_ENGINE"),
+            'CONFIG': {
+                'hosts': [(os.environ.get("NOSQL_HOST", "localhost"), int(os.environ.get("NOSQL_PORT", "6379")))],
+            },
         },
-    },
-}
+    }
 else:
     ch_layer_temp = {
-    "default": {
-        "BACKEND": os.environ.get("NOSQL_ENGINE", "channels.layers.InMemoryChannelLayer")
+        "default": {
+            "BACKEND": os.environ.get("NOSQL_ENGINE", "channels.layers.InMemoryChannelLayer")
+        }
     }
-}
 
 CHANNEL_LAYERS = ch_layer_temp
 
@@ -164,8 +159,8 @@ CHANNEL_LAYERS = ch_layer_temp
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis:6379/0")
 
-#Main url for manage media
+# Main url for manage media
 MEDIA_URL = '/media/'
 
-#Path to store media files
+# Path to store media files
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')

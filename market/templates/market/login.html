@@ -2,24 +2,24 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8"/>
     <title>Log In</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
       crossorigin="anonymous"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link
       href="https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap"
       rel="stylesheet"
     />
 
-    <link rel="shortcut icon" href="{% static 'market/alexdollslogo.svg' %}" />
-    <link href="{% static 'market/style.css' %}" rel="stylesheet" />
+    <link rel="shortcut icon" href="{% static 'market/alexdollslogo.svg' %}"/>
+
     <link
       href="{% static 'theme/css/vendor/jquery-jvectormap-1.2.2.css' %}"
       rel="stylesheet"
@@ -47,12 +47,9 @@
   <body class="authentication-bg" data-layout-config='{"darkMode":false}'>
     <div class="account-pages mt-5 mb-5">
       {% if message %}
-      <div
-        class="alert alert-danger bg-danger text-white border-0"
-        role="alert"
-      >
-        {{ message }}
-      </div>
+        <div class="alert alert-danger bg-danger text-white border-0" role="alert">
+          {{ message }}
+        </div>
       {% endif %}
       <!-- SignIn container -->
       <div class="container">
@@ -61,56 +58,42 @@
             <div class="card">
               <!-- Logo -->
               <div class="card-header pt-4 pb-4 text-center bg-primary">
-                <span
-                  ><a href="{% url 'market:index' %}">
-                    <img
-                      src="{% static 'market/alexdollslogo-dark.png' %}"
-                      alt=""
-                      height="50"
-                    /> </a
-                ></span>
+                <span>
+                  <a href="{% url 'market:index' %}">
+                    <img src="{% static 'market/alexdollslogo-dark.png' %}" alt="" height="50"/>
+                  </a>
+                </span>
               </div>
-              <!-- card body -->
+
               <div class="card-body p-4">
                 <div class="text-center w-75 m-auto">
                   <h4 class="text-dark-50 text-center mt-0 font-weight-bold">
                     Log In
                   </h4>
                 </div>
-                {% if messages %}{% for message in messages %}
-                <div
-                  class="alert alert-danger bg-danger text-white text-center border-0"
-                  role="alert"
-                >
-                  {{ message }}
-                </div>
-                {% endfor %} {% endif %}
-                <form
-                  action="{% url 'market:login' %}"
-                  method="post"
-                  class="card-text mb-3"
-                >
+                <!-- Alert -->
+                {% if messages %}
+                  {% for message in messages %}
+                    <div class="alert alert-danger bg-danger text-white text-center border-0"
+                      role="alert">
+                      {{ message }}
+                    </div>
+                  {% endfor %}
+                {% endif %}
+
+                <form action="{% url 'market:login' %}" method="post" class="card-text mb-3">
                   {% csrf_token %}
                   <div class="form-group">
                     <label for="username">Username</label>
-                    <input
-                      class="form-control"
-                      autofocus
-                      type="text"
-                      name="username"
-                      placeholder="Enter your username"
-                    />
+                    <input class="form-control" autofocus type="text" name="username"
+                           placeholder="Enter your username"/>
                   </div>
 
                   <div class="form-group">
                     <label for="password">Password</label>
                     <div class="input-group input-group-merge">
-                      <input
-                        class="form-control"
-                        type="password"
-                        name="password"
-                        placeholder="Enter your password"
-                      />
+                      <input class="form-control" type="password" name="password"
+                             placeholder="Enter your password"/>
 
                       <div class="input-group-append" data-password="false">
                         <div class="input-group-text">
@@ -121,15 +104,10 @@
                   </div>
 
                   <div class="form-group mb-0 text-center">
-                    <input
-                      class="btn btn-primary"
-                      type="submit"
-                      value="Log In"
-                    />
+                    <input class="btn btn-primary" type="submit" value="Log In"/>
                   </div>
                 </form>
               </div>
-              <!-- end card body -->
             </div>
 
             <!-- SignUp Link -->
@@ -137,19 +115,17 @@
               <div class="col-12 text-center">
                 <p class="text-muted">
                   Don't have an account?
-                  <a href="{% url 'market:signup' %}" class="text-muted ml-1"
-                    ><b>Sign Up</b></a
-                  >
+                  <a href="{% url 'market:signup' %}" class="text-muted ml-1">
+                    <b>Sign Up</b>
+                  </a>
                 </p>
               </div>
-              <!-- end col -->
             </div>
-            <!-- end signup -->
           </div>
         </div>
       </div>
-      <!-- end container -->
     </div>
+
     <!-- bundle -->
     <script src="{% static 'theme/js/vendor.min.js' %}"></script>
     <script src="{% static 'theme/js/app.min.js' %}"></script>
