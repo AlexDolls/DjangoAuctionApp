@@ -8,7 +8,7 @@
 </p>
 <p align = center>
 <img src = "https://i.imgur.com/WoLMzyU.png"><img>
-<h2 align = "center"><strong><a href = "http://vps-39294.vps-default-host.net/market/">Try it in Live Version</a></strong></h2>
+<h2 align = "center"><strong><a href = "http://vps-39294.vps-default-host.net/market/">Try it in Live Version (NOT ACTIVE) </a></strong></h2>
 </p>
 <h2>Technologies used in project</h2>
 <ol>
